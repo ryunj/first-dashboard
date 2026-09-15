@@ -26,6 +26,11 @@ Streamlit Cloud → New app → Repository `ryunj/first-dashboard` · Branch `ma
 - 브라우저는 xlsx 를 읽지 않는다 → APP설치데이터 · 조직 카테고리별 실적은 CSV 로 저장해 올린다.
 - 합치는 규칙은 `build_data.py`(파이썬)와 `merge.js`(브라우저)에 같게 들어 있다. 한쪽을 바꾸면 다른 쪽도 고친다.
 
+## 메모 · 다운로드
+
+- **메모**: 화면 맨 위 `+ 메모` — 지금 보는 기간 · 필터에 포스트잇을 붙이고 📌 를 누르면 그 보기로 돌아간다. 이 브라우저(localStorage)에 저장되고 백업 파일에 함께 담긴다(백업을 열면 메모를 합침 · 같은 메모는 최근 수정본).
+- **다운로드**(맨 아래): 엑셀 = 서식 포함 `.xlsx` · PDF = 고른 영역을 찍어 A4 가로 PDF 파일로 바로 받기(html-to-image · jsPDF 를 CDN 에서 불러옴, 못 불러오면 인쇄 창).
+
 ## 파일
 
 | 파일 | 역할 |

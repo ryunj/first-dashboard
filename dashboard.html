@@ -12,6 +12,7 @@
   --prev:#b3b1a9; --neg:#d03b3b; --pos:#006300; --wash:rgba(42,120,214,.07);
   /* 채널 고유색 — 선택이 바뀌어도 채널 색은 그대로 */
   --c1:#2a78d6; --c2:#eb6834; --c3:#1baf7a; --c4:#eda100; --c5:#e87ba4; --c6:#008300; --c7:#4a3aa7; --c8:#e34948;
+  --memo-y:#fff2b3; --memo-p:#ffdce5; --memo-b:#dbeeff; --memo-g:#dcf3d2; --memo-ink:#34322a;
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
@@ -19,7 +20,7 @@
     --page:#0d0d0d; --surface:#1a1a19; --surface-2:#262624; --ink:#fff; --ink-2:#c3c2b7; --muted:#898781;
     --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,.10); --row-alt:rgba(255,255,255,.03);
     --prev:#6b6a64; --neg:#e66767; --pos:#0ca30c; --wash:rgba(57,135,229,.12);
-    --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#c98500; --c5:#d55181; --c6:#008300; --c7:#9085e9; --c8:#e66767;
+    --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#c98500; --c5:#d55181; --c6:#008300; --c7:#9085e9; --c8:#e66767; --memo-y:#4d4526; --memo-p:#4d2c36; --memo-b:#243b52; --memo-g:#2a432c; --memo-ink:#f2f0e8;
   }
 }
 :root[data-theme="dark"]{
@@ -27,7 +28,7 @@
   --page:#0d0d0d; --surface:#1a1a19; --surface-2:#262624; --ink:#fff; --ink-2:#c3c2b7; --muted:#898781;
   --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,.10); --row-alt:rgba(255,255,255,.03);
   --prev:#6b6a64; --neg:#e66767; --pos:#0ca30c; --wash:rgba(57,135,229,.12);
-  --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#c98500; --c5:#d55181; --c6:#008300; --c7:#9085e9; --c8:#e66767;
+  --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#c98500; --c5:#d55181; --c6:#008300; --c7:#9085e9; --c8:#e66767; --memo-y:#4d4526; --memo-p:#4d2c36; --memo-b:#243b52; --memo-g:#2a432c; --memo-ink:#f2f0e8;
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -312,6 +313,65 @@ details.notes li{margin:3px 0}
 /* 다운로드 */
 .dl{padding:14px 16px;display:grid;gap:10px}
 .dl-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+/* 상품 구성 카테고리 — 체크박스 태그 */
+#pdCatChips{gap:5px}
+#pdCatChips .chip{gap:6px;padding:3px 10px 3px 7px;font-size:12px;font-weight:500;color:var(--muted);background:var(--surface);border:1px solid var(--grid);border-radius:7px;transition:background .12s,border-color .12s,color .12s}
+#pdCatChips .chip::before{content:"";flex:none;width:13px;height:13px;border-radius:4px;border:1.5px solid var(--axis);background:var(--surface);box-sizing:border-box}
+#pdCatChips .chip[aria-pressed="true"]{color:var(--ink);font-weight:500;background:color-mix(in srgb,var(--c1) 8%,var(--surface));border-color:color-mix(in srgb,var(--c1) 34%,var(--grid))}
+#pdCatChips .chip[aria-pressed="true"]::before{border-color:var(--c1);background:var(--c1) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.2 5 8.6 9.6 3.6' fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/11px no-repeat}
+#pdCatChips .chip.all{font-weight:650;color:var(--ink)}
+#pdCatChips .chip.all.part::before{border-color:var(--c1);background:var(--c1) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 6h6' fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E") center/11px no-repeat}
+#pdCatChips .chip:hover{border-color:var(--axis);color:var(--ink)}
+.pd-cat-n{font-size:11.5px;font-weight:600;color:var(--ink-2);white-space:nowrap;font-variant-numeric:tabular-nums}
+#pdCatBar{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 10px;align-items:start}
+#pdCatBar .flabel{padding-top:4px}
+.pd-cat-meta{grid-column:2;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
+/* 메모 — 포스트잇 */
+.memo-sec{margin-top:16px}
+.memo-h{display:flex;align-items:center;flex-wrap:wrap;gap:4px 12px;margin:0 0 8px}
+.memo-h h2{font-size:14px;font-weight:700;margin:0}
+.memo-h .desc{font-size:12px;color:var(--muted)}
+.memo-h .tools{margin-left:auto;display:flex;gap:8px;align-items:center}
+.memos{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start}
+.memo-empty{font-size:12px;color:var(--muted);padding:2px 0}
+.memo{--mc:var(--memo-y);position:relative;width:236px;min-height:100px;padding:11px 12px 7px;border-radius:3px 3px 12px 3px;background:var(--mc);color:var(--memo-ink);box-shadow:0 1px 2px rgba(0,0,0,.08),0 6px 14px rgba(0,0,0,.07);display:flex;flex-direction:column;gap:7px;font-size:12.5px}
+.memo[data-c="pink"]{--mc:var(--memo-p)}
+.memo[data-c="blue"]{--mc:var(--memo-b)}
+.memo[data-c="green"]{--mc:var(--memo-g)}
+.memo.now{box-shadow:0 0 0 2px color-mix(in srgb,var(--c1) 60%,transparent),0 6px 14px rgba(0,0,0,.08)}
+.memo-t{white-space:pre-wrap;word-break:break-word;line-height:1.55;flex:1}
+.memo-pin{align-self:flex-start;max-width:100%;border:0;background:rgba(120,120,120,.16);color:inherit;border-radius:999px;padding:2px 9px;font-size:11px;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.memo-pin:hover{background:rgba(120,120,120,.28)}
+.memo-f{display:flex;align-items:center;gap:2px;font-size:10.5px}
+.memo-f span{margin-right:auto;opacity:.65}
+.memo-f button{border:0;background:none;color:inherit;cursor:pointer;padding:2px 6px;border-radius:4px;font-size:12px;opacity:.7}
+.memo-f button:hover{background:rgba(120,120,120,.2);opacity:1}
+.memo-f button.del-arm{background:var(--neg);color:#fff;opacity:1;font-size:11px}
+.memo textarea{width:100%;min-height:78px;resize:vertical;border:0;outline:0;background:rgba(255,255,255,.45);border-radius:4px;padding:6px 7px;font:inherit;color:inherit;line-height:1.5}
+.memo-cs{display:flex;gap:6px;align-items:center}
+.memo-cs button.dot{width:16px;height:16px;border-radius:50%;border:1px solid rgba(0,0,0,.18);cursor:pointer;padding:0}
+.memo-cs button.dot[aria-pressed="true"]{box-shadow:0 0 0 2px var(--mc),0 0 0 3.5px var(--memo-ink)}
+.memo-cs .sp{margin-left:auto}
+.memo-cs .btn{padding:3px 9px}
+/* PDF 파일 만들기 — 데스크톱 폭으로 고정해 그린 뒤 영역별로 찍는다(화면 캡처) */
+body.pdfcap::after{content:"PDF 만드는 중…";position:fixed;inset:0;z-index:300;display:grid;place-items:center;background:color-mix(in srgb,var(--page) 90%,transparent);font-size:15px;font-weight:650;color:var(--ink)}
+body.pdfcap main.wrap{width:1160px;max-width:none;padding-inline:0;margin:0}
+body.pdfcap main>section:not(.pr-on){display:none!important}
+body.pdfcap #bkBanner,body.pdfcap .sec-h .tools,body.pdfcap .pd-filter,body.pdfcap .crumbs .pd-spread,body.pdfcap #pdOld,body.pdfcap #selbar,body.pdfcap .toast{display:none!important}
+body.pdfcap .fold::before{display:none}
+body.pdfcap #printHead{display:block;padding:0 2px 8px}
+body.pdfcap #printHead h1{font-size:19px;margin:0 0 3px}
+body.pdfcap #printHead p{margin:0;font-size:11.5px;color:#555}
+body.pdfcap .tbl-wrap,body.pdfcap .pmat,body.pdfcap .pd-tbl .tbl-wrap{max-height:none!important;overflow:visible!important}
+body.pdfcap .grid thead th,body.pdfcap .grid th.stick{position:static!important}
+body.pdfcap .kpis{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.55fr)!important}
+body.pdfcap .kpi-wide{grid-column:auto!important}
+body.pdfcap .charts{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+body.pdfcap .pb{grid-template-columns:minmax(120px,240px) minmax(40px,1fr) minmax(64px,130px) 84px 74px 66px 52px 118px!important}
+body.pdfcap .pb.uv{grid-template-columns:minmax(120px,220px) minmax(40px,1fr) minmax(60px,120px) 84px 74px 66px 66px 58px 52px 118px!important}
+body.pdfcap .pb-t,body.pdfcap .pmix{grid-column:auto!important}
+body.pdfcap .pb-d,body.pdfcap .pb-c,body.pdfcap .pb-pv,body.pdfcap .pb-uv,body.pdfcap .pb-cr{display:block!important}
+body.pdfcap .pgrid{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr)!important}
 #printHead{display:none}
 /* 인쇄 · PDF — 보고용: 컨트롤 숨김, A4 가로, 넓은 표는 줄임 */
 @page{size:A4 landscape;margin:0}
@@ -319,7 +379,7 @@ details.notes li{margin:3px 0}
   /* 크롬은 A4 가로를 약 740px 폭으로 배치한다 → 본문을 줄여(zoom) 데스크톱 폭(약 1,000px)으로 · 여백 0 = 브라우저 머리글·바닥글(날짜 · 주소) 없음 */
   html,body{background:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   body{zoom:.72;padding:8mm 10mm!important}
-  header.top,#bkBanner,#dlSec,details.notes,#selbar,dialog,.toast,.sec-h .tools,.pd-filter,.crumbs .pd-spread,#pdOld{display:none!important}
+  header.top,#bkBanner,#dlSec,details.notes,#selbar,dialog,.toast,.sec-h .tools,.pd-filter,.crumbs .pd-spread,#pdOld,#memoSec{display:none!important}
   .fold::before{display:none}
   #printHead{display:block;margin:0 0 4mm}
   #printHead h1{font-size:18px;margin:0 0 2px}
@@ -388,6 +448,12 @@ details.notes li{margin:3px 0}
 
 <main class="wrap" id="main">
   <div class="card bk-banner" id="bkBanner" role="status" hidden><span id="bkInfo"></span><button class="btn" id="btnBkClear" type="button">원래 데이터로 돌아가기</button></div>
+  <section id="memoSec" class="memo-sec" hidden>
+    <div class="memo-h"><h2>메모</h2><span class="desc" id="memoDesc"></span>
+      <div class="tools"><div class="seg" role="group" aria-label="메모 보기"><button type="button" data-memof="all">전체</button><button type="button" data-memof="view">이 보기</button></div>
+        <button class="btn primary" type="button" id="btnMemoAdd" title="지금 보고 있는 기간 · 필터에 메모 붙이기">+ 메모</button></div></div>
+    <div class="memos" id="memoList"></div>
+  </section>
   <div id="printHead"></div>
   <section id="sumSec">
     <div class="sec-h"><h2>실적 요약</h2><span class="desc" id="sumDesc"></span></div>
@@ -431,7 +497,7 @@ details.notes li{margin:3px 0}
       </div>
     </div>
     <div class="bar2 pd-filter"><span class="flabel">채널</span><div class="chips" id="pdChips" role="group" aria-label="상품 구성 채널 필터 (여러 개 선택 가능)"></div><span class="hint">상품 구성에만 적용 · 전체 = 모든 채널 합산</span></div>
-    <div class="bar2 pd-filter"><span class="flabel">카테고리</span><div class="chips" id="pdCatChips" role="group" aria-label="상품 구성 카테고리 필터 (여러 개 선택 가능)"></div><span class="hint">기본 모두 선택 · 누르면 빼기/넣기 · 전체 = 모두 선택 ↔ 모두 해제 · 거르면 커버리지 · 상품UV · CR 은 숨김</span></div>
+    <div class="bar2 pd-filter" id="pdCatBar"><span class="flabel">카테고리</span><div class="chips" id="pdCatChips" role="group" aria-label="상품 구성 카테고리 필터 (여러 개 선택 가능)"></div><div class="pd-cat-meta"><span class="pd-cat-n" id="pdCatN"></span><span class="hint">누르면 빼기/넣기 · 전체 = 모두 선택 ↔ 해제 · 거르면 커버리지 · 상품UV · CR 숨김</span></div></div>
     <div class="card app-note" id="pdOld" hidden></div>
     <div class="card pd" id="pdBody"></div>
   </section>
@@ -480,7 +546,8 @@ details.notes li{margin:3px 0}
       <li><b>백업</b> — 상단 <b>백업 다운로드</b>는 지금 보고 있는 데이터(실적 data.js · KPI kpi.js · 상품 products.js)를 한 파일(.json.gz)로 저장한다. <b>백업 불러오기</b>로 그 파일을 올리면 이 브라우저에 저장해 그 데이터로 다시 연다(새로고침해도 유지). 위 안내줄의 '원래 데이터로 돌아가기'를 누르면 해제. <code>build_data.py</code> 도 빌드할 때마다 <code>backup/</code> 에 같은 형식의 백업을 쓴다. 백업 파일에는 실적 원본이 담기니 사내 보안 기준에 맞게 보관할 것.</li>
       <li><b>새 데이터 추가</b>(일자별 갱신) — 백업(또는 data.js) + 그날 내보낸 raw 폴더(예: <code>2026년/0914</code>)를 올리면 <code>build_data.py</code> 와 같은 규칙으로 합친다: 같은 날짜 · 주차는 새 값으로 바꾸고 빈 칸은 기존 값을 유지, 회원현황이 모두 0인 날(미갱신)은 건너뜀, 상품 표는 그 날짜 행을 통째로 교체. 결과표에서 파일별 읽음 · 건너뜀 · 오류와 새 날짜 · 기존 값과 달라진 칸 수를 확인한 뒤 적용한다. 상품은 모두 개별로 보관한다(예전 백업처럼 상위 N만 개별이던 이력은 '기타 상품' 그대로). 브라우저는 xlsx 를 읽지 않으니 APP설치데이터 · 조직 카테고리별 실적은 CSV로 저장해 올린다.</li>
       <li><b>차트 끝값</b> — 마지막 기간의 당해 값과 함께 비교(전년 동기간) 값을 회색으로 표시한다(차트 선이 하나일 때). <b>지표 순서</b>: 거래액 → 고객수 → 객단가 → 트래픽 → 가입자수 → 가입률 → 당일가입 CR → 첫구매율.</li>
-      <li><b>다운로드</b>(맨 아래) — 형식(엑셀 · PDF)과 영역(전체 · 실적 요약 · 흐름 차트 · 실적 표 · 상품 구성 · 앱 설치 · 수신동의 · KPI)을 골라 받는다. <b>엑셀</b>은 영역마다 시트 하나로, 화면과 같은 기간 · 필터 · 비교 기준의 값을 숫자 셀 + 서식(단위 · 비율 · 증감 색)으로 쓴다(차트는 표 데이터와 같아 제외). <b>PDF</b>는 인쇄 창에서 대상 'PDF로 저장'을 고른다 — A4 가로 · 여백 0(브라우저 머리글 · 바닥글 없음) · 본문을 72%로 줄여 화면(데스크톱)과 같은 배치, 표는 3단 비교 모양, 넓은 표는 폭에 맞춰 줄이고, 상단에 기준 기간 · 필터 · 출력 시각을 적는다. KPI 영역은 기본 접힘(제목 앞 ▶ 를 누르면 펼침).</li>
+      <li><b>다운로드</b>(맨 아래) — 형식(엑셀 · PDF)과 영역(전체 · 실적 요약 · 흐름 차트 · 실적 표 · 상품 구성 · 앱 설치 · 수신동의 · KPI)을 골라 받는다. <b>엑셀</b>은 영역마다 시트 하나로, 화면과 같은 기간 · 필터 · 비교 기준의 값을 숫자 셀 + 서식(단위 · 비율 · 증감 색)으로 쓴다(차트는 표 데이터와 같아 제외). <b>PDF</b>는 인쇄 창 없이 <b>파일로 바로</b> 받는다 — 고른 영역을 데스크톱 폭으로 그려 찍고(html-to-image) A4 가로에 이어 붙이며(jsPDF) 표 행 · 카드 경계에서 쪽을 나눈다. 두 라이브러리는 받을 때 CDN(cdnjs · jsDelivr)에서 불러오고, 못 불러오면(사내망 차단 등) 인쇄 창을 연다(대상 'PDF로 저장'). 표는 3단 비교 모양, 첫 쪽 위에 기준 기간 · 필터 · 출력 시각. KPI 영역은 기본 접힘(제목 앞 ▶ 를 누르면 펼침).</li>
+      <li><b>메모</b>(화면 맨 위) — <b>+ 메모</b>로 지금 보고 있는 기간 · 단위 · 일평균/누계 · 비교 · 채널 · 회원구분(+ 상품 구성 위치)에 포스트잇을 붙인다. 📌 를 누르면 그 보기로 이동, ✎ 고치기, ✕ 두 번 눌러 지우기, 색 4가지. '이 보기'는 지금 기간 · 채널 · 회원구분과 같은 메모만. 메모는 이 브라우저(localStorage)에 저장되고 <b>백업 다운로드 · 새 데이터 추가 백업에 함께 담긴다</b> — 백업을 열면 그 안의 메모를 합친다(같은 메모는 최근 수정본, 지운 메모가 예전 백업에 있으면 다시 들어옴). 엑셀 · PDF 에는 넣지 않는다.</li>
       <li><b>드래그 합계</b> — 실적 표에서 숫자를 드래그(또는 클릭 후 Shift+클릭)하면 아래에 합계 · 평균 · 최소 · 최대가 뜬다. 합계는 거래액 · 고객수 · 가입자수 · 트래픽처럼 더할 수 있는 같은 단위일 때만. Ctrl+C로 선택 영역 복사(엑셀에 붙여넣기), Esc로 해제.</li>
     </ul>
   </details>
@@ -1499,8 +1566,9 @@ function renderProd() {
     + PRD.ch.map((ch, k) => `<button type="button" class="chip" data-pch="${k}" aria-pressed="${PD.chans.includes(k)}" style="--sw:${chColor(ch)}"><i></i>${esc(ch)}</button>`).join('');
   // 카테고리 — 상단 채널 필터처럼 모두 펼쳐 두고 기본은 모두 선택. 누르면 그 카테고리만 빼거나 다시 넣는다
   const cats = catOrder(), catAll = !PD.cats.length && !PD.catNone, catOn = k => catAll || PD.cats.includes(k);
-  $('#pdCatChips').innerHTML = `<button type="button" class="chip" data-pcat="-1" aria-pressed="${catAll}" title="${catAll ? '누르면 모두 해제' : '누르면 모두 선택'}">전체</button>`
+  $('#pdCatChips').innerHTML = `<button type="button" class="chip all${!catAll && !PD.catNone ? ' part' : ''}" data-pcat="-1" aria-pressed="${catAll}" title="${catAll ? '누르면 모두 해제' : '누르면 모두 선택'}">전체</button>`
     + [...cats, ...PD.cats.filter(k => !cats.includes(k))].map(k => `<button type="button" class="chip" data-pcat="${k}" aria-pressed="${catOn(k)}">${esc(PRD.cat[k])}</button>`).join('');
+  $('#pdCatN').textContent = `${catAll ? cats.length : PD.catNone ? 0 : PD.cats.length}/${cats.length}개 선택`;
   const legacyTop = PRD.meta.topN || PRD.meta.legacyTopN;  // 예전 형식 백업 안내 — 기타 상품 묶음 · 상품UV 없음
   $('#pdOld').hidden = !legacyTop && PC.hasUv;
   $('#pdOld').innerHTML = `<b>예전 형식의 백업</b>입니다 — ${[legacyTop ? `상품이 브랜드별 연간 상위 ${legacyTop}개만 개별(나머지는 '기타 상품'으로 묶임)` : '', PC.hasUv ? '' : '상품UV · 상품CR 없음'].filter(Boolean).join(' · ')}. <b>최신 백업 파일</b>(모든 상품 개별 · 상품UV 포함)로 다시 열면 모두 보입니다. 새 데이터 추가로 합친 날짜는 개별로 들어갑니다.`;
@@ -1855,6 +1923,8 @@ const DL_PARTS = [['sum', '실적 요약', '#sumSec'], ['chart', '흐름 차트'
                   ['prod', '상품 구성', '#prodSec'], ['app', '앱 설치 · 수신동의', '#appSec'], ['kpi', 'KPI', '#kpiSec']];
 const DL = {fmt: 'xlsx', parts: DL_PARTS.map(p => p[0])};
 const PRINT_W = 950;  // 인쇄 본문 폭(CSS px) — 크롬 A4 가로 ≈ 740px ÷ zoom .72 − 좌우 여백
+const PDF_W = 1160;  // PDF 파일 만들 때 본문 폭(CSS px) — 이 폭으로 그려 A4 가로(277mm)에 맞춘다
+const PDF_LIBS = ['https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', 'https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js'];
 const PRINT_HASH = new URLSearchParams(location.hash.slice(1)).get('print');  // 점검용 #print=all | #print=sum,table — 인쇄 창 없이 인쇄 모양으로만
 const partOk = (kind, k) => !(kind === 'xlsx' && k === 'chart') && !$(DL_PARTS.find(p => p[0] === k)[2]).hidden;
 function renderDl() {
@@ -1868,7 +1938,7 @@ function renderDl() {
     }).join('');
   $('#dlHint').textContent = DL.fmt === 'xlsx'
     ? '영역마다 시트 하나 · 화면과 같은 기간 · 필터 · 비교 기준 · 숫자 셀 + 서식'
-    : "인쇄 창에서 대상 'PDF로 저장' 선택 · A4 가로 · 표는 3단 비교 모양";
+    : 'PDF 파일로 바로 받기 · A4 가로 · 영역마다 쪽을 이어 붙임 · 표는 3단 비교 모양 (라이브러리를 못 불러오면 인쇄 창)';
 }
 const loadJs = src => new Promise((resolve, reject) => {
   const el = document.createElement('script');
@@ -1879,7 +1949,21 @@ async function runDownload(kind, parts) {
   const note = msg => { $('#dlMsg').textContent = msg; if (parts && window.__say) window.__say(msg); };
   const pick = (parts || DL.parts).filter(k => partOk(kind, k));
   if (!pick.length) { note('받을 영역을 고르세요'); return null; }
-  if (kind === 'pdf') { printParts(pick, true); return null; }
+  if (kind === 'pdf') {
+    const btn = $('#btnDl');
+    btn.disabled = true;
+    note('PDF 만드는 중… (영역을 찍어 A4 가로로 붙입니다)');
+    try {
+      const out = await makePdf(pick);
+      window.FP_BACKUP.saveBlob(out.blob, out.name);
+      note(`PDF를 받았습니다 · ${out.pages}쪽`);
+      return out;
+    } catch (err) {
+      note(`PDF 파일을 만들지 못해 인쇄 창을 엽니다 — 대상 'PDF로 저장' (${err.message})`);
+      printParts(pick, true);
+      return null;
+    } finally { btn.disabled = false; }
+  }
   note('엑셀 만드는 중…');
   try {
     if (!window.FP_EXPORT) await loadJs('export.js');
@@ -1892,7 +1976,69 @@ async function runDownload(kind, parts) {
     return null;
   }
 }
-function printParts(parts, doPrint) {  // 고른 영역만 보고용 인쇄 모양으로 — 인쇄 뒤(또는 돌려받은 함수로) 원래대로
+async function makePdf(parts) {  // 고른 영역을 데스크톱 폭으로 그려 찍고(html-to-image) A4 가로 PDF(jsPDF)로 — 행 · 카드 경계에서 쪽을 나눈다
+  for (const src of PDF_LIBS) if (!(src.includes('jspdf') ? window.jspdf && window.jspdf.jsPDF : window.htmlToImage)) await loadJs(src);
+  const root = document.documentElement, themeBefore = root.getAttribute('data-theme'), sx = window.scrollX, sy = window.scrollY;
+  root.setAttribute('data-theme', 'light');  // 어두운 테마여도 보고서는 밝게
+  document.body.classList.add('pdfcap');
+  const restore = printParts(parts, false, PDF_W - 4);
+  try {
+    await new Promise(r => { let done = false; const go = () => { if (!done) { done = true; r(); } }; requestAnimationFrame(() => requestAnimationFrame(go)); setTimeout(go, 150); });  // 백그라운드 탭은 rAF 가 멈춘다
+    const blocks = [];
+    if ($('#printHead').textContent) blocks.push({el: $('#printHead'), head: true});
+    for (const [k, , sel] of DL_PARTS) {
+      const sec = $(sel);
+      if (!parts.includes(k) || sec.hidden) continue;
+      for (const el of sec.children) if (!el.hidden && el.offsetHeight > 0) blocks.push({el, head: el.classList.contains('sec-h')});
+    }
+    const pdf = new window.jspdf.jsPDF({orientation: 'landscape', unit: 'mm', format: 'a4', compress: true});
+    const PW = 297, PH = 210, M = 9, CW = PW - M * 2, BOTTOM = PH - M - 5, PR = 2;  // 아래 5mm = 쪽 번호
+    let y = M, afterHead = false;
+    const newPage = () => { pdf.addPage(); y = M; };
+    for (let i = 0; i < blocks.length; i++) {
+      const {el, head} = blocks[i], top = el.getBoundingClientRect().top;
+      const w = Math.max(el.scrollWidth, el.offsetWidth), h = el.offsetHeight, scale = CW / Math.max(PDF_W, w);  // mm / px — 넓은 블록은 더 줄임
+      const cuts = [...new Set([...el.querySelectorAll('tr, .pb, .mb, .cc, .tile, .kpi, .pgrid, .pcap, .crumbs, .pd-tbl, .tbl-wrap, .pbars')]
+        .map(x => Math.round(x.getBoundingClientRect().bottom - top)).filter(v => v > 0 && v < h))].sort((a, b) => a - b);
+      const canvas = await window.htmlToImage.toCanvas(el, {pixelRatio: PR, backgroundColor: '#ffffff', width: w, height: h, skipFonts: true, style: {margin: '0'}});
+      if (head) {  // 제목은 다음 블록 앞부분과 같은 쪽에
+        const next = blocks[i + 1], nh = next ? next.el.offsetHeight * scale : 0, need = h * scale + (h * scale + nh <= BOTTOM - M ? nh : Math.min(40, nh));  // 제목+다음 블록이 한 쪽에 들어가면 통째로 함께
+        if (y > M && y + need > BOTTOM) newPage();
+      } else if (y > M && !afterHead && y + h * scale > BOTTOM && h * scale <= BOTTOM - M) newPage();  // 제목 바로 뒤면 넘기지 않고 행 경계에서 나눔
+      let from = 0;
+      while (from < h - 1) {
+        const room = (BOTTOM - y) / scale;
+        let to = h;
+        if (h - from > room) {
+          const fit = cuts.filter(c => c > from + 1 && c <= from + room);
+          to = fit.length && fit[fit.length - 1] - from > room * 0.3 ? fit[fit.length - 1] : Math.floor(from + room);
+          if (to - from < 24 && y > M) { newPage(); continue; }
+        }
+        const part = document.createElement('canvas');
+        part.width = canvas.width;
+        part.height = Math.max(1, Math.round((to - from) * PR));
+        part.getContext('2d').drawImage(canvas, 0, Math.round(from * PR), canvas.width, part.height, 0, 0, part.width, part.height);
+        pdf.addImage(part.toDataURL('image/jpeg', 0.92), 'JPEG', M, y, w * scale, (to - from) * scale);
+        y += (to - from) * scale;
+        from = to;
+        if (from < h - 1) newPage();
+      }
+      y += head ? 1 : 4;
+      afterHead = head;
+    }
+    const n = pdf.getNumberOfPages();
+    for (let p = 1; p <= n; p++) { pdf.setPage(p); pdf.setFontSize(8); pdf.setTextColor(150); pdf.text(`${p} / ${n}`, PW - M, PH - 5, {align: 'right'}); }
+    const t = new Date(), p2 = x => String(x).padStart(2, '0');
+    const name = `첫구매실적보고_${{month: '월별', week: '주별', day: '일별'}[S.grain]}_${(DAILY.dates.at(-1) || '').replace(/-/g, '')}_${t.getFullYear()}${p2(t.getMonth() + 1)}${p2(t.getDate())}_${p2(t.getHours())}${p2(t.getMinutes())}.pdf`;
+    return {blob: pdf.output('blob'), name, pages: n};
+  } finally {
+    restore();
+    document.body.classList.remove('pdfcap');
+    if (themeBefore == null) root.removeAttribute('data-theme'); else root.setAttribute('data-theme', themeBefore);
+    window.scrollTo(sx, sy);
+  }
+}
+function printParts(parts, doPrint, fitW = PRINT_W) {  // 고른 영역만 보고용 인쇄 모양으로 — 인쇄 뒤(또는 돌려받은 함수로) 원래대로
   const body = document.body, before = {layout: S.layout, kpi: $('#kpis').hidden, tbl: PD_TBL_OPEN};
   body.classList.add('printing');
   for (const [k, , selector] of DL_PARTS) $(selector).classList.toggle('pr-on', parts.includes(k));
@@ -1902,7 +2048,7 @@ function printParts(parts, doPrint) {  // 고른 영역만 보고용 인쇄 모�
   if (parts.includes('prod')) PD_TBL_OPEN = true;
   S.layout = 'stack';  // 3단 비교 = 열이 적어 A4 가로에 들어감
   render();
-  document.querySelectorAll('.pr-on table.grid').forEach(tb => { const w = tb.scrollWidth; tb.style.zoom = w > PRINT_W ? (PRINT_W / w).toFixed(3) : ''; });  // 넓은 표는 인쇄 폭에 맞춰 줄임
+  document.querySelectorAll('.pr-on table.grid').forEach(tb => { const w = tb.scrollWidth; tb.style.zoom = w > fitW ? (fitW / w).toFixed(3) : ''; });  // 넓은 표는 인쇄 폭에 맞춰 줄임
   const restore = () => {
     body.classList.remove('printing');
     document.querySelectorAll('.pr-on').forEach(el => el.classList.remove('pr-on'));
@@ -1932,6 +2078,107 @@ $('#dlSec').addEventListener('click', e => {
   if (e.target.closest('#btnDl')) runDownload(DL.fmt);
 });
 
+/* ---------- 메모 — 포스트잇: 지금 보기(기간 · 필터)에 붙이고 📌 를 누르면 그 보기로 · 이 브라우저에 저장 + 백업 파일에 포함 ---------- */
+const MEMO_COLORS = [['yellow', '노랑', 'y'], ['pink', '분홍', 'p'], ['blue', '파랑', 'b'], ['green', '초록', 'g']];
+let MEMO_FILTER = 'all', MEMO_EDIT = null, MEMO_DRAFT = {text: '', color: 'yellow'}, MEMO_FOCUS = false, MEMO_DEL = null, MEMO_DEL_T = 0;
+const memoView = () => ({year: S.year, grain: S.grain, mode: S.mode, cmp: S.cmp, at: S.at[S.grain] || '', range: S.grain === 'month' ? '' : S.range[S.grain],
+  chans: selChans(), segs: selSegs(), layout: S.layout, pd: {view: PD.view, path: PD.path.slice(), chans: PD.chans.slice(), cats: PD.cats.slice(), catNone: !!PD.catNone, metric: PD.metric}});
+const memoLabel = v => {
+  const at = v.at ? (v.grain === 'month' ? `${+v.at.slice(0, 4)}년 ${+v.at.slice(5, 7)}월` : v.at) : `${v.year}년 최근`;
+  return [at, {month: '월별', week: '주별', day: '일별'}[v.grain], v.mode === 'sum' ? '누계' : '일평균', v.cmp === 'pop' ? `${CMP_NAME[v.grain]}비` : '전년비',
+    `채널 ${(v.chans || []).map(chLabel).join('·')}`].join(' · ');
+};
+const memoMatch = v => !!v && v.year === S.year && v.grain === S.grain && (v.at || '') === (S.at[S.grain] || '')
+  && (v.chans || []).join() === selChans().join() && (v.segs || []).join() === selSegs().join();
+function memoGo(v) {  // 메모가 붙은 보기로 — 없는 연도 · 채널은 건너뛴다
+  if (!v) return;
+  if (YEARS.includes(v.year)) S.year = v.year;
+  for (const k of ['grain', 'mode', 'cmp', 'layout']) if (ALLOWED[k].includes(v[k])) S[k] = v[k];
+  S.at[S.grain] = v.at || '';
+  if (v.range && S.grain !== 'month') S.range[S.grain] = v.range;
+  const ch = CHS.filter(c => (v.chans || []).includes(c)), sg = SEG_KEYS.filter(c => (v.segs || []).includes(c));
+  if (ch.length) S.chans = ch;
+  if (sg.length) S.segs = sg;
+  const p = v.pd;
+  if (p) {
+    if (['bpu', 'ch'].includes(p.view)) PD.view = p.view;
+    const lim = key => (PRD ? PRD[key].length : Infinity), ints = (a, n) => (Array.isArray(a) ? a.filter(k => Number.isInteger(k) && k >= 0 && k < n) : []);
+    PD.path = PRD && Array.isArray(p.path) && p.path.length < pDims().length ? p.path.slice() : [];
+    PD.chans = ints(p.chans, lim('ch'));
+    PD.cats = ints(p.cats, lim('cat'));
+    PD.catNone = !!p.catNone && !PD.cats.length;
+    if (['amt', 'cust'].includes(p.metric)) PD.metric = p.metric;
+  }
+  PD.sel = null;
+  render();
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+function renderMemos() {
+  const sec = $('#memoSec');
+  if (!sec || !window.FP_MEMOS) return;
+  const ta0 = $('#memoList textarea');
+  if (ta0 && MEMO_EDIT) MEMO_DRAFT.text = ta0.value;  // 편집 중에 화면이 다시 그려져도 쓰던 글은 남긴다
+  sec.hidden = false;
+  const all = window.FP_MEMOS.all().sort((a, b) => String(b.updated || '').localeCompare(String(a.updated || '')));
+  const here = all.filter(m => memoMatch(m.view)), list = MEMO_FILTER === 'view' ? here : all;
+  document.querySelectorAll('[data-memof]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.memof === MEMO_FILTER)));
+  $('#memoDesc').textContent = all.length
+    ? `${all.length}개 · 지금 보기에 붙은 메모 ${here.length}개 · 📌 를 누르면 그 기간 · 필터로 이동 · 이 브라우저에 저장되고 백업 파일에 함께 담김`
+    : '지금 보는 기간 · 필터에 메모를 붙여 두면 📌 로 그 보기로 돌아옵니다 · 이 브라우저에 저장되고 백업 파일에 함께 담김';
+  const tm = s => { const x = new Date(s), p2 = n => String(n).padStart(2, '0'); return isNaN(x) ? '' : `${x.getFullYear()}-${p2(x.getMonth() + 1)}-${p2(x.getDate())} ${p2(x.getHours())}:${p2(x.getMinutes())}`; };
+  const color = c => (MEMO_COLORS.some(x => x[0] === c) ? c : 'yellow');
+  const editor = id => `<div class="memo edit" data-c="${color(MEMO_DRAFT.color)}" data-mid="${esc(id)}"><textarea aria-label="메모 내용" maxlength="2000" placeholder="메모 입력 · Ctrl+Enter 저장 · Esc 취소">${esc(MEMO_DRAFT.text)}</textarea>`
+    + `<div class="memo-cs">${MEMO_COLORS.map(([c, nm, t]) => `<button type="button" class="dot" data-memocolor="${c}" aria-pressed="${color(MEMO_DRAFT.color) === c}" title="${nm}" aria-label="${nm}" style="background:var(--memo-${t})"></button>`).join('')}`
+    + `<span class="sp"></span><button class="btn" type="button" data-memocancel>취소</button><button class="btn primary" type="button" data-memosave>저장</button></div></div>`;
+  const card = m => (MEMO_EDIT === m.id ? editor(m.id) : `<div class="memo${memoMatch(m.view) ? ' now' : ''}" data-c="${color(m.color)}" data-mid="${esc(m.id)}">`
+    + `<div class="memo-t">${esc(m.text)}</div>`
+    + (m.view ? `<button type="button" class="memo-pin" data-memogo title="${esc(`이 보기로 이동 — ${m.label || ''}`)}">📌 ${esc(m.label || '')}</button>` : '')
+    + `<div class="memo-f"><span>${tm(m.updated || m.created)}</span><button type="button" data-memoedit title="고치기" aria-label="고치기">✎</button>`
+    + (MEMO_DEL === m.id ? '<button type="button" class="del-arm" data-memodel>지울까요?</button>' : '<button type="button" data-memodel title="지우기" aria-label="지우기">✕</button>')
+    + '</div></div>');
+  const empty = MEMO_FILTER === 'view' && all.length ? '지금 보기에 붙은 메모가 없습니다 — 전체를 누르면 모든 메모' : '메모가 없습니다 — + 메모 로 추가';
+  $('#memoList').innerHTML = (MEMO_EDIT === 'new' ? editor('new') : '') + (list.length ? list.map(card).join('') : MEMO_EDIT === 'new' ? '' : `<div class="memo-empty">${empty}</div>`);
+  if (MEMO_FOCUS) { const ta = $('#memoList textarea'); if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); } MEMO_FOCUS = false; }
+}
+function memoSave() {
+  const ta = $('#memoList textarea'), text = (ta ? ta.value : MEMO_DRAFT.text).trim().slice(0, 2000);
+  if (!text) { (window.__say || (() => {}))('메모 내용을 입력하세요'); return; }
+  const now = new Date().toISOString();
+  if (MEMO_EDIT === 'new') {
+    const v = memoView();
+    window.FP_MEMOS.add({id: `m${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`, text, color: MEMO_DRAFT.color, created: now, updated: now, view: v, label: memoLabel(v)});
+  } else window.FP_MEMOS.update(MEMO_EDIT, {text, color: MEMO_DRAFT.color, updated: now});
+  MEMO_EDIT = null;
+  renderMemos();
+}
+$('#memoSec').addEventListener('click', e => {
+  const f = e.target.closest('[data-memof]');
+  if (f) { MEMO_FILTER = f.dataset.memof; renderMemos(); return; }
+  if (e.target.closest('#btnMemoAdd')) { MEMO_EDIT = 'new'; MEMO_DRAFT = {text: '', color: 'yellow'}; MEMO_FOCUS = true; renderMemos(); return; }
+  const cardEl = e.target.closest('[data-mid]');
+  if (!cardEl) return;
+  const id = cardEl.dataset.mid;
+  const col = e.target.closest('[data-memocolor]');
+  if (col) { const ta = $('#memoList textarea'); if (ta) MEMO_DRAFT.text = ta.value; MEMO_DRAFT.color = col.dataset.memocolor; renderMemos(); return; }
+  if (e.target.closest('[data-memocancel]')) { MEMO_EDIT = null; renderMemos(); return; }
+  if (e.target.closest('[data-memosave]')) { memoSave(); return; }
+  const m = window.FP_MEMOS.all().find(x => x.id === id);
+  if (!m) return;
+  if (e.target.closest('[data-memogo]')) { memoGo(m.view); return; }
+  if (e.target.closest('[data-memoedit]')) { MEMO_EDIT = id; MEMO_DRAFT = {text: m.text, color: m.color}; MEMO_FOCUS = true; renderMemos(); return; }
+  if (e.target.closest('[data-memodel]')) {  // 두 번 눌러 지우기(sandbox iframe 에선 확인 창이 막힐 수 있음)
+    clearTimeout(MEMO_DEL_T);
+    if (MEMO_DEL === id) { window.FP_MEMOS.remove(id); MEMO_DEL = null; }
+    else { MEMO_DEL = id; MEMO_DEL_T = setTimeout(() => { MEMO_DEL = null; renderMemos(); }, 4000); }
+    renderMemos();
+  }
+});
+$('#memoSec').addEventListener('keydown', e => {
+  if (!e.target.matches('#memoList textarea')) return;
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); memoSave(); }
+  else if (e.key === 'Escape') { MEMO_EDIT = null; renderMemos(); }
+});
+
 /* ---------- 렌더 ---------- */
 function render() {
   syncControls();
@@ -1945,6 +2192,7 @@ function render() {
   renderApp();
   renderKpi();
   renderDl();
+  renderMemos();
   save();
 }
 $('#asof').textContent = `데이터 ~${DAILY.dates.at(-1) || LAST} · raw ${D.meta.sources.join(', ')}`;
@@ -1962,7 +2210,7 @@ window.__dash = {get state() { return S; }, render, compute, evalCol, getCols, s
                  // 엑셀 다운로드(export.js)가 화면과 같은 값을 쓰도록
                  get lastCols() { return lastCols; }, get lastSum() { return LAST_SUM; }, get dataMeta() { return D.meta; },
                  focusIdx, unitOf, fmtDelta, delta, axFmtDelta, fmtAX, cmpLbl, otherLbl, baseLbl, baseShort, modeName, trNote,
-                 selChans, selSegs, chLabel, segLabel, KPI, printParts, runDownload, renderDl, DL, DL_PARTS,
+                 selChans, selSegs, chLabel, segLabel, KPI, printParts, runDownload, renderDl, DL, DL_PARTS, makePdf, renderMemos, memoGo,
                  get prodTblOpen() { return PD_TBL_OPEN; }, set prodTblOpen(v) { PD_TBL_OPEN = !!v; }};
 loadProducts();
 };
@@ -1983,6 +2231,34 @@ const say = msg => {
   setTimeout(() => t.remove(), 7000);
 };
 window.__say = say;
+// 메모 저장소 — 이 브라우저(localStorage). 백업 파일에 함께 담고, 백업을 열면 합친다(같은 메모는 최근 수정본)
+const MEMO_KEY = 'fp-dashboard-memos';
+let MEMO_MEM = null;  // 저장소를 못 쓰면 이 창에만
+const memoOk = m => !!m && typeof m.id === 'string' && m.id.length < 60 && typeof m.text === 'string';
+const memoRead = () => {
+  if (MEMO_MEM) return MEMO_MEM;
+  try { const x = JSON.parse(localStorage.getItem(MEMO_KEY) || '[]'); MEMO_MEM = Array.isArray(x) ? x.filter(memoOk) : []; } catch (e) { MEMO_MEM = []; }
+  return MEMO_MEM;
+};
+const memoWrite = list => { MEMO_MEM = list; try { localStorage.setItem(MEMO_KEY, JSON.stringify(list)); } catch (e) { /* 저장소 사용 불가 */ } };
+window.FP_MEMOS = {
+  all: () => memoRead().map(m => ({...m})),
+  add: m => memoWrite([...memoRead(), m]),
+  update: (id, patch) => memoWrite(memoRead().map(m => (m.id === id ? {...m, ...patch} : m))),
+  remove: id => memoWrite(memoRead().filter(m => m.id !== id)),
+  mergeIn: list => {
+    if (!Array.isArray(list)) return 0;
+    const cur = new Map(memoRead().map(m => [m.id, m]));
+    let n = 0;
+    for (const m of list) {
+      if (!memoOk(m)) continue;
+      const o = cur.get(m.id);
+      if (!o || String(m.updated || '') > String(o.updated || '')) { cur.set(m.id, {...m, text: m.text.slice(0, 2000)}); n++; }
+    }
+    if (n) memoWrite([...cur.values()]);
+    return n;
+  },
+};
 function idb(mode, fn) {
   return new Promise((resolve, reject) => {
     if (!window.indexedDB) { reject(new Error('이 브라우저는 저장소(IndexedDB)를 쓸 수 없습니다')); return; }
@@ -2017,6 +2293,7 @@ function validate(o) {
   for (const [k, arr] of Object.entries(d.daily.s)) if (!Array.isArray(arr) || arr.length !== d.daily.p.length) fail(`일별 ${k}`);
   if (o.prod != null && (!o.prod.meta || !Array.isArray(o.prod.f) || !Array.isArray(o.prod.ch) || !Array.isArray(o.prod.cov))) fail('상품 데이터');
   if (o.kpi != null && (typeof o.kpi !== 'object' || !o.kpi.targets)) fail('KPI');
+  if (o.memos != null && !Array.isArray(o.memos)) fail('메모');
   return o;
 }
 async function blobOf(payload) {  // 백업 payload → .json.gz (압축을 못 쓰는 브라우저면 .json)
@@ -2030,7 +2307,7 @@ async function makeBlob() {
   const prod = await ensureProducts(), d = window.DASH_DATA;
   return blobOf({format: FORMAT, version: 1, created: new Date().toISOString(),
                  source: window.DASH_BACKUP ? window.DASH_BACKUP.name : 'data/data.js',
-                 lastDate: d.meta.lastDate, built: d.meta.built, data: d, kpi: window.DASH_KPI || null, prod});
+                 lastDate: d.meta.lastDate, built: d.meta.built, data: d, kpi: window.DASH_KPI || null, prod, memos: window.FP_MEMOS.all()});
 }
 const backupName = (lastDate, ext) => `첫구매대시보드_백업_데이터${String(lastDate || '').replace(/-/g, '')}_${stamp(new Date())}.${ext}`;
 function saveBlob(blob, name) {
@@ -2067,6 +2344,7 @@ async function download() {
 }
 async function restore(file, opts = {}) {
   const o = await parseFile(file);
+  window.FP_MEMOS.mergeIn(o.memos);  // 백업에 담긴 메모를 이 브라우저 메모에 합친다
   const info = {name: file.name || '백업 파일', loaded: new Date().toISOString(), created: o.created || '', hasProd: !!o.prod,
                 lastDate: o.lastDate || o.data.meta.lastDate || '', built: o.built || o.data.meta.built || ''};
   await idb('readwrite', st => st.put({info, data: o.data, kpi: o.kpi || null, prod: o.prod || null}, KEY));
@@ -2086,7 +2364,7 @@ async function mergeFiles(files) {
 }
 async function applyMerged(res, opts = {}) {  // 합친 결과를 브라우저에 저장(백업 불러오기와 같은 자리) · 원하면 백업 파일도 내려받기
   const payload = validate({format: FORMAT, version: 1, created: new Date().toISOString(), source: '새 데이터 추가',
-    lastDate: res.data.meta.lastDate, built: res.data.meta.built, data: res.data, kpi: res.kpi || null, prod: res.prod || null});
+    lastDate: res.data.meta.lastDate, built: res.data.meta.built, data: res.data, kpi: res.kpi || null, prod: res.prod || null, memos: window.FP_MEMOS.all()});
   if (opts.download) { const {blob, ext} = await blobOf(payload); saveBlob(blob, backupName(payload.lastDate, ext)); }
   const info = {name: `새 데이터 반영 (~${payload.lastDate})`, loaded: new Date().toISOString(), created: payload.created,
                 hasProd: !!payload.prod, lastDate: payload.lastDate, built: payload.built};
