@@ -1,0 +1,2 @@
+# Streamlit Cloud 배포용 — 대시보드는 HTML 이라 streamlit 만 필요
+streamlit>=1.40,<1.59

@@ -270,6 +270,7 @@ dialog.mdlg.drag{outline:3px dashed var(--c1);outline-offset:-8px}
 .st-err{color:var(--neg);font-weight:600}
 .merr,.mwarn{color:var(--neg)}
 .merr{font-size:13px;margin-top:10px}
+.toast{position:fixed;left:50%;top:18px;transform:translateX(-50%);z-index:200;max-width:calc(100vw - 32px);padding:10px 16px;border-radius:10px;background:var(--ink);color:var(--surface);font-size:13px;box-shadow:0 6px 24px rgba(0,0,0,.25)}
 /* 백업 끌어다 놓기 */
 body.drop-on::after{content:"백업 파일(.json.gz)을 놓으면 불러옵니다";position:fixed;inset:12px;z-index:100;display:grid;place-items:center;border:3px dashed var(--c1);border-radius:16px;background:color-mix(in srgb,var(--c1) 10%,var(--page));font-size:18px;font-weight:650;color:var(--ink);pointer-events:none}
 .drop-empty{max-width:680px;margin:64px auto;padding:36px 32px;border:2px dashed var(--axis);border-radius:14px;background:var(--surface);text-align:center;color:var(--ink-2);line-height:1.7}
@@ -630,7 +631,7 @@ const save = () => {
     if (PD.path.length) h.set('pd', PD.path.join(','));
     if (PD.chans.length) h.set('pch', PD.chans.join(','));
   } else for (const k of ['pv', 'pd', 'pch']) if (PD_HASH.get(k)) h.set(k, PD_HASH.get(k));  // 상품 데이터를 불러오기 전에는 받은 값을 유지
-  history.replaceState(null, '', '#' + h);
+  try { history.replaceState(null, '', '#' + h); } catch (e) { /* iframe(srcdoc) 처럼 주소를 바꿀 수 없는 곳 */ }
 };
 // 지표별 계열: 채널 × (회원구분 적용 지표면 선택 구분, 아니면 전체)
 const seriesKeys = m => { const out = []; for (const ch of selChans()) for (const seg of (SEG_METRICS.has(m) ? selSegs() : ['T'])) out.push({ch, seg}); return out; };
@@ -1013,11 +1014,7 @@ function exportCsv() {
     }));
   }
   const blob = new Blob(['﻿' + lines.map(l => l.map(q).join(',')).join('\r\n')], {type: 'text/csv;charset=utf-8'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `첫구매실적_${{month: '월별', week: '주별', day: '일별'}[S.grain]}_${modeName()}_${cmpLbl()}_${y}.csv`;
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  window.FP_BACKUP.saveBlob(blob, `첫구매실적_${{month: '월별', week: '주별', day: '일별'}[S.grain]}_${modeName()}_${cmpLbl()}_${y}.csv`);
 }
 
 /* ---------- 표 드래그 합계 — 엑셀 상태 표시줄처럼 선택 영역의 합계·평균 ---------- */
@@ -1225,7 +1222,7 @@ function loadProducts() {  // 8MB가 넘는 파일이라 대시보드를 먼저 
     }
   };
   // 상품 데이터가 없는 백업으로 열었으면 지금 폴더의 products.js 를 섞지 않는다
-  if (window.DASH_PROD || (window.DASH_BACKUP && !window.DASH_BACKUP.hasProd)) { done(); return; }
+  if (window.DASH_PROD || window.DASH_EMBED || (window.DASH_BACKUP && !window.DASH_BACKUP.hasProd)) { done(); return; }
   prodLoad = 'loading';
   renderProd();
   const sc = document.createElement('script');
@@ -1647,6 +1644,13 @@ loadProducts();
 'use strict';
 const FORMAT = 'fp-dashboard-backup', DB = 'fp-dashboard-backup', STORE = 'kv', KEY = 'active';
 const $id = id => document.getElementById(id);
+// 알림 — Streamlit 같은 sandbox iframe 에서는 alert 가 막히므로 화면 위 토스트로 보여 준다
+const say = msg => {
+  const t = Object.assign(document.createElement('div'), {className: 'toast', textContent: msg});
+  t.setAttribute('role', 'status');
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 7000);
+};
 function idb(mode, fn) {
   return new Promise((resolve, reject) => {
     if (!window.indexedDB) { reject(new Error('이 브라우저는 저장소(IndexedDB)를 쓸 수 없습니다')); return; }
@@ -1666,7 +1670,7 @@ const loadScript = src => new Promise((resolve, reject) => {
   document.body.appendChild(el);
 });
 async function ensureProducts() {
-  if (!window.DASH_PROD && !(window.DASH_BACKUP && !window.DASH_BACKUP.hasProd)) {
+  if (!window.DASH_PROD && !window.DASH_EMBED && !(window.DASH_BACKUP && !window.DASH_BACKUP.hasProd)) {
     try { await loadScript(`data/products.js?v=${encodeURIComponent((window.DASH_DATA && window.DASH_DATA.meta.built) || Date.now())}`); } catch (e) { /* 상품 데이터 없이 백업 */ }
   }
   return window.DASH_PROD || null;
@@ -1698,10 +1702,13 @@ async function makeBlob() {
 }
 const backupName = (lastDate, ext) => `첫구매대시보드_백업_데이터${String(lastDate || '').replace(/-/g, '')}_${stamp(new Date())}.${ext}`;
 function saveBlob(blob, name) {
-  const a = document.createElement('a');
+  // Streamlit 처럼 iframe 안이면(내려받기가 막힌 sandbox일 수 있음) 같은 출처의 바깥 문서에서 링크를 누른다
+  let doc = document;
+  try { if (window.parent !== window && window.parent.document) doc = window.parent.document; } catch (e) { /* 다른 출처 — 이 문서에서 */ }
+  const a = doc.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = name;
-  document.body.appendChild(a); a.click(); a.remove();
+  doc.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 60000);
 }
 async function parseFile(file) {
@@ -1723,7 +1730,7 @@ async function download() {
   try {
     const {blob, ext} = await makeBlob();
     saveBlob(blob, backupName(window.DASH_DATA.meta.lastDate, ext));
-  } catch (e) { alert(`백업을 만들지 못했습니다: ${e.message}`); }
+  } catch (e) { say(`백업을 만들지 못했습니다: ${e.message}`); }
   finally { btn.disabled = false; btn.textContent = label; }
 }
 async function restore(file, opts = {}) {
@@ -1780,7 +1787,7 @@ async function runMerge(files) {
   try { MERGED = await mergeFiles(files); showMerge(MERGED); }
   catch (err) { $id('mergeOut').innerHTML = `<div class="merr">합치지 못했습니다: ${escHtml(err.message)}</div>`; }
 }
-window.FP_BACKUP = {makeBlob, blobOf, parseFile, restore, clear, read, validate, loadMerge, mergeFiles, applyMerged};
+window.FP_BACKUP = {makeBlob, blobOf, saveBlob, parseFile, restore, clear, read, validate, loadMerge, mergeFiles, applyMerged};
 
 const dlg = $id('mergeDlg');
 $id('btnMerge').addEventListener('click', () => {
@@ -1802,7 +1809,7 @@ const applyBtn = download => async () => {
     await applyMerged(MERGED, {download});
     $id('mergeOut').insertAdjacentHTML('beforeend', `<div class="msum">반영했습니다${download ? ' · 백업 파일을 내려받는 중' : ''} — 곧 새로고침합니다</div>`);
   } catch (err) {
-    alert(`적용하지 못했습니다: ${err.message}`);
+    say(`적용하지 못했습니다: ${err.message}`);
     $id('mergeApply').disabled = $id('mergeApplyOnly').disabled = false;
   }
 };
@@ -1817,8 +1824,8 @@ window.addEventListener('drop', async e => {
   e.preventDefault();
   document.body.classList.remove('drop-on');
   const f = [...e.dataTransfer.files].find(x => /\.(gz|json)$/i.test(x.name));
-  if (!f) { alert('백업 파일(.json.gz)을 놓아 주세요 — 일자별 raw(CSV)는 상단 새 데이터 추가 창에 놓습니다'); return; }
-  try { await restore(f); } catch (err) { alert(`불러오지 못했습니다: ${err.message}`); }
+  if (!f) { say('백업 파일(.json.gz)을 놓아 주세요 — 일자별 raw(CSV)는 상단 새 데이터 추가 창에 놓습니다'); return; }
+  try { await restore(f); } catch (err) { say(`불러오지 못했습니다: ${err.message}`); }
 });
 
 $id('btnBackup').addEventListener('click', download);
@@ -1829,16 +1836,16 @@ $id('fileRestore').addEventListener('change', async e => {
   if (!f) return;
   const btn = $id('btnRestore'), label = btn.textContent;
   btn.disabled = true; btn.textContent = '불러오는 중…';
-  try { await restore(f); } catch (err) { alert(`불러오지 못했습니다: ${err.message}`); btn.disabled = false; btn.textContent = label; }
+  try { await restore(f); } catch (err) { say(`불러오지 못했습니다: ${err.message}`); btn.disabled = false; btn.textContent = label; }
 });
-$id('btnBkClear').addEventListener('click', () => clear().catch(err => alert(err.message)));
+$id('btnBkClear').addEventListener('click', () => clear().catch(err => say(err.message)));
 
 // 부팅 — 브라우저에 불러온 백업이 있으면 그 데이터로 연다(#selftest 는 항상 원래 데이터)
 (async () => {
   // 이 폴더의 data.js · kpi.js — 주소 뒤에 시각을 붙여 매번 새로 받는다(브라우저가 예전 data.js 를 캐시로 보여 주지 않게).
   // 웹 배포본처럼 파일이 없으면 그냥 넘어가고 백업(불러오기 · 끌어다 놓기)으로만 연다
   const bust = `?t=${Date.now()}`;
-  await Promise.all(['data/data.js', 'kpi.js'].map(src => loadScript(src + bust).catch(() => null)));
+  if (!window.DASH_EMBED) await Promise.all(['data/data.js', 'kpi.js'].map(src => loadScript(src + bust).catch(() => null)));  // Streamlit(app.py)은 파일 없이 백업으로만
   window.DASH_LOCAL = window.DASH_DATA ? {lastDate: window.DASH_DATA.meta.lastDate, built: window.DASH_DATA.meta.built} : null;
   let rec = null, boot = 'skip';
   if (!/selftest/.test(location.hash)) {

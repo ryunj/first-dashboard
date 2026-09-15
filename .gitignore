@@ -4,6 +4,7 @@ data/
 backup/
 *.csv
 *.txt
+!requirements.txt
 *.xlsx
 *.xls
 *.json.gz

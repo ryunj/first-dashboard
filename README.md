@@ -9,6 +9,12 @@
 2. 받은 **백업 파일을 화면에 끌어다 놓거나** `백업 파일 열기`로 고른다.
 3. 데이터는 서버로 올라가지 않고 **그 브라우저에만** 저장된다(IndexedDB). 새로고침해도 유지, 위쪽 안내줄의 `백업 데이터 지우기`로 삭제.
 
+## Streamlit 으로 배포
+
+Streamlit Cloud → New app → Repository `ryunj/first-dashboard` · Branch `main` · **Main file path `app.py`**.
+`app.py` 가 `dashboard.html`(+ `merge.js`)을 화면 가득 띄운다. 데이터는 서버에 없고, 보는 사람이 백업 파일을 끌어다 놓거나 열면 그 브라우저에만 저장된다.
+보는 사람을 제한하려면 Streamlit Cloud 앱 설정(Sharing)에서 이메일로 초대한 사람만 보게 할 수 있다.
+
 ## 일자별 갱신
 
 | 방법 | 순서 |
