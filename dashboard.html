@@ -104,6 +104,8 @@ select{font-size:13px;background:var(--surface);border:1px solid var(--border);b
 .gl{stroke:var(--grid);stroke-width:1;shape-rendering:crispEdges}
 .yt,.xt{fill:var(--muted);font-size:10.5px;font-variant-numeric:tabular-nums}
 .yt{text-anchor:end}
+.xtick{stroke:var(--grid);stroke-width:1;shape-rendering:crispEdges}
+.xtick.on{stroke:var(--axis)}
 .ln{fill:none;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
 .ln.prev{stroke:var(--prev)}
 .dot{stroke:var(--surface);stroke-width:2}
@@ -810,11 +812,20 @@ function niceTicks(lo, hi, count) {
   for (let v = min; v <= max + step * 1e-6 && ticks.length < 20; v += step) ticks.push(+v.toPrecision(12));
   return {min, max, step, ticks};
 }
-const LABEL_GAP = {month: 34, week: 64, day: 40};  // x축 라벨 최소 간격(px) — 첫 라벨은 왼쪽 정렬이라 글자 폭의 1.5배
-function labelIdx(n, width, minGap) {  // 첫·마지막 라벨은 항상 보이고, 사이 라벨은 겹치지 않게 솎는다
+const LABEL_GAP = {month: 34, week: 64, day: 40};  // x축 라벨 중심 사이 최소 간격(px) — 가장자리 라벨이 안쪽으로 밀려도 겹치지 않게 여유를 둠
+function labelIdx(n, width, minGap) {  // 첫·마지막 라벨은 항상, 사이는 겹치지 않게 솎되 간격이 되도록 고르게
   if (n <= 1) return n ? [0] : [];
-  const gap = width / (n - 1), step = Math.max(1, Math.ceil(minGap / gap)), out = [];
-  for (let i = 0; i < n - 1; i += step) out.push(i);
+  const gap = width / (n - 1), need = Math.max(1, Math.ceil(minGap / gap));
+  // 몇 칸마다 찍을지: 겹치지 않는 최소 간격(need)부터 2배까지 보고, 마지막 칸이 다른 칸과 가장 비슷한 쪽을 고른다
+  //   예) 12개월 · 좁은 차트 — 2칸마다면 1·3·5·7·9·12월(마지막만 3칸), 3칸마다면 1·4·7·10·12월
+  let best = null;
+  for (let st = need; st <= Math.max(need, Math.min(n - 1, need * 2)); st++) {
+    const r = (n - 1) % st, lastSpan = r === 0 ? st : (r * gap >= minGap ? r : r + st);
+    const score = Math.abs(lastSpan - st) / st + (st - need) * 0.15;  // 고른 간격 우선, 너무 듬성해지면 감점
+    if (!best || score < best.score - 1e-9) best = {st, score};
+  }
+  const out = [];
+  for (let i = 0; i < n - 1; i += best.st) out.push(i);
   if (out.length > 1 && (n - 1 - out[out.length - 1]) * gap < minGap) out.pop();
   out.push(n - 1);
   return out;
@@ -848,9 +859,11 @@ function lineChart(host, o) {
     const fw = n > 1 ? Math.max(6, pw / (n - 1) * 0.8) : 24;
     s += `<rect class="fband" x="${(X(o.focus) - fw / 2).toFixed(1)}" y="${T}" width="${fw.toFixed(1)}" height="${ph}"/>`;
   }
-  for (const i of labelIdx(n, pw, LABEL_GAP[o.grain] || 40)) {
-    const anchor = n > 1 && i === n - 1 ? 'end' : (n > 1 && i === 0 ? 'start' : 'middle');
-    s += `<text class="xt" x="${X(i).toFixed(1)}" y="${H - 6}" text-anchor="${anchor}">${esc(o.labels[i])}</text>`;
+  const shown = new Set(labelIdx(n, pw, LABEL_GAP[o.grain] || 40));
+  for (let i = 0; i < n; i++) {  // 모든 기간에 작은 눈금 — 라벨이 없는 기간도 점 위치를 읽을 수 있게, 라벨이 붙는 기간은 조금 길게
+    const x = X(i).toFixed(1), on = shown.has(i);
+    s += `<line class="xtick${on ? ' on' : ''}" x1="${x}" x2="${x}" y1="${T + ph}" y2="${T + ph + (on ? 4 : 2.5)}"/>`;
+    if (on) s += `<text class="xt" x="${x}" y="${H - 6}" text-anchor="middle">${esc(o.labels[i])}</text>`;
   }
   // o.breaks[i] = 월 누계가 새로 시작하는 날(1일) — 선을 끊고 월 경계선을 그어 '뚝 떨어지는' 선으로 보이지 않게 한다
   const brk = i => !!(o.breaks && o.breaks[i]);
@@ -881,6 +894,12 @@ function lineChart(host, o) {
   SR.forEach((sr, k) => { s += `<circle class="dot hs" data-s="${k}" style="fill:${sr.color}" r="4.5" visibility="hidden"/>`; });
   s += `<rect x="${L - 8}" y="0" width="${pw + 16}" height="${H}" fill="transparent"/></svg><div class="tip" hidden></div>`;
   host.innerHTML = s;
+  for (const t of host.querySelectorAll('.xt')) {  // 가운데 정렬한 라벨이 차트 밖으로 나가면(첫 · 마지막) 안쪽으로 민다
+    const b = t.getBBox();
+    if (!b.width) continue;
+    const dx = b.x < 1 ? 1 - b.x : (b.x + b.width > W - 1 ? W - 1 - b.x - b.width : 0);
+    if (dx) t.setAttribute('x', (+t.getAttribute('x') + dx).toFixed(1));
+  }
 
   const svg = host.querySelector('svg'), tip = host.querySelector('.tip'), guide = svg.querySelector('.guide');
   const hp = svg.querySelector('.hp'), hs = [...svg.querySelectorAll('.hs')];
