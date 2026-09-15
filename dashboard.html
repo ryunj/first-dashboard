@@ -1875,6 +1875,9 @@ $id('btnBkClear').addEventListener('click', () => clear().catch(err => alert(err
       <p>백업 파일(<code>.json.gz</code>)을 이 화면에 끌어다 놓거나<br><button class="btn primary" type="button" id="btnRestoreEmpty">백업 파일 열기</button></p>
       <p class="hint">파일은 서버로 올라가지 않고 이 브라우저에만 저장됩니다(지우기: 위쪽 안내줄의 '백업 데이터 지우기').<br>일자별 raw 가 있으면 상단 <b>새 데이터 추가</b> · 로컬 폴더에서는 <code>python build_data.py</code></p></div>`;
     $id('btnRestoreEmpty').addEventListener('click', () => $id('fileRestore').click());
+    // 데이터가 없으면 비어 있는 필터 · 일평균/누계 메뉴 · 백업 다운로드는 숨긴다
+    document.querySelectorAll('header .bar2, header .menu').forEach(el => { el.hidden = true; });
+    $id('btnBackup').hidden = true;
     return;
   }
   window.__dashMain();
