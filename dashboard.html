@@ -114,6 +114,7 @@ select{font-size:13px;background:var(--surface);border:1px solid var(--border);b
 .guide{stroke:var(--axis);stroke-width:1}
 .mdiv{stroke:var(--axis);stroke-width:1;shape-rendering:crispEdges}
 .mlab{fill:var(--muted);font-size:10px}
+.endl.endp{fill:var(--muted)}
 .fband{fill:var(--wash)}
 input[type=date]{font:inherit;font-size:13px;background:var(--surface);color:inherit;border:1px solid var(--border);border-radius:6px;padding:3px 6px;cursor:pointer}
 #fAt select{max-width:230px}
@@ -192,7 +193,7 @@ table.grid{border-collapse:separate;border-spacing:0;font-size:12.5px;font-varia
 .crumbs button.cur{color:var(--ink);cursor:default}
 .crumbs .sep{color:var(--muted)}
 .crumbs .lvl{color:var(--muted);font-size:12px;margin-left:8px}
-.pb{display:grid;grid-template-columns:minmax(130px,260px) minmax(60px,1fr) minmax(90px,150px) 88px 52px 124px 66px;gap:12px;align-items:center;padding:5px 8px;border-radius:6px;font-size:12.5px;font-variant-numeric:tabular-nums}
+.pb{display:grid;grid-template-columns:minmax(120px,220px) minmax(40px,1fr) minmax(64px,120px) 74px 64px 58px 64px 58px 58px 48px 118px;gap:12px;align-items:center;padding:5px 8px;border-radius:6px;font-size:12.5px;font-variant-numeric:tabular-nums}
 .pb[role=button]{cursor:pointer}
 .pb[role=button]:hover,.pb[role=button]:focus-visible{background:var(--wash);outline:none}
 .pb-h{color:var(--muted);font-size:11px;padding-block:0 4px}
@@ -210,6 +211,24 @@ a.pc:hover{text-decoration:underline}
 .pb-s,.pb-d{text-align:right;font-size:11.5px;color:var(--muted);white-space:nowrap}
 .pb-other .pn{color:var(--muted)}
 .pb-rest{font-size:11.5px;color:var(--muted);padding:4px 8px 0}
+.pb.uv{grid-template-columns:minmax(120px,210px) minmax(40px,1fr) minmax(60px,110px) 74px 64px 58px 64px 58px 58px 62px 52px 48px 118px}
+.pb-pv{text-align:right;font-size:11.5px;color:var(--muted);white-space:nowrap}
+.pb-v2{text-align:right;font-weight:650;white-space:nowrap}
+.pb-uv,.pb-cr{text-align:right;font-size:12px;white-space:nowrap}
+.pb .dim{font-weight:400;color:var(--ink-2)}
+.pb-h .on{color:var(--ink)}
+.pb-total{background:var(--surface-2)}
+.pb-total .pn{font-weight:700}
+.pb-t.pb-t0{background:none}
+.pd-tbl{margin-top:12px;border:1px solid var(--grid);border-radius:8px}
+.pd-tbl>summary{cursor:pointer;padding:8px 12px;font-size:12.5px;font-weight:650}
+.pd-tbl .tbl-wrap{max-height:520px;border-top:1px solid var(--grid);border-radius:0 0 8px 8px}
+.pd-tbl td .cv{display:block}
+.pd-tbl td .cd{display:block;font-size:10.5px;color:var(--muted)}
+.pmat tr.pm-total th,.pmat tr.pm-total td{background:var(--surface-2);font-weight:650}
+.pmat td.pv2{color:var(--muted)}
+.chip.more{border-style:dashed}
+.chip[disabled]{opacity:.4;cursor:not-allowed}
 .pgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:24px;margin-top:14px;padding-top:14px;border-top:1px solid var(--grid)}
 .pgrid h3{display:flex;align-items:center;flex-wrap:wrap;gap:4px 12px;font-size:12.5px;font-weight:650;margin:0 0 8px}
 .pgrid h3 span{display:inline-flex;align-items:center;gap:5px;font-weight:400;font-size:11px;color:var(--ink-2)}
@@ -279,7 +298,8 @@ body.drop-on::after{content:"백업 파일(.json.gz)을 놓으면 불러옵니�
 .drop-empty h2{margin:0 0 6px;font-size:20px;color:var(--ink)}
 .drop-empty p{margin:10px 0}
 .drop-empty .btn{font-size:14px;padding:7px 16px}
-@media (max-width:760px){.pb{grid-template-columns:minmax(0,1fr) 84px 50px}.pb-t,.pmix{grid-column:1/-1}.pb-d,.pb-c{display:none}.pgrid{grid-template-columns:1fr}.crumbs .pd-spread{margin-left:0}}
+@media (max-width:1280px){.pb-pv{display:none}.pb{grid-template-columns:minmax(110px,200px) minmax(40px,1fr) minmax(60px,110px) 74px 58px 64px 58px 48px 110px}.pb.uv{grid-template-columns:minmax(110px,190px) minmax(40px,1fr) minmax(56px,100px) 74px 58px 64px 58px 62px 52px 48px 110px}}
+@media (max-width:760px){.pb,.pb.uv{grid-template-columns:minmax(0,1fr) 84px 50px}.pb-t,.pmix{grid-column:1/-1}.pb-d,.pb-c,.pb-pv,.pb-v2,.pb-uv,.pb-cr{display:none}.pgrid{grid-template-columns:1fr}.crumbs .pd-spread{margin-left:0}}
 
 /* 주석 */
 details.notes{margin:28px 0 40px;color:var(--ink-2);font-size:12.5px}
@@ -287,7 +307,28 @@ details.notes summary{cursor:pointer;font-weight:600;color:var(--ink)}
 details.notes ul{margin:8px 0 0;padding-left:18px}
 details.notes li{margin:3px 0}
 .empty{padding:40px;text-align:center;color:var(--ink-2)}
-@media print{.top{position:static}.tbl-wrap{max-height:none;overflow:visible}}
+/* 다운로드 */
+.dl{padding:14px 16px;display:grid;gap:10px}
+.dl-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+#printHead{display:none}
+/* 인쇄 · PDF — 보고용: 컨트롤 숨김, A4 가로, 넓은 표는 줄임 */
+@page{size:A4 landscape;margin:10mm}
+@media print{
+  html,body{background:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .top,#bkBanner,#dlSec,details.notes,#selbar,dialog,.toast,.sec-h .tools,.pd-filter,.crumbs .pd-spread{display:none!important}
+  #printHead{display:block;margin:0 0 5mm}
+  #printHead h1{font-size:18px;margin:0 0 2px}
+  #printHead p{margin:0;font-size:11px;color:#555}
+  .wrap{max-width:none;padding-inline:0}
+  .tbl-wrap,.pmat,.pd-tbl .tbl-wrap{max-height:none!important;overflow:visible!important}
+  .grid thead th,.grid th.stick{position:static!important}
+  .charts{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .cc,.tile,.kpi{break-inside:avoid}
+  .cc-b{height:auto}
+  .cc-b svg{width:100%;height:auto}
+  .sec-h{break-after:avoid;margin-top:4mm}
+  body.printing main>section:not(.pr-on){display:none!important}
+}
 </style>
 </head>
 <body>
@@ -341,17 +382,18 @@ details.notes li{margin:3px 0}
 
 <main class="wrap" id="main">
   <div class="card bk-banner" id="bkBanner" role="status" hidden><span id="bkInfo"></span><button class="btn" id="btnBkClear" type="button">원래 데이터로 돌아가기</button></div>
-  <section>
+  <div id="printHead"></div>
+  <section id="sumSec">
     <div class="sec-h"><h2>실적 요약</h2><span class="desc" id="sumDesc"></span></div>
     <div class="tiles" id="tiles"></div>
   </section>
 
-  <section>
+  <section id="chartSec">
     <div class="sec-h"><h2 id="chartTitle">흐름</h2><span class="desc" id="chartDesc"></span><div class="legend" id="legend"></div></div>
     <div class="charts" id="charts"></div>
   </section>
 
-  <section>
+  <section id="tableSec">
     <div class="sec-h">
       <h2 id="tableTitle">실적 표</h2><span class="desc" id="tableDesc"></span>
       <div class="tools">
@@ -360,7 +402,7 @@ details.notes li{margin:3px 0}
           <button data-set="layout" data-v="stack">3단 비교</button>
         </div>
         <span class="hint">숫자를 드래그하면 합계</span>
-        <button class="btn" id="btnCsv">CSV</button>
+        <button class="btn" id="btnCsv" type="button" title="이 표를 엑셀(서식 포함)로 받기">엑셀</button>
       </div>
     </div>
     <div class="card tbl-wrap" id="tblWrap"></div>
@@ -377,12 +419,13 @@ details.notes li{margin:3px 0}
         </div>
         <label class="field"><span id="pdPeriodLbl">기간</span> <select id="pdPeriod"></select></label>
         <div class="seg" role="group" aria-label="상품 구성 기준">
-          <button type="button" data-pm="amt">거래액</button>
-          <button type="button" data-pm="cust">주문고객수</button>
+          <button type="button" data-pm="amt" title="막대 · 정렬 · 구성비 · 채널 구성 기준">거래액</button>
+          <button type="button" data-pm="cust" title="막대 · 정렬 · 구성비 · 채널 구성 기준">주문고객수</button>
         </div>
       </div>
     </div>
     <div class="bar2 pd-filter"><span class="flabel">채널</span><div class="chips" id="pdChips" role="group" aria-label="상품 구성 채널 필터 (여러 개 선택 가능)"></div><span class="hint">상품 구성에만 적용 · 전체 = 모든 채널 합산</span></div>
+    <div class="bar2 pd-filter"><span class="flabel">카테고리</span><div class="chips" id="pdCatChips" role="group" aria-label="상품 구성 카테고리 필터 (여러 개 선택 가능)"></div><span class="hint">조직 카테고리 기준 · 거르면 커버리지 · 상품UV · CR 은 숨김</span></div>
     <div class="card pd" id="pdBody"></div>
   </section>
 
@@ -395,8 +438,18 @@ details.notes li{margin:3px 0}
   </section>
 
   <section id="kpiSec" hidden>
-    <div class="sec-h"><h2 id="kpiTitle">KPI 목표</h2><span class="desc" id="kpiDesc"></span></div>
-    <div class="kpis" id="kpis"></div>
+    <div class="sec-h"><h2 id="kpiTitle">KPI 목표</h2><span class="desc" id="kpiDesc"></span>
+      <div class="tools"><button class="btn" type="button" id="btnKpi" aria-expanded="false" aria-controls="kpis">펼치기</button></div></div>
+    <div class="kpis" id="kpis" hidden></div>
+  </section>
+
+  <section id="dlSec">
+    <div class="sec-h"><h2>다운로드</h2><span class="desc">지금 화면의 기간 · 필터 · 비교 기준 그대로 받는다</span></div>
+    <div class="card dl">
+      <div class="dl-row"><span class="flabel">형식</span><div class="seg" role="group" aria-label="다운로드 형식"><button type="button" data-dlf="xlsx">엑셀</button><button type="button" data-dlf="pdf">PDF</button></div><span class="hint" id="dlHint"></span></div>
+      <div class="dl-row"><span class="flabel">영역</span><div class="chips" id="dlParts" role="group" aria-label="받을 영역 (여러 개 선택 가능)"></div></div>
+      <div class="dl-row"><button class="btn primary" type="button" id="btnDl">다운로드</button><span class="hint" id="dlMsg" role="status"></span></div>
+    </div>
   </section>
 
   <details class="notes">
@@ -413,13 +466,15 @@ details.notes li{margin:3px 0}
       <li><b>채널 · 회원구분</b>은 여러 개를 고를 수 있다. 차트 선 하나(채널 1개 × 구분 1개)면 당해 vs 전년, 여러 개면 비교선 — 색 = 채널, 선 모양 = 회원구분. 요약 타일은 선택 중 첫 번째 기준.</li>
       <li><b>*(기울임)</b> = 전년 일자 raw가 없어 전년 주별 raw를 날짜별로 나눠 채운 추정값.</li>
       <li><b>KPI 목표</b>(맨 아래)는 <code>kpi.js</code> 의 연간 누적 목표 기준 · 필터와 무관하게 전체 채널. 첫구매 거래액 · 고객수 실적은 <b>신규회원실적대시보드의 총)첫구매 거래액 · 고객수 (당년신규)</b>. 전체관점 당월신규+기가입신규와 비슷하지만 집계 기준이 달라 조금 다르다. 목표 일평균 = 연간 목표 ÷ 연간 일수, 남은 기간 필요 일평균 = (목표 − 누적) ÷ 남은 일수. 트래픽 · 가입자 목표를 넣으면 목표 가입률도 환산된다.</li>
-      <li><b>상품 구성</b>(KPI 위) — <code>조직 카테고리별 첫구매 실적</code> xlsx의 상품 단위 첫구매 실적. <b>기본 = 사업부 기준</b>: 사업부(BPU) → 카테고리 → 브랜드 → 상품을 <b>전 채널 합산</b>으로 드릴다운하고, 채널은 ① 채널 칩(여러 개 선택 · 전체 = 모든 채널) ② 행마다 <b>채널 구성 띠</b>(마우스를 올리면 채널별 비중) ③ <b>주 채널</b>(가장 많이 판 채널 · 비중 · 판매 채널 수) ④ 상품 단계의 <b>상품 × 채널 표</b>로 본다. 카테고리 · 브랜드 · 상품 단계에서 <b>판매 채널 많은 순</b>으로 정렬하면 여러 채널에서 팔린 항목이 위로 온다(같은 수면 값 큰 순). '채널 기준'으로 바꾸면 채널 → 사업부 → 카테고리 → 브랜드 → 상품. 이 원천은 첫구매 거래액의 일부만 담고 있어 캡션에 <b>상품 원천 커버리지</b>(같은 채널·BPU의 상품관점 실측 거래액 대비)를 표시한다. 상품은 브랜드별 연간 상위 20개만 개별로, 나머지는 '기타 상품'으로 합산(합계는 그대로). 주문고객수는 상품별 합이라 한 주문에 여러 상품이면 중복된다. 기간은 상단 월별 · 주별 · 일별과 일평균/누계를 그대로 따르고(추이 막대를 누르면 그 기간 선택), 전년비는 364일 전 동기간 · 동요일. 상품코드를 누르면 LF몰 상품 페이지가 새 탭으로 열린다. 사업부는 e-영업1 → 4 순서 고정.</li>
-      <li><b>신규회원 앱 설치 · 앱푸시 수신동의</b> — 모두 <b>앱 설치자 기준</b>. 흐름 차트(가입 → 설치 → 수신동의 · 추가 · 이탈)는 진행 중인 달 · 주가 뚝 떨어져 보이지 않게 누계 메뉴에서도 일평균으로 그린다(타일 · 표는 메뉴를 따름). 가입자수 → <b>앱 신규 설치</b>(APP설치데이터 '신규 설치', 재설치 제외) → <b>앱푸시 수신동의</b>(PUSH '신규' 회원의 신규추가(+)). 기존 대시보드 '앱푸시수신동의' · '앱푸시(앱포함)/신규회원'과 같은 값이다(원천 대조로 확인). <b>앱푸시 수신동의율(신규회원)</b> = 앱푸시 수신동의 ÷ 가입자수 · <b>가입자 대비 앱 신규 설치율</b> = 앱 신규 설치 ÷ 가입자수(설치에는 비회원도 있어 100%를 넘을 수 있다) · <b>앱 신규 설치 대비 수신동의율</b> = 앱푸시 수신동의 ÷ 앱 신규 설치. 비율은 분자 · 분모가 모두 있는 날만 합산.</li>
+      <li><b>상품 구성</b>(KPI 위) — <code>조직 카테고리별 첫구매 실적</code>의 상품 단위 첫구매 실적. <b>기본 = 사업부 기준</b>: 사업부(BPU) → 카테고리 → 브랜드 → 상품을 <b>전 채널 합산</b>으로 드릴다운한다. 채널 · 카테고리 칩으로 거르고(여러 개 선택), 행마다 <b>거래액 · 주문고객수와 비교 기간 값 · 비교(전년비 등)</b>를 함께 보여 준다. 맨 위 <b>합계</b> 행 = 지금 범위 전체. 위쪽 거래액/주문고객수 버튼은 막대 · 정렬 · 구성비 · 채널 구성 띠의 기준. <b>주 채널</b> = 가장 많이 판 채널 · 비중 · 판매 채널 수, 카테고리 · 브랜드 · 상품 단계에서 <b>판매 채널 많은 순</b>으로 정렬 가능. <b>상품UV · 상품CR</b>(상품관점 실측, CR = 상품관점 고객수 ÷ 상품UV)은 채널 · 사업부 단계에서만 보인다(조직 카테고리와 상품관점 상품군은 분류가 달라 카테고리 단계 · 카테고리 필터 중에는 없음 · 채널을 여러 개 고르면 채널별 UV 합). <b>상품은 모두 개별로 보관</b>하고 상품 단계에서 고른 기준 상위 30개를 보여 준다(나머지는 '그 외' 합계). 이 원천은 첫구매 거래액의 일부만 담고 있어 캡션에 <b>상품 원천 커버리지</b>(같은 채널 · BPU의 상품관점 실측 거래액 대비)를 표시한다. 주문고객수는 상품별 합이라 한 주문에 여러 상품이면 중복된다. <b>기간별 표</b>(기본 접힘)는 합계와 지금 단계 상위 항목의 기간별 값 · 비교. 기간은 상단 월별 · 주별 · 일별과 일평균/누계를 따르고(추이 막대를 누르면 그 기간 선택), 상품코드를 누르면 LF몰 상품 페이지가 새 탭으로 열린다. 사업부는 e-영업1 → 4 순서 고정.</li>
+      <li><b>신규회원 앱 설치 · 앱푸시 수신동의</b> — 모두 <b>앱 설치자 기준</b>. 흐름 차트(가입 → 설치 → 수신동의 · 추가 · 이탈)는 진행 중인 달 · 주가 뚝 떨어져 보이지 않게 누계 메뉴에서도 일평균으로 그린다(타일 · 표는 메뉴를 따름). 가입자수 → <b>앱 신규 설치</b>(APP설치데이터 '신규 설치', 재설치 제외) → <b>앱푸시 수신동의</b>(PUSH '신규' 회원의 신규추가(+)). 기존 대시보드 '앱푸시수신동의' · '앱푸시(앱포함)/신규회원'과 같은 값이다(원천 대조로 확인). <b>앱푸시 수신동의율(신규회원)</b> = 앱푸시 수신동의 ÷ 가입자수 · <b>앱 신규 설치 대비 수신동의율</b> = 앱푸시 수신동의 ÷ 앱 신규 설치. 비율은 분자 · 분모가 모두 있는 날만 합산.</li>
       <li><b>앱푸시 수신동의 회원</b>(PUSH, 앱 설치자 기준): 기존 · 신규(당년 가입) · 합계. 회원 수는 기간 말 값, 추가 · 이탈 · 순증은 기간 합(일평균 메뉴면 ÷ 일수). 이탈 · 삭제는 늘어나면 빨강. 매년 1/1은 전년 신규가 기존으로 재분류되며 추가 · 이탈에 수만 명이 섞여 추가 · 이탈에서 뺀다. 원천 오류일 — 2025-04-18(수신동의 회원 0 · 전원 이탈)은 회원 수와 흐름을 모두 빼고, 2025-04-19 · 2026-04-24(증감 칸에 재고 값)와 2026-04-25(흐름 모두 0)는 흐름만 뺐다. 2026-06-15 이후엔 수신동의 회원이 전날 + 증감과 하루 수십 명씩 어긋난다(원천 그대로 표시).</li>
       <li><b>앱 설치 상세</b>(APP설치데이터, 2026-03~): 전체 설치 = 신규 설치 + 재설치 · 순증 설치 = 전체 설치 − 삭제 · 스토어 방문 · Push 활성 기기(기간 말 값). 원천에 같은 날짜가 두 번 나오면 뒤 행을 쓴다(7/17 · 7/18은 값이 다름). 2025년 raw가 없어 전년비는 비어 있다.</li>
-      <li><b>표시하지 않는 것</b> — 회원현황 raw(누적 · 유효 · 신규회원수)는 <b>앱 설치자 미포함 기준</b>이고 수신동의 항목이 없어 뺐다. 기존 대시보드의 '앱푸시(앱보유무관)/신규회원'은 raw(앱푸시동의_앱무관)가 없어 아직 표시할 수 없다.</li>
+      <li><b>표시하지 않는 것</b> — 회원현황 raw(누적 · 유효 · 신규회원수)는 <b>앱 설치자 미포함 기준</b>이고 수신동의 항목이 없어 뺐다. 기존 대시보드의 '앱푸시(앱보유무관)/신규회원' · 앱 설치 유무별 수신동의는 원천에 앱 미설치자 수신동의 항목이 없어 아직 표시할 수 없다(PUSH 원천은 앱 설치자 기준만). <b>가입자 대비 앱 신규 설치율</b>(앱 신규 설치 ÷ 가입자수)은 앱 설치에 비회원 설치가 섞여 100%를 넘는 달이 있는 등 데이터 검증이 되지 않아 2026-09-15 대시보드에서 뺐다(앱 신규 설치 수 · 앱 신규 설치 대비 수신동의율은 유지).</li>
       <li><b>백업</b> — 상단 <b>백업 다운로드</b>는 지금 보고 있는 데이터(실적 data.js · KPI kpi.js · 상품 products.js)를 한 파일(.json.gz)로 저장한다. <b>백업 불러오기</b>로 그 파일을 올리면 이 브라우저에 저장해 그 데이터로 다시 연다(새로고침해도 유지). 위 안내줄의 '원래 데이터로 돌아가기'를 누르면 해제. <code>build_data.py</code> 도 빌드할 때마다 <code>backup/</code> 에 같은 형식의 백업을 쓴다. 백업 파일에는 실적 원본이 담기니 사내 보안 기준에 맞게 보관할 것.</li>
-      <li><b>새 데이터 추가</b>(일자별 갱신) — 백업(또는 data.js) + 그날 내보낸 raw 폴더(예: <code>2026년/0914</code>)를 올리면 <code>build_data.py</code> 와 같은 규칙으로 합친다: 같은 날짜 · 주차는 새 값으로 바꾸고 빈 칸은 기존 값을 유지, 회원현황이 모두 0인 날(미갱신)은 건너뜀, 상품 표는 그 날짜 행을 통째로 교체. 결과표에서 파일별 읽음 · 건너뜀 · 오류와 새 날짜 · 기존 값과 달라진 칸 수를 확인한 뒤 적용한다. 상품의 '브랜드별 연간 상위 20' 개별 보관은 이미 합쳐진 이력을 다시 풀 수 없어 이미 개별인 상품 + 빈 자리 · 기준을 넘는 새 상품만 개별로 두고 나머지는 '기타 상품'(합계는 정확). 브라우저는 xlsx 를 읽지 않으니 APP설치데이터 · 조직 카테고리별 실적은 CSV로 저장해 올린다.</li>
+      <li><b>새 데이터 추가</b>(일자별 갱신) — 백업(또는 data.js) + 그날 내보낸 raw 폴더(예: <code>2026년/0914</code>)를 올리면 <code>build_data.py</code> 와 같은 규칙으로 합친다: 같은 날짜 · 주차는 새 값으로 바꾸고 빈 칸은 기존 값을 유지, 회원현황이 모두 0인 날(미갱신)은 건너뜀, 상품 표는 그 날짜 행을 통째로 교체. 결과표에서 파일별 읽음 · 건너뜀 · 오류와 새 날짜 · 기존 값과 달라진 칸 수를 확인한 뒤 적용한다. 상품은 모두 개별로 보관한다(예전 백업처럼 상위 N만 개별이던 이력은 '기타 상품' 그대로). 브라우저는 xlsx 를 읽지 않으니 APP설치데이터 · 조직 카테고리별 실적은 CSV로 저장해 올린다.</li>
+      <li><b>차트 끝값</b> — 마지막 기간의 당해 값과 함께 비교(전년 동기간) 값을 회색으로 표시한다(차트 선이 하나일 때). <b>지표 순서</b>: 거래액 → 고객수 → 객단가 → 트래픽 → 가입자수 → 가입률 → 당일가입 CR → 첫구매율.</li>
+      <li><b>다운로드</b>(맨 아래) — 형식(엑셀 · PDF)과 영역(전체 · 실적 요약 · 흐름 차트 · 실적 표 · 상품 구성 · 앱 설치 · 수신동의 · KPI)을 골라 받는다. <b>엑셀</b>은 영역마다 시트 하나로, 화면과 같은 기간 · 필터 · 비교 기준의 값을 숫자 셀 + 서식(단위 · 비율 · 증감 색)으로 쓴다(차트는 표 데이터와 같아 제외). <b>PDF</b>는 인쇄 창에서 대상 'PDF로 저장'을 고른다 — A4 가로, 표는 3단 비교 모양, 넓은 표는 폭에 맞춰 줄이고, 상단에 기준 기간 · 필터 · 출력 시각을 적는다. KPI 영역은 기본 접힘(펼치기).</li>
       <li><b>드래그 합계</b> — 실적 표에서 숫자를 드래그(또는 클릭 후 Shift+클릭)하면 아래에 합계 · 평균 · 최소 · 최대가 뜬다. 합계는 거래액 · 고객수 · 가입자수 · 트래픽처럼 더할 수 있는 같은 단위일 때만. Ctrl+C로 선택 영역 복사(엑셀에 붙여넣기), Esc로 해제.</li>
     </ul>
   </details>
@@ -520,7 +575,7 @@ const MET = {
   jr:   {name: '가입률', type: 'ratio', pct: true, dp: 2, num: 'sg', den: 'tr'},
   cr:   {name: '당일가입 CR', type: 'ratio', pct: true, dp: 1, num: 'crn', den: 'sg'},
 };
-const METRICS = ['amt', 'cust', 'fpr', 'aov', 'tr', 'sg', 'jr', 'cr'];
+const METRICS = ['amt', 'cust', 'aov', 'tr', 'sg', 'jr', 'cr', 'fpr'];  // 첫구매율은 맨 뒤
 const SEG_METRICS = new Set(['amt', 'cust', 'aov']);
 const keyOf = (base, r) => base === 'amt' || base === 'cust' ? `${base}|${r.seg}|${r.ch}` : `${base}|${r.ch}`;
 const CHS = D.meta.channels;
@@ -632,7 +687,8 @@ const save = () => {
     if (PD.view !== 'bpu') h.set('pv', PD.view);
     if (PD.path.length) h.set('pd', PD.path.join(','));
     if (PD.chans.length) h.set('pch', PD.chans.join(','));
-  } else for (const k of ['pv', 'pd', 'pch']) if (PD_HASH.get(k)) h.set(k, PD_HASH.get(k));  // 상품 데이터를 불러오기 전에는 받은 값을 유지
+    if (PD.cats.length) h.set('pcat', PD.cats.join(','));
+  } else for (const k of ['pv', 'pd', 'pch', 'pcat']) if (PD_HASH.get(k)) h.set(k, PD_HASH.get(k));  // 상품 데이터를 불러오기 전에는 받은 값을 유지
   try { history.replaceState(null, '', '#' + h); } catch (e) { /* iframe(srcdoc) 처럼 주소를 바꿀 수 없는 곳 */ }
 };
 // 지표별 계열: 채널 × (회원구분 적용 지표면 선택 구분, 아니면 전체)
@@ -775,9 +831,16 @@ $('#selAt').addEventListener('change', e => setAt(e.target.value));
 $('#dateAt').addEventListener('change', e => { const v = e.target.value, avail = fullCols().filter(c => c.cur.length); setAt(avail.length && v === avail[avail.length - 1].id ? '' : v); });
 $('#btnAtReset').addEventListener('click', () => setAt(''));
 $('#selRange').addEventListener('change', e => { S.range[S.grain] = e.target.value; render(); });
-$('#btnCsv').addEventListener('click', exportCsv);
+$('#btnCsv').addEventListener('click', () => runDownload('xlsx', ['table']));
+$('#btnKpi').addEventListener('click', () => {  // KPI 는 기본 접힘
+  const open = $('#kpis').hidden;
+  $('#kpis').hidden = !open;
+  $('#btnKpi').textContent = open ? '접기' : '펼치기';
+  $('#btnKpi').setAttribute('aria-expanded', String(open));
+});
 
 /* ---------- 요약 ---------- */
+let LAST_SUM = null;  // 엑셀 다운로드용 — 마지막으로 그린 요약
 function renderSummary(cols) {
   const k = focusIdx(cols), ch0 = selChans()[0], seg0 = selSegs()[0];
   const rowFor = m => ({ch: ch0, seg: SEG_METRICS.has(m) ? seg0 : 'T'});
@@ -802,6 +865,11 @@ function renderSummary(cols) {
       <div class="t-r"><span>${otherLbl()}</span><b class="${other.c}">${other.t}</b></div>
       <div class="t-r"><span>${baseShort()}</span><span class="${v.pe && ok(v.p) ? 'est' : ''}">${fmt(m, v.p)}</span></div></div>`;
   }).join('');
+  LAST_SUM = {tip: col.tip, rows: METRICS.map(m => {
+    const r = rowFor(m), v = evalCol(m, r, col);
+    return {m, name: MET[m].name, unit: MET[m].pct ? '%' : unitOf(m), c: v.c, p: v.p, main: fmtDelta(v.d),
+            other: oPrev && oPrev.length ? fmtDelta(delta(m, v.c, compute(m, r, oPrev, oWk).v)) : {t: '–', c: ''}};
+  })};
 }
 
 /* ---------- 차트 ---------- */
@@ -888,6 +956,17 @@ function lineChart(host, o) {
   for (const e of kept) {
     const anchor = e.x > W - R - 40 ? 'end' : (e.x < L + 40 ? 'start' : 'middle');
     s += `<text class="endl" x="${e.x.toFixed(1)}" y="${(e.y - 9).toFixed(1)}" text-anchor="${anchor}">${fmt(o.m, e.v)}</text>`;
+  }
+  if (o.single && !o.noPrev && ends.length) {  // 같은 기간의 전년 동기간 값 — 회색, 당해 라벨과 겹치지 않게 위아래로 비킨다
+    const e = ends[0], pv = SR[0].prev[e.i];
+    if (ok(pv)) {
+      const py = Y(pv), curTop = e.y - 9;
+      let ty = py >= e.y ? py + 15 : py - 9;
+      if (Math.abs(ty - curTop) < 13) ty = py >= e.y ? Math.max(ty, curTop + 26) : curTop - 13;
+      ty = Math.max(T + 8, Math.min(T + ph - 2, ty));
+      const anchor = e.x > W - R - 40 ? 'end' : (e.x < L + 40 ? 'start' : 'middle');
+      s += `<circle class="dot prev" cx="${e.x.toFixed(1)}" cy="${py.toFixed(1)}" r="3"/><text class="endl endp" x="${e.x.toFixed(1)}" y="${ty.toFixed(1)}" text-anchor="${anchor}">${fmt(o.m, pv)}</text>`;
+    }
   }
   s += `<line class="guide" x1="0" x2="0" y1="${T}" y2="${T + ph}" visibility="hidden"/>`;
   if (o.single && !o.noPrev) s += `<circle class="dot prev hp" r="4.5" visibility="hidden"/>`;
@@ -1015,25 +1094,6 @@ function renderTable(cols) {
   $('#tableTitle').textContent = `${{month: '월별', week: '주별', day: '일별'}[S.grain]} 실적 (${modeName()})`;
   const segTxt = selSegs().length > 1 || selSegs()[0] !== 'T' ? ` · 회원구분 ${selSegs().map(segLabel).join('·')}` : '';
   $('#tableDesc').textContent = `${selChans().map(chLabel).join(' · ')}${segTxt} · ${cmpDesc()}${anyEst ? ' · * 주별 raw 일할 추정' : ''}`;
-}
-
-function exportCsv() {
-  const cols = lastCols, y = S.year, q = v => `"${String(v).replace(/"/g, '""')}"`, lines = [];
-  const pv = (m, v) => fmt(m, v.p) + (v.pe && ok(v.p) ? '*' : '');
-  if (S.layout === 'block') {
-    lines.push(['지표', '단위', '구분', ...cols.map(c => `${y} ${c.label}`), ...cols.map(c => `${cmpLbl()} ${c.label}`), ...cols.map(c => `${baseLbl()} ${c.label}`)]);
-    METRICS.forEach(m => MODEL[m].forEach(r => lines.push([MET[m].name, unitOf(m), r.label,
-      ...r.vals.map(v => fmt(m, v.c)), ...r.vals.map(v => fmtDelta(v.d).t), ...r.vals.map(v => pv(m, v))])));
-  } else {
-    lines.push(['지표', '단위', '구분', '기준', ...cols.map(c => c.label)]);
-    METRICS.forEach(m => MODEL[m].forEach(r => {
-      lines.push([MET[m].name, unitOf(m), r.label, y, ...r.vals.map(v => fmt(m, v.c))]);
-      lines.push([MET[m].name, unitOf(m), r.label, cmpPop() ? CMP_NAME[S.grain] : y - 1, ...r.vals.map(v => pv(m, v))]);
-      lines.push([MET[m].name, unitOf(m), r.label, cmpLbl(), ...r.vals.map(v => fmtDelta(v.d).t)]);
-    }));
-  }
-  const blob = new Blob(['﻿' + lines.map(l => l.map(q).join(',')).join('\r\n')], {type: 'text/csv;charset=utf-8'});
-  window.FP_BACKUP.saveBlob(blob, `첫구매실적_${{month: '월별', week: '주별', day: '일별'}[S.grain]}_${modeName()}_${cmpLbl()}_${y}.csv`);
 }
 
 /* ---------- 표 드래그 합계 — 엑셀 상태 표시줄처럼 선택 영역의 합계·평균 ---------- */
@@ -1212,7 +1272,8 @@ function renderKpi() {
 // 상품 단계의 상품 × 채널 표로 보여 준다. '채널 기준'이면 채널 → BPU → … 순서. 기간은 상단 기간 단위와 일평균/누계를 그대로 따른다.
 let PRD = null, PF = null, PC = null, PSTART = 0, PVIEW = null, prodLoad = 'idle';
 const PD_HASH = new URLSearchParams(location.hash.slice(1));  // 첫 렌더가 주소를 덮어쓰기 전에 드릴 위치를 잡아 둔다
-const PD = {view: 'bpu', path: [], chans: [], sort: 'v', sel: null, metric: 'amt'};  // path = 보기 순서대로 고른 값 · chans = 채널 필터(빈 배열 = 전체)
+const PD = {view: 'bpu', path: [], chans: [], cats: [], catMore: false, sort: 'v', sel: null, metric: 'amt'};  // cats = 카테고리 필터(빈 배열 = 전체)
+let PD_TBL_OPEN = false;  // 기간별 표 펼침(기본 접힘)  // path = 보기 순서대로 고른 값 · chans = 채널 필터(빈 배열 = 전체)
 const PCODE = ['채널', '사업부(BPU)', '카테고리', '브랜드', '상품'];  // 차원 코드 0~4
 const PDIMS = {bpu: [1, 2, 3, 4], ch: [0, 1, 2, 3, 4]};
 const pDims = () => PDIMS[PD.view];
@@ -1226,6 +1287,8 @@ function applyProdHash() {  // 주소 해시 pv=보기 · pd=드릴 위치 인�
   if (pd.length && pd.length < dims.length && pd.every((k, i) => Number.isInteger(k) && k >= 0 && k < lists[dims[i]].length)) PD.path = pd;
   const pch = (h.get('pch') || '').split(',').filter(Boolean).map(Number);
   if (pch.length && pch.every(k => Number.isInteger(k) && k >= 0 && k < PRD.ch.length)) PD.chans = [...new Set(pch)].sort((a, b) => a - b);
+  const pcat = (h.get('pcat') || '').split(',').filter(Boolean).map(Number);
+  if (pcat.length && pcat.every(k => Number.isInteger(k) && k >= 0 && k < PRD.cat.length)) PD.cats = [...new Set(pcat)].sort((a, b) => a - b);
   if (['amt', 'cust'].includes(h.get('pm'))) PD.metric = h.get('pm');
 }
 function loadProducts() {  // 8MB가 넘는 파일이라 대시보드를 먼저 그리고 뒤에서 불러온다
@@ -1259,9 +1322,13 @@ function prodInit() {
     day += f[j];
     PF.d[i] = day; PF.c[i] = f[j + 1]; PF.p[i] = f[j + 2]; PF.q[i] = f[j + 3]; PF.a[i] = f[j + 4]; PF.u[i] = f[j + 5];
   }
-  const cv = PRD.cov, m = cv.length / 5;
-  PC = {n: m, d: new Uint16Array(m), c: new Int16Array(m), b: new Int16Array(m), a: new Float64Array(m)};
-  for (let i = 0, j = 0, day = 0; i < m; i++, j += 5) { day += cv[j]; PC.d[i] = day; PC.c[i] = cv[j + 1]; PC.b[i] = cv[j + 2]; PC.a[i] = cv[j + 3]; }
+  PF.off = new Uint32Array(PRD.meta.days + 1);  // 날짜별 시작 위치 — 사실은 날짜순이라 고른 날짜만 훑는다
+  for (let d = 0, i = 0; d <= PRD.meta.days; d++) { while (i < n && PF.d[i] < d) i++; PF.off[d] = i; }
+  const cv = PRD.cov, cf = PRD.meta.covFields || 5, m = cv.length / cf;  // cov = [날짜차분, 채널, BPU, 거래액, 고객수(, 상품UV)]
+  PC = {n: m, hasUv: cf >= 6, d: new Uint16Array(m), c: new Int16Array(m), b: new Int16Array(m), a: new Float64Array(m), u: new Float64Array(m), uv: new Float64Array(m)};
+  for (let i = 0, j = 0, day = 0; i < m; i++, j += cf) {
+    day += cv[j]; PC.d[i] = day; PC.c[i] = cv[j + 1]; PC.b[i] = cv[j + 2]; PC.a[i] = cv[j + 3]; PC.u[i] = cv[j + 4]; PC.uv[i] = cf >= 6 ? cv[j + 5] : 0;
+  }
 }
 const pDay = s => Math.round((toUTC(s) - PSTART) / DAY);
 const pInRange = ds => ds.length > 0 && pDay(ds[0]) >= 0 && pDay(ds[ds.length - 1]) < PRD.meta.days;
@@ -1278,23 +1345,67 @@ function pChanMask() {  // 채널 필터 — null = 전체 채널
   for (const k of PD.chans) m[k] = 1;
   return m;
 }
+let PCM = null;  // 카테고리 필터 마스크 — 렌더할 때 정해 pAgg · pSeries 가 함께 쓴다
+function pCatMask() {
+  if (!PD.cats.length) return null;
+  const m = new Uint8Array(PRD.cat.length);
+  for (const k of PD.cats) m[k] = 1;
+  return m;
+}
+let CAT_ORDER = null;
+function catOrder() {  // 카테고리 칩 순서 — 전체 기간 거래액 큰 순
+  if (CAT_ORDER) return CAT_ORDER;
+  const tot = new Float64Array(PRD.cat.length);
+  for (let i = 0; i < PF.n; i++) tot[PRD.paths[PF.p[i] * 3 + 1]] += PF.a[i];
+  return (CAT_ORDER = PRD.cat.map((_, k) => k).filter(k => tot[k] > 0).sort((a, b) => tot[b] - tot[a]));
+}
 function pAgg(code, cond, mask, chm, mix) {  // code = 묶을 차원(null = 하나로, 'd' = 날짜) · mix = 채널별 값도 모은다
-  const out = new Map(), nch = PRD.ch.length;
-  outer: for (let i = 0; i < PF.n; i++) {
-    if (!mask[PF.d[i]]) continue;
-    const c = PF.c[i];
-    if (chm && !chm[c]) continue;
-    for (let j = 0; j < cond.length; j++) if (pVal(i, cond[j][0]) !== cond[j][1]) continue outer;
-    const k = code == null ? 0 : pVal(i, code);
-    let o = out.get(k);
-    if (!o) {
-      out.set(k, o = {a: 0, u: 0});
-      if (mix) { o.ca = new Float64Array(nch); o.cu = new Float64Array(nch); }
+  const out = new Map(), nch = PRD.ch.length, cl = cond.length;
+  for (let d = 0; d < mask.length; d++) {
+    if (!mask[d]) continue;
+    rows: for (let i = PF.off[d], e = PF.off[d + 1]; i < e; i++) {
+      const c = PF.c[i];
+      if (chm && !chm[c]) continue;
+      if (PCM && !PCM[PRD.paths[PF.p[i] * 3 + 1]]) continue;
+      for (let j = 0; j < cl; j++) if (pVal(i, cond[j][0]) !== cond[j][1]) continue rows;
+      const k = code == null ? 0 : pVal(i, code);
+      let o = out.get(k);
+      if (!o) {
+        out.set(k, o = {a: 0, u: 0});
+        if (mix) { o.ca = new Float64Array(nch); o.cu = new Float64Array(nch); }
+      }
+      o.a += PF.a[i]; o.u += PF.u[i];
+      if (mix) { o.ca[c] += PF.a[i]; o.cu[c] += PF.u[i]; }
     }
-    o.a += PF.a[i]; o.u += PF.u[i];
-    if (mix) { o.ca[c] += PF.a[i]; o.cu[c] += PF.u[i]; }
   }
   return out;
+}
+function pSeries(code, cond, mask, chm, keys) {  // 기간별 표용 — Map('T' 합계 | 항목 → Map(날짜 → {a, u}))
+  const out = new Map([['T', new Map()]]), cl = cond.length;
+  for (const k of keys) out.set(k, new Map());
+  const add = (m, d, i) => { let o = m.get(d); if (!o) m.set(d, o = {a: 0, u: 0}); o.a += PF.a[i]; o.u += PF.u[i]; };
+  for (let d = 0; d < mask.length; d++) {
+    if (!mask[d]) continue;
+    rows: for (let i = PF.off[d], e = PF.off[d + 1]; i < e; i++) {
+      if (chm && !chm[PF.c[i]]) continue;
+      if (PCM && !PCM[PRD.paths[PF.p[i] * 3 + 1]]) continue;
+      for (let j = 0; j < cl; j++) if (pVal(i, cond[j][0]) !== cond[j][1]) continue rows;
+      add(out.get('T'), d, i);
+      const m = out.get(pVal(i, code));
+      if (m) add(m, d, i);
+    }
+  }
+  return out;
+}
+function pCov(mask, chSel, b) {  // 상품관점 실측 합 — chSel: 채널 목록 | -1(전체 채널 행), b: BPU | -1 → {a, u, uv}
+  const o = {a: 0, u: 0, uv: 0};
+  for (let j = 0; j < PC.n; j++) {
+    if (!mask[PC.d[j]] || PC.b[j] !== b) continue;
+    const c = PC.c[j];
+    if (chSel === -1 ? c !== -1 : !chSel.includes(c)) continue;
+    o.a += PC.a[j]; o.u += PC.u[j]; o.uv += PC.uv[j];
+  }
+  return o;
 }
 const pName = (code, k) => code === 0 ? PRD.ch[k] : code === 1 ? PRD.bpu[k] : code === 2 ? PRD.cat[k] : code === 3 ? PRD.brand[k]
   : (k < 0 ? `기타 상품 (브랜드 연간 상위 ${PRD.meta.topN} 외)` : PRD.prods[k * 2 + 1] || PRD.prods[k * 2]);
@@ -1352,6 +1463,7 @@ function renderProd() {
   if (!PRD) {
     sec.hidden = prodLoad !== 'loading';
     if (!sec.hidden) $('#pdBody').innerHTML = '<div class="nodata" style="height:120px">상품 데이터 불러오는 중…</div>';
+    renderDl();
     return;
   }
   prodInit();
@@ -1364,99 +1476,144 @@ function renderProd() {
   const fk = focusIdx(cols), fkey = fk >= 0 ? cols[fk].tip : null;
   const all = [ytd, ...opts], sel = all.find(o => o.key === PD.sel) || all.find(o => o.key === fkey) || opts[0] || ytd;  // 기본 = 상단 기준 기간
   PD.sel = sel.key;
-  const cLbl = sel === ytd ? '전년비' : cmpLbl(), noPrevLine = sel !== ytd && cmpPop();  // 연간 누계는 늘 전년 동기와 비교
+  const cLbl = sel === ytd ? '전년비' : cmpLbl(), noPrevLine = sel !== ytd && cmpPop(), baseName = sel === ytd ? '전년' : baseShort();  // 연간 누계는 늘 전년 동기와 비교
   $('#pdPeriodLbl').textContent = `${gName.slice(0, 1)} 선택`;
   $('#pdPeriod').innerHTML = all.map(o => `<option value="${esc(o.key)}">${esc(o.tip)}</option>`).join('');
   $('#pdPeriod').value = sel.key;
   document.querySelectorAll('[data-pm]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.pm === PD.metric)));
   document.querySelectorAll('[data-pv]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.pv === PD.view)));
   $('#pdDesc').textContent = PD.view === 'bpu'
-    ? '사업부(BPU) → 카테고리 → 브랜드 → 상품 · 전 채널 합산 · 행마다 채널 구성 띠 · 상품 단계는 상품 × 채널 표'
+    ? '사업부(BPU) → 카테고리 → 브랜드 → 상품 · 전 채널 합산 · 거래액 · 주문고객수 · 비교 함께'
     : '채널 → 사업부(BPU) → 카테고리 → 브랜드 → 상품';
   $('#pdChips').innerHTML = `<button type="button" class="chip" data-pch="-1" aria-pressed="${!PD.chans.length}">전체</button>`
     + PRD.ch.map((ch, k) => `<button type="button" class="chip" data-pch="${k}" aria-pressed="${PD.chans.includes(k)}" style="--sw:${chColor(ch)}"><i></i>${esc(ch)}</button>`).join('');
-  if (!pInRange(sel.cur)) { $('#pdBody').innerHTML = `<div class="nodata" style="height:120px">${Y}년 상품 데이터가 없습니다</div>`; PVIEW = null; return; }
+  const cats = catOrder(), CAT_SHOW = 12, catList = PD.catMore ? cats.slice() : cats.slice(0, CAT_SHOW);
+  for (const k of PD.cats) if (!catList.includes(k)) catList.push(k);  // 고른 카테고리는 접혀 있어도 보이게
+  $('#pdCatChips').innerHTML = `<button type="button" class="chip" data-pcat="-1" aria-pressed="${!PD.cats.length}">전체</button>`
+    + catList.map(k => `<button type="button" class="chip" data-pcat="${k}" aria-pressed="${PD.cats.includes(k)}">${esc(PRD.cat[k])}</button>`).join('')
+    + (cats.length > CAT_SHOW ? `<button type="button" class="chip more" data-pcatmore="1">${PD.catMore ? '접기' : `+${cats.length - CAT_SHOW}개 더보기`}</button>` : '');
+  if (!pInRange(sel.cur)) { $('#pdBody').innerHTML = `<div class="nodata" style="height:120px">${Y}년 상품 데이터가 없습니다</div>`; PVIEW = null; renderDl(); return; }
 
   const dims = pDims(), lv = PD.path.length, code = dims[lv];
-  const mk = PD.metric === 'amt' ? 'a' : 'u', mkc = mk === 'a' ? 'ca' : 'cu', avg = S.mode === 'avg' && S.grain !== 'day';  // 일별은 일평균 = 누계
+  const amtSel = PD.metric === 'amt', mk = amtSel ? 'a' : 'u', mkc = amtSel ? 'ca' : 'cu', avg = S.mode === 'avg' && S.grain !== 'day';  // 일별은 일평균 = 누계
   const dv = (v, ds) => v == null ? null : (avg && ds.length ? v / ds.length : v);
   const hasPrev = pInRange(sel.prev);
   const curMask = pMask([sel.cur]), prevMask = hasPrev ? pMask([sel.prev]) : null;
   const chm = pChanMask(), cond = pCond();
+  PCM = pCatMask();
   const cur = pAgg(code, cond, curMask, chm, true), prev = hasPrev ? pAgg(code, cond, prevMask, chm, false) : new Map();
-  const items = [...cur].map(([k, o]) => ({k, v: dv(o[mk], sel.cur), p: prev.has(k) ? dv(prev.get(k)[mk], sel.prev) : null,
-    mix: Array.from(o[mkc], x => dv(x, sel.cur)), sp: pSpread(o[mkc])})).filter(x => x.v !== 0);
-  const total = items.reduce((a, x) => a + x.v, 0);  // 구성비 분모 = 분산 필터 전 합계
-  const sortOn = code !== 0 && code !== 1, shown = items;
-  const other = code === 4 ? shown.find(x => x.k === -1) : null;
-  const ranked = pSort(code, shown.filter(x => x !== other));
+  const nch = PRD.ch.length, totRaw = new Float64Array(nch), items = [];
+  for (const [k, o] of cur) {
+    if (!o.a && !o.u) continue;
+    const q = prev.get(k);
+    for (let c = 0; c < nch; c++) totRaw[c] += o[mkc][c];
+    items.push({k, a: dv(o.a, sel.cur), u: dv(o.u, sel.cur), pa: q ? dv(q.a, sel.prev) : null, pu: q ? dv(q.u, sel.prev) : null,
+      mix: Array.from(o[mkc], x => dv(x, sel.cur)), sp: pSpread(o[mkc])});
+  }
+  for (const x of items) { x.v = amtSel ? x.a : x.u; x.p = amtSel ? x.pa : x.pu; }
+  let pa = null, pu = null;
+  if (hasPrev) { pa = 0; pu = 0; for (const o of prev.values()) { pa += o.a; pu += o.u; } pa = dv(pa, sel.prev); pu = dv(pu, sel.prev); }
+  const totA = items.reduce((t, x) => t + x.a, 0), totU = items.reduce((t, x) => t + x.u, 0);
+  const totalRow = {total: true, k: null, a: totA, u: totU, pa, pu, v: amtSel ? totA : totU, p: amtSel ? pa : pu, mix: Array.from(totRaw, x => dv(x, sel.cur)), sp: pSpread(totRaw)};
+  const total = totalRow.v;  // 구성비 분모
+  const sortOn = code !== 0 && code !== 1;
+  const other = code === 4 ? items.find(x => x.k === -1) : null;  // 예전 백업(상위 N만 개별)의 '기타 상품'
+  const ranked = pSort(code, items.filter(x => x !== other));
   if (sortOn && PD.sort === 'n') ranked.sort((a, b) => b.sp.n - a.sp.n || b.v - a.v);
-  const LIMIT = code === 4 ? 20 : 10;
+  const LIMIT = code === 4 ? 30 : 10;
   const top = code === 1 ? ranked : ranked.slice(0, LIMIT), rest = code === 1 ? [] : ranked.slice(LIMIT);
-  const restSum = rest.reduce((a, x) => a + x.v, 0), shownSum = shown.reduce((a, x) => a + x.v, 0);
+  const restSum = rest.reduce((t, x) => t + x.v, 0), restA = rest.reduce((t, x) => t + x.a, 0), restU = rest.reduce((t, x) => t + x.u, 0);
   const max = Math.max(1e-9, ...top.map(x => x.v), other ? other.v : 0);
   const share = v => total ? (v / total * 100).toFixed(1) + '%' : '–';
-  const yoyOf = x => hasPrev ? fmtDelta(delta('amt', x.v, x.p)) : {t: '–', c: ''};
-  const restLine = rest.length ? `<div class="pb-rest">그 외 ${rest.length.toLocaleString()}개 · ${pFmt(restSum)} (${share(restSum)})</div>` : '';
+  const yo = (c, p) => hasPrev ? fmtDelta(delta('amt', c, p)) : {t: '–', c: ''};
+  const fU = v => ok(v) ? NF.format(Math.round(v)) + '명' : '–';
+  const fPA = v => hasPrev && ok(v) ? fmtM(v) : '–', fPU = v => hasPrev && ok(v) ? fU(v) : '–';
+  const pct1 = v => ok(v) ? (v * 100).toFixed(1) + '%' : '–';
+
+  // 상품UV · 상품CR — 상품관점 실측(채널 × 사업부). 채널 · 사업부 단계에서만, 카테고리를 거르지 않았을 때
+  const uvOn = (code === 0 || code === 1) && !PCM && PC.hasUv;
+  const curCh = cond.find(c => c[0] === 0), bpuC = cond.find(c => c[0] === 1);
+  const uvScope = x => code === 0
+    ? [x.total ? (chm ? PD.chans : -1) : [x.k], bpuC ? bpuC[1] : -1]
+    : [curCh ? [curCh[1]] : chm ? PD.chans : -1, x.total ? -1 : x.k];
+  const crDelta = x => hasPrev && ok(x.cr) && ok(x.pcr) ? fmtDelta({v: (x.cr - x.pcr) * 100, unit: '%p', dp: 1}) : {t: '–', c: ''};
+  if (uvOn) for (const x of [totalRow, ...top]) {
+    const [cs, b] = uvScope(x), c1 = pCov(curMask, cs, b), c0 = hasPrev ? pCov(prevMask, cs, b) : null;
+    x.uv = c1.uv ? dv(c1.uv, sel.cur) : null; x.cr = c1.uv ? c1.u / c1.uv : null;
+    x.puv = c0 && c0.uv ? dv(c0.uv, sel.prev) : null; x.pcr = c0 && c0.uv ? c0.u / c0.uv : null;
+  }
+  const uvCells = x => uvOn
+    ? `<span class="pb-uv" title="${esc(`상품UV · ${baseName} ${ok(x.puv) ? NF.format(Math.round(x.puv)) : '–'} · ${cLbl} ${yo(x.uv, x.puv).t}`)}">${ok(x.uv) ? NF.format(Math.round(x.uv)) : '–'}</span>`
+      + `<span class="pb-cr" title="${esc(`상품관점 고객수 ÷ 상품UV · ${baseName} ${pct1(x.pcr)} · ${cLbl} ${crDelta(x).t}`)}">${pct1(x.cr)}</span>`
+    : '';
+  const restLine = rest.length ? `<div class="pb-rest">그 외 ${rest.length.toLocaleString()}개 · 거래액 ${fmtM(restA)} · 주문고객수 ${fU(restU)} (구성비 ${share(restSum)})</div>` : '';
   const empty = '<div class="nodata" style="height:80px">이 조건의 상품 데이터가 없습니다</div>';
   let body, chCols = [];
   if (code === 4) {
-    // 상품 × 채널 표 — 이 범위에서 팔린 채널만 열로, 칸 배경 막대 = 그 상품 안에서의 채널 비중
+    // 상품 × 채널 표 — 이 범위에서 팔린 채널만 열로(고른 기준 값), 칸 배경 막대 = 그 상품 안에서의 채널 비중
     chCols = PRD.ch.map((_, c) => c).filter(c => (!chm || chm[c]) && items.some(x => x.mix[c]));
-    const rowsHtml = [...top, ...(other ? [other] : [])].map(x => {
-      const name = pName(4, x.k), pcode = x.k >= 0 ? PRD.prods[x.k * 2] : '', yoy = yoyOf(x);
-      return `<tr${x === other ? ' class="pm-other"' : ''}><th class="stick s1"><span class="pn" title="${esc(name)}">${esc(name)}</span>`
+    const trow = x => {
+      const name = x.total ? '합계' : pName(4, x.k), pcode = !x.total && x.k >= 0 ? PRD.prods[x.k * 2] : '', ya = yo(x.a, x.pa), yu = yo(x.u, x.pu);
+      return `<tr class="${x.total ? 'pm-total' : x === other ? 'pm-other' : ''}"><th class="stick s1"><span class="pn" title="${esc(name)}">${esc(name)}</span>`
         + (pcode ? `<a class="pc" href="${LF_PRODUCT_URL}${encodeURIComponent(pcode)}" target="_blank" rel="noopener" title="LF몰 상품 페이지 열기">${esc(pcode)} ↗</a>` : '') + '</th>'
-        + `<td class="pm-tot" data-x="${x.v}">${pFmt(x.v)}</td>`
+        + `<td${amtSel ? ' class="pm-tot"' : ''} data-x="${x.a}">${fmtM(x.a)}</td><td class="pv2">${fPA(x.pa)}</td><td class="${ya.c}">${ya.t}</td>`
+        + `<td${amtSel ? '' : ' class="pm-tot"'} data-x="${x.u}">${fU(x.u)}</td><td class="pv2">${fPU(x.pu)}</td><td class="${yu.c}">${yu.t}</td>`
         + chCols.map(c => {
           const v = x.mix[c], r = x.v ? v / x.v : 0;
           return `<td data-ch="${c}" data-x="${v}" style="--pmw:${(Math.max(0, Math.min(1, r)) * 100).toFixed(1)}%;--pmc:${chColor(PRD.ch[c])}" title="${esc(`${PRD.ch[c]} ${pFmt(v)} · ${(r * 100).toFixed(0)}%`)}">${v ? pFmt(v) : '–'}</td>`;
         }).join('')
-        + `<td class="pb-c" title="${esc(spreadTip(x.sp))}">${spreadTxt(x.sp)}</td><td class="${yoy.c}" title="${sel === ytd ? '전년' : baseShort()} ${esc(pFmt(x.p))}">${yoy.t}</td></tr>`;
-    }).join('');
-    body = shown.length
-      ? `<div class="tbl-wrap pmat"><table class="grid"><thead><tr><th class="stick s1">상품</th><th>합계${avg ? '(일평균)' : ''}</th>${chCols.map(c => `<th><i class="sw" style="background:${chColor(PRD.ch[c])}"></i>${esc(PRD.ch[c])}</th>`).join('')}<th title="가장 많이 판 채널과 그 비중 · N개 = 판매한 채널 수">주 채널</th><th>${cLbl}</th></tr></thead><tbody>${rowsHtml}</tbody></table></div>${restLine}`
+        + `<td class="pb-c" title="${esc(spreadTip(x.sp))}">${spreadTxt(x.sp)}</td></tr>`;
+    };
+    body = items.length
+      ? `<div class="tbl-wrap pmat"><table class="grid"><thead><tr><th class="stick s1">상품</th><th>거래액${avg ? '(일평균)' : ''}</th><th>${esc(baseName)}</th><th>${esc(cLbl)}</th><th>주문고객수</th><th>${esc(baseName)}</th><th>${esc(cLbl)}</th>`
+        + `${chCols.map(c => `<th title="채널별 ${amtSel ? '거래액' : '주문고객수'}"><i class="sw" style="background:${chColor(PRD.ch[c])}"></i>${esc(PRD.ch[c])}</th>`).join('')}<th title="가장 많이 판 채널과 그 비중 · N개 = 판매한 채널 수">주 채널</th></tr></thead>`
+        + `<tbody>${[totalRow, ...top, ...(other ? [other] : [])].map(trow).join('')}</tbody></table></div>${restLine}`
       : empty;
   } else {
     const row = x => {
-      const name = pName(code, x.k), yoy = yoyOf(x);
-      return `<div class="pb" role="button" tabindex="0" data-pk="${x.k}" aria-label="${esc(name)} 하위 단계 보기">
-      <span class="pb-n"><span class="pn" title="${esc(name)}">${esc(name)}</span></span><span class="pb-t"><i style="width:${Math.max(0, x.v / max * 100).toFixed(1)}%;background:${pColor(code, x.k)}"></i></span>
-      ${mixBar(x.mix)}<span class="pb-v">${pFmt(x.v)}</span><span class="pb-s">${share(x.v)}</span>
-      <span class="pb-c" title="${esc(spreadTip(x.sp))}">${spreadTxt(x.sp)}</span><span class="pb-d ${yoy.c}">${yoy.t}</span></div>`;
+      const name = x.total ? '합계' : pName(code, x.k), ya = yo(x.a, x.pa), yu = yo(x.u, x.pu);
+      const attrs = x.total ? `class="pb pb-total${uvOn ? ' uv' : ''}"` : `class="pb${uvOn ? ' uv' : ''}" role="button" tabindex="0" data-pk="${x.k}" aria-label="${esc(name)} 하위 단계 보기"`;
+      const bar = x.total ? '<span class="pb-t pb-t0"></span>' : `<span class="pb-t"><i style="width:${Math.max(0, x.v / max * 100).toFixed(1)}%;background:${pColor(code, x.k)}"></i></span>`;
+      return `<div ${attrs}><span class="pb-n"><span class="pn" title="${esc(name)}">${esc(name)}</span></span>${bar}${mixBar(x.mix)}`
+        + `<span class="pb-v${amtSel ? '' : ' dim'}">${fmtM(x.a)}</span><span class="pb-pv">${fPA(x.pa)}</span><span class="pb-d ${ya.c}">${ya.t}</span>`
+        + `<span class="pb-v2${amtSel ? ' dim' : ''}">${fU(x.u)}</span><span class="pb-pv">${fPU(x.pu)}</span><span class="pb-d ${yu.c}">${yu.t}</span>`
+        + `${uvCells(x)}<span class="pb-s">${x.total ? '100%' : share(x.v)}</span><span class="pb-c" title="${esc(spreadTip(x.sp))}">${spreadTxt(x.sp)}</span></div>`;
     };
-    body = shown.length
-      ? `<div class="pb pb-h"><span>${PCODE[code]}</span><span></span><span>채널 구성</span><span class="pb-v">${PD.metric === 'amt' ? '거래액' : '주문고객수'}${avg ? '(일평균)' : ''}</span><span class="pb-s">구성비</span><span class="pb-c" title="가장 많이 판 채널과 그 비중 · N개 = 판매한 채널 수">주 채널</span><span class="pb-d">${cLbl}</span></div>`
-        + top.map(row).join('') + restLine
+    body = items.length
+      ? `<div class="pb pb-h${uvOn ? ' uv' : ''}"><span>${PCODE[code]}</span><span></span><span>채널 구성</span>`
+        + `<span class="pb-v${amtSel ? ' on' : ''}">거래액${avg ? '(일평균)' : ''}</span><span class="pb-pv">${esc(baseName)}</span><span class="pb-d">${esc(cLbl)}</span>`
+        + `<span class="pb-v2${amtSel ? '' : ' on'}">주문고객수</span><span class="pb-pv">${esc(baseName)}</span><span class="pb-d">${esc(cLbl)}</span>`
+        + `${uvOn ? '<span class="pb-uv" title="상품관점 상품UV">상품UV</span><span class="pb-cr" title="상품관점 고객수 ÷ 상품UV">상품CR</span>' : ''}`
+        + `<span class="pb-s">구성비</span><span class="pb-c" title="가장 많이 판 채널과 그 비중 · N개 = 판매한 채널 수">주 채널</span></div>`
+        + row(totalRow) + top.map(row).join('') + restLine
       : empty;
   }
-  const chTxt = chm ? ` (${PD.chans.map(k => PRD.ch[k]).join('·')})` : '';
-  const crumbs = `<button type="button" data-plv="0"${lv === 0 ? ' class="cur"' : ''}>전체${esc(chTxt)}</button>`
+  const chTxt = [chm ? PD.chans.map(k => PRD.ch[k]).join('·') : '', PCM ? PD.cats.map(k => PRD.cat[k]).join('·') : ''].filter(Boolean).join(' · ');
+  const crumbs = `<button type="button" data-plv="0"${lv === 0 ? ' class="cur"' : ''}>전체${chTxt ? ` (${esc(chTxt)})` : ''}</button>`
     + PD.path.map((k, i) => `<span class="sep">›</span><button type="button" data-plv="${i + 1}"${i + 1 === lv ? ' class="cur"' : ''}>${esc(pName(dims[i], k))}</button>`).join('');
-  const spreadSeg = sortOn ? `<div class="seg pd-spread" role="group" aria-label="정렬">${[['v', PD.metric === 'amt' ? '거래액 큰 순' : '고객수 많은 순'], ['n', '판매 채널 많은 순']].map(([v, t]) => `<button type="button" data-psort="${v}" aria-pressed="${PD.sort === v}">${t}</button>`).join('')}</div>` : '';
-  const lvlTxt = `${PCODE[code]} ${shown.length.toLocaleString()}개${ranked.length > LIMIT && code !== 1 ? ` 중 상위 ${LIMIT}` : ''}${code < 4 ? ' · 막대를 누르면 하위 단계' : ' · 상품코드를 누르면 LF몰 상품 페이지'}`;
+  const spreadSeg = sortOn ? `<div class="seg pd-spread" role="group" aria-label="정렬">${[['v', amtSel ? '거래액 큰 순' : '고객수 많은 순'], ['n', '판매 채널 많은 순']].map(([v, t]) => `<button type="button" data-psort="${v}" aria-pressed="${PD.sort === v}">${t}</button>`).join('')}</div>` : '';
+  const lvlTxt = `${PCODE[code]} ${items.length.toLocaleString()}개${ranked.length > LIMIT && code !== 1 ? ` 중 ${amtSel ? '거래액' : '주문고객수'} 상위 ${LIMIT}` : ''}${code < 4 ? ' · 막대를 누르면 하위 단계' : ' · 상품코드를 누르면 LF몰 상품 페이지'}`;
 
   // 옆 패널: 채널 구성(현재 범위가 어느 채널에서 팔렸는지) — 채널 기준 첫 단계에서만 사업부 구성
   const sideCode = PD.view === 'ch' && lv === 0 ? 1 : 0;
   const sideCond = sideCode === 0 ? cond.filter(c => c[0] !== 0) : cond;
   const sAll = pSort(sideCode, [...pAgg(sideCode, sideCond, curMask, PD.view === 'bpu' ? chm : null, false)].map(([k, o]) => ({k, v: dv(o[mk], sel.cur)})).filter(x => x.v));
-  const sItems = sAll.slice(0, 8), sTot = sAll.reduce((a, x) => a + x.v, 0), sMax = Math.max(1e-9, ...sItems.map(x => x.v));
-  const curCh = cond.find(c => c[0] === 0);
+  const sItems = sAll.slice(0, 8), sTot = sAll.reduce((t, x) => t + x.v, 0), sMax = Math.max(1e-9, ...sItems.map(x => x.v));
   const sideScope = sideCond.length ? sideCond.map(([cd, k]) => pName(cd, k)).join(' › ') : '전체';
   const sideTitle = sideCode === 1 ? '사업부(BPU) 구성 · 전체 채널' : `채널 구성 · ${sideScope}`;
   const sideHtml = sItems.map(x => `<div class="mb${sideCode === 0 && curCh && curCh[1] === x.k ? ' on' : ''}"><span class="pn" title="${esc(pName(sideCode, x.k))}">${esc(pName(sideCode, x.k))}</span><span class="pb-t"><i style="width:${(Math.max(0, x.v) / sMax * 100).toFixed(1)}%;background:${pColor(sideCode, x.k)}"></i></span><span class="pb-v">${pFmt(x.v)}</span><span class="pb-s">${sTot ? (x.v / sTot * 100).toFixed(0) + '%' : ''}</span></div>`).join('');
 
   // 추이: 표·차트와 같은 기간 열 — 당해 막대 + 전년(364일 전 동요일) 가로선, 막대를 누르면 그 기간 선택
   const gd = pAgg('d', cond, pMask([...cols.map(c => c.cur), ...cols.map(c => c.prev)]), chm, false);
-  const daySum = ds => ds.reduce((a, x) => { const o = gd.get(pDay(x)); return a + (o ? o[mk] : 0); }, 0);
+  const daySum = ds => ds.reduce((t, x) => { const o = gd.get(pDay(x)); return t + (o ? o[mk] : 0); }, 0);
   const tbars = cols.map(c => ({key: c.tip, tip: c.tip, label: c.label + (c.partial ? '*' : ''),
     c: pInRange(c.cur) ? dv(daySum(c.cur), c.cur) : null, p: !cmpPop() && pInRange(c.prev) ? dv(daySum(c.prev), c.prev) : null,  // 직전 기간 모드에선 전년 가로선 숨김
     on: sel === ytd || c.tip === sel.key}));
 
-  // 커버리지: 같은 채널·BPU 범위의 상품관점 실측 거래액 대비 상품 원천 합계
+  // 커버리지: 같은 채널·BPU 범위의 상품관점 실측 거래액 대비 상품 원천 합계 (카테고리를 거르면 분모가 맞지 않아 숨김)
   let coverage = null, covTxt = '';
-  if (PD.metric === 'amt') {
-    const bc = cond.find(c => c[0] === 1), sb = bc ? bc[1] : -1;
+  if (amtSel && !PCM) {
+    const sb = bpuC ? bpuC[1] : -1;
     const chList = curCh ? [curCh[1]] : chm ? PD.chans : null;  // null = 전체 채널
     let exact = 0;
     for (let j = 0; j < PC.n; j++) {
@@ -1464,26 +1621,65 @@ function renderProd() {
       const c = PC.c[j];
       if (chList ? chList.includes(c) : (sb < 0 ? c === -1 : c >= 0)) exact += PC.a[j];
     }
-    const scope = pAgg(null, [bc, curCh].filter(Boolean), curMask, curCh ? null : chm, false).get(0);
-    const scopeName = [curCh ? PRD.ch[curCh[1]] : chm ? PD.chans.map(k => PRD.ch[k]).join('·') : '전체 채널', bc ? PRD.bpu[bc[1]] : ''].filter(Boolean).join(' · ');
+    const scope = pAgg(null, [bpuC, curCh].filter(Boolean), curMask, curCh ? null : chm, false).get(0);
+    const scopeName = [curCh ? PRD.ch[curCh[1]] : chm ? PD.chans.map(k => PRD.ch[k]).join('·') : '전체 채널', bpuC ? PRD.bpu[bpuC[1]] : ''].filter(Boolean).join(' · ');
     if (exact > 0 && scope) {
       coverage = scope.a / exact;
       covTxt = ` · 상품 원천 커버리지 <b>${(coverage * 100).toFixed(1)}%</b> (${esc(scopeName)} 첫구매 거래액 ${fmtM(dv(exact, sel.cur))} 중 ${fmtM(dv(scope.a, sel.cur))})`;
     }
   }
+
+  // 기간별 표 — 합계 + 지금 단계 상위 항목 × 기간(값 · 비교). 펼쳤을 때만 계산한다
+  const tblKeys = (code === 1 ? top : top.slice(0, 15)).map(x => x.k), catMask = PCM;
+  const tableData = () => {
+    const keep = PCM;
+    PCM = catMask;
+    const cs = cols.filter(c => pInRange(c.cur));
+    const ser = pSeries(code, cond, pMask([...cs.map(c => c.cur), ...cs.map(c => c.prev)]), chm, new Set(tblKeys));
+    PCM = keep;
+    const sumDays = (m, ds) => { let t = 0; if (m) for (const x of ds) { const o = m.get(pDay(x)); if (o) t += o[mk]; } return t; };
+    const rows = [{label: '합계', total: true, key: 'T'}, ...tblKeys.map(k => ({label: pName(code, k), total: false, key: k}))].map(r => ({
+      label: r.label, total: r.total,
+      vals: cs.map(c => {
+        const m = ser.get(r.key), v = dv(sumDays(m, c.cur), c.cur), p = pInRange(c.prev) ? dv(sumDays(m, c.prev), c.prev) : null;
+        return {v, p, d: fmtDelta(delta('amt', v, p))};
+      }),
+    }));
+    return {cols: cs.map(c => ({label: c.label, tip: c.tip})), rows, basis: amtSel ? '거래액' : '주문고객수', metric: PD.metric};
+  };
+  const T = PD_TBL_OPEN ? tableData() : null;
+  const tblHtml = `<details class="pd-tbl" id="pdTbl"${PD_TBL_OPEN ? ' open' : ''}><summary>기간별 표 · ${amtSel ? '거래액' : '주문고객수'}${avg ? '(일평균)' : ''} · ${esc(cmpLbl())} 포함 · 합계 + ${PCODE[code]} 상위 ${tblKeys.length}</summary>`
+    + (T ? `<div class="tbl-wrap"><table class="grid"><thead><tr><th class="stick s1">항목</th>${T.cols.map(c => `<th class="p" title="${esc(c.tip)}">${esc(c.label)}</th>`).join('')}</tr></thead><tbody>`
+      + T.rows.map(r => `<tr class="${r.total ? 'top' : 'ch'}"><th class="stick s1"><span class="pn" title="${esc(r.label)}">${esc(r.label)}</span></th>${r.vals.map(x => `<td data-x="${x.v}"><span class="cv">${x.v ? pFmt(x.v) : '–'}</span><span class="cd ${x.d.c}">${x.d.t}</span></td>`).join('')}</tr>`).join('')
+      + '</tbody></table></div>' : '')
+    + '</details>';
+
+  const mainTxt = sp => (sp.n ? `${PRD.ch[sp.top]} ${(sp.share * 100).toFixed(0)}% · ${sp.n}개` : '–');
+  const capTop = PRD.meta.topN ? `상품은 브랜드별 연간 상위 ${PRD.meta.topN}개만 개별(나머지 '기타 상품')` : `상품은 모두 개별 보관 · 상품 단계는 ${amtSel ? '거래액' : '주문고객수'} 상위 ${code === 4 ? LIMIT : 30}개 표시`;
   $('#pdBody').innerHTML = `<div class="crumbs">${crumbs}<span class="lvl">${lvlTxt}</span>${spreadSeg}</div>
     <div class="pbars" id="pdBars">${body}</div>
+    ${tblHtml}
     <div class="pgrid">
       <div><h3>${esc(sideTitle)}</h3>${sideHtml || '<div class="nodata" style="height:60px">데이터 없음</div>'}</div>
       <div><h3>${gName} 추이${avg ? ' (일평균)' : ''}<span><i class="k"></i>${Y}</span>${cmpPop() ? '' : '<span><i class="k prev"></i>전년 동기간</span>'}<span>막대를 누르면 그 기간 선택</span></h3><div class="pd-m" id="pdTrend"></div></div>
     </div>
-    <div class="pcap">${esc(sel.tip)} · ${PD.view === 'bpu' ? '사업부 기준' : '채널 기준'} · ${chm ? `채널 ${esc(PD.chans.map(k => PRD.ch[k]).join('·'))}` : '전 채널'} · 첫구매 · 표시 ${avg ? '일평균' : '합계'} <b>${pFmt(total)}</b>${covTxt} · ${cLbl} = ${hasPrev ? `${esc(sel.ptip)}${noPrevLine ? '' : ' (364일 전 동요일)'}` : '비교 데이터 없음'} · 주 채널 = 가장 많이 판 채널과 비중 · N개 = 판매한 채널 수 (판매 채널 많은 순으로 정렬하면 여러 채널에서 팔린 항목이 위로) · 상품은 브랜드별 연간 상위 ${PRD.meta.topN}개, 나머지는 '기타 상품'${PD.metric === 'cust' ? ' · 주문고객수는 상품별 합이라 한 주문에 여러 상품이면 중복돼 실제 첫구매 고객수보다 클 수 있음' : ''}</div>`;
+    <div class="pcap">${esc(sel.tip)} · ${PD.view === 'bpu' ? '사업부 기준' : '채널 기준'} · ${chm ? `채널 ${esc(PD.chans.map(k => PRD.ch[k]).join('·'))}` : '전 채널'}${PCM ? ` · 카테고리 ${esc(PD.cats.map(k => PRD.cat[k]).join('·'))}` : ''} · 첫구매 · 표시 ${avg ? '일평균' : '합계'} 거래액 <b>${fmtM(totA)}</b> · 주문고객수 <b>${fU(totU)}</b>${covTxt} · ${cLbl} = ${hasPrev ? `${esc(sel.ptip)}${noPrevLine ? '' : ' (364일 전 동요일)'}` : '비교 데이터 없음'}${uvOn ? ' · 상품UV · CR = 상품관점 실측(채널을 여러 개 고르면 채널별 UV 합)' : ''}${PCM ? ' · 카테고리를 거르면 커버리지 · 상품UV · CR 은 숨김' : ''} · 주 채널 = 가장 많이 판 채널과 비중 · N개 = 판매한 채널 수 · ${capTop} · 주문고객수는 상품별 합이라 한 주문에 여러 상품이면 중복돼 실제 첫구매 고객수보다 클 수 있음</div>`;
   trendBars($('#pdTrend'), tbars);
-  PVIEW = {view: PD.view, lv, code, total, itemCount: items.length, shownCount: shown.length, sort: sortOn ? PD.sort : 'v',
-    top: top.map(x => ({k: x.k, v: x.v, p: x.p, mixSum: x.mix.reduce((a, y) => a + y, 0), sp: x.sp})), restCount: rest.length, restSum, other,
-    coverage, key: sel.key, cur: sel.cur, prev: sel.prev, hasPrev, optCount: all.length, trendN: tbars.length,
+  const expRows = [totalRow, ...top, ...(other ? [other] : [])].map(x => ({
+    name: x.total ? '합계' : pName(code, x.k), total: !!x.total, code: code === 4 && !x.total && x.k >= 0 ? PRD.prods[x.k * 2] : '',
+    a: x.a, pa: hasPrev ? x.pa : null, da: yo(x.a, x.pa), u: x.u, pu: hasPrev ? x.pu : null, du: yo(x.u, x.pu),
+    uv: x.uv, duv: yo(x.uv, x.puv), cr: x.cr, dcr: crDelta(x), share: total ? x.v / total : null, main: mainTxt(x.sp)}));
+  PVIEW = {view: PD.view, lv, code, total, itemCount: items.length, shownCount: items.length, sort: sortOn ? PD.sort : 'v',
+    top: top.map(x => ({k: x.k, v: x.v, p: x.p, a: x.a, u: x.u, pa: x.pa, pu: x.pu, uv: x.uv, cr: x.cr, mixSum: x.mix.reduce((t, y) => t + y, 0), sp: x.sp})),
+    restCount: rest.length, restSum, other, coverage, key: sel.key, cur: sel.cur, prev: sel.prev, hasPrev, optCount: all.length, trendN: tbars.length,
     names: top.map(x => pName(code, x.k)), sideCode, sideNames: sItems.map(x => pName(sideCode, x.k)), sideTotal: sTot, chCols,
-    crumb: PD.path.map((k, i) => pName(dims[i], k)).join(' › ')};
+    crumb: PD.path.map((k, i) => pName(dims[i], k)).join(' › '), uvOn, cats: PD.cats.slice(), limit: LIMIT,
+    totalRow: {a: totA, u: totU, pa, pu, uv: totalRow.uv, cr: totalRow.cr}, table: tableData, tblKeys,
+    exp: {tip: sel.tip, viewName: PD.view === 'bpu' ? '사업부 기준' : '채널 기준',
+      filters: `${chm ? `채널 ${PD.chans.map(k => PRD.ch[k]).join('·')}` : '전 채널'}${PCM ? ` · 카테고리 ${PD.cats.map(k => PRD.cat[k]).join('·')}` : ''}`,
+      crumb: PD.path.map((k, i) => pName(dims[i], k)).join(' › '), level: PCODE[code], avg, hasCode: code === 4, baseName, cLbl, cLbl2: cmpLbl(), uvOn,
+      basis: amtSel ? '거래액' : '주문고객수', rows: expRows, rest: rest.length ? {n: rest.length, a: restA, u: restU} : null, table: tableData}};
+  renderDl();
 }
 $('#prodSec').addEventListener('click', e => {
   const pk = e.target.closest('[data-pk]');
@@ -1503,9 +1699,21 @@ $('#prodSec').addEventListener('click', e => {
     if (PD.chans.length === PRD.ch.length) PD.chans = [];  // 모두 고르면 전체와 같다
     renderProd(); save(); return;
   }
+  const pcat = e.target.closest('[data-pcat]');
+  if (pcat && PRD) {
+    const k = +pcat.dataset.pcat;
+    PD.cats = k < 0 ? [] : PD.cats.includes(k) ? PD.cats.filter(x => x !== k) : [...PD.cats, k].sort((a, b) => a - b);
+    renderProd(); save(); return;
+  }
+  if (e.target.closest('[data-pcatmore]')) { PD.catMore = !PD.catMore; renderProd(); return; }
   const psort = e.target.closest('[data-psort]');
   if (psort) { PD.sort = psort.dataset.psort; renderProd(); }
 });
+$('#prodSec').addEventListener('toggle', e => {  // 기간별 표 — 펼칠 때 계산해서 채운다 (toggle 은 버블링이 없어 캡처로 받음)
+  if (e.target.id !== 'pdTbl' || PD_TBL_OPEN === e.target.open) return;
+  PD_TBL_OPEN = e.target.open;
+  if (PD_TBL_OPEN) renderProd();
+}, true);
 $('#prodSec').addEventListener('keydown', e => {
   if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[data-pk]')) { e.preventDefault(); e.target.click(); }
 });
@@ -1521,7 +1729,6 @@ const AX = {
   appNew:  {grp: G_NEW, name: '앱 신규 설치', type: 'flow', key: 'app|new', unit: '건'},
   pNyAdd:  {grp: G_NEW, name: '앱푸시 수신동의 (신규회원)', type: 'flow', key: 'push|ny_add', unit: '명'},
   rNy:     {grp: G_NEW, name: '앱푸시 수신동의율 (신규회원)', type: 'ratio', num: 'push|ny_add', den: 'sg|*TOTAL', pct: true, formula: '앱푸시 수신동의(신규회원) ÷ 가입자수'},
-  rApp:    {grp: G_NEW, name: '가입자 대비 앱 신규 설치율', type: 'ratio', num: 'app|new', den: 'sg|*TOTAL', pct: true, formula: '앱 신규 설치 ÷ 가입자수'},
   rConv:   {grp: G_NEW, name: '앱 신규 설치 대비 수신동의율', type: 'ratio', num: 'push|ny_add', den: 'app|new', pct: true, formula: '앱푸시 수신동의(신규회원) ÷ 앱 신규 설치'},
   pTot:    {grp: G_PUSH, name: '수신동의 회원', type: 'stock', key: 'push|tot_stock', unit: '명'},
   pEx:     {grp: G_PUSH, name: '기존 회원', type: 'stock', key: 'push|ex_stock', unit: '명', sub: true},
@@ -1577,8 +1784,8 @@ function renderApp() {
   const lastOf = key => { const a = DAILY.s[key]; if (!a) return null; for (let i = a.length - 1; i >= 0; i--) if (a[i] != null) return DAILY.dates[i]; return null; };
   const appLast = lastOf('app|new'), allLast = DAILY.dates.at(-1);
   $('#appDesc').textContent = `가입 → 앱 신규 설치 → 앱푸시 수신동의 · 모두 앱 설치자 기준 · ${col ? col.tip : '데이터 없음'} · 흐름 ${modeName()}, 회원·기기 수는 기간 말 · ${cmpDesc()}${appLast && appLast < allLast ? ` · 앱 설치 raw ~${md(appLast)}` : ''} · 채널/회원구분 필터 미적용`;
-  const TILES = ['sg', 'appNew', 'pNyAdd', 'rNy', 'rApp', 'rConv', ['pTot', 'pNy'], ['pOut', 'pExOut']];
-  const APP_DEP = new Set(['appNew', 'rApp', 'rConv']);  // 앱 설치 raw 가 있어야 계산되는 타일
+  const TILES = ['sg', 'appNew', 'pNyAdd', 'rNy', 'rConv', ['pTot', 'pNy'], ['pOut', 'pExOut']];
+  const APP_DEP = new Set(['appNew', 'rConv']);  // 앱 설치 raw 가 있어야 계산되는 타일
   $('#appTiles').innerHTML = col ? TILES.map(t => {
     const [id, subId] = Array.isArray(t) ? t : [t, null];
     const M = AX[id], c = axVal(id, col.cur), p = axVal(id, col.prev), dl = axFmtDelta(id, c, p);
@@ -1627,6 +1834,87 @@ function renderApp() {
   wrap.scrollLeft = wrap.scrollWidth;
 }
 
+/* ---------- 다운로드 — 엑셀(서식 포함 · export.js) · PDF(인쇄 창에서 'PDF로 저장') ---------- */
+const DL_PARTS = [['sum', '실적 요약', '#sumSec'], ['chart', '흐름 차트', '#chartSec'], ['table', '실적 표', '#tableSec'],
+                  ['prod', '상품 구성', '#prodSec'], ['app', '앱 설치 · 수신동의', '#appSec'], ['kpi', 'KPI', '#kpiSec']];
+const DL = {fmt: 'xlsx', parts: DL_PARTS.map(p => p[0])};
+const PRINT_HASH = new URLSearchParams(location.hash.slice(1)).get('print');  // 점검용 #print=all | #print=sum,table — 인쇄 창 없이 인쇄 모양으로만
+const partOk = (kind, k) => !(kind === 'xlsx' && k === 'chart') && !$(DL_PARTS.find(p => p[0] === k)[2]).hidden;
+function renderDl() {
+  document.querySelectorAll('[data-dlf]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.dlf === DL.fmt)));
+  const live = DL_PARTS.filter(p => partOk(DL.fmt, p[0]));
+  const allOn = live.length > 0 && live.every(p => DL.parts.includes(p[0]));
+  $('#dlParts').innerHTML = `<button type="button" class="chip" data-dlp="all" aria-pressed="${allOn}">전체</button>`
+    + DL_PARTS.map(([k, t]) => {
+      const on = partOk(DL.fmt, k), why = DL.fmt === 'xlsx' && k === 'chart' ? '엑셀은 표 데이터만 — 차트는 PDF로' : '지금 화면에 없는 영역';
+      return `<button type="button" class="chip" data-dlp="${k}" aria-pressed="${on && DL.parts.includes(k)}"${on ? '' : ` disabled title="${why}"`}>${t}</button>`;
+    }).join('');
+  $('#dlHint').textContent = DL.fmt === 'xlsx'
+    ? '영역마다 시트 하나 · 화면과 같은 기간 · 필터 · 비교 기준 · 숫자 셀 + 서식'
+    : "인쇄 창에서 대상 'PDF로 저장' 선택 · A4 가로 · 표는 3단 비교 모양";
+}
+const loadJs = src => new Promise((resolve, reject) => {
+  const el = document.createElement('script');
+  el.src = src; el.onload = resolve; el.onerror = () => reject(new Error(`${src} 를 불러오지 못했습니다`));
+  document.body.appendChild(el);
+});
+async function runDownload(kind, parts) {
+  const note = msg => { $('#dlMsg').textContent = msg; if (parts && window.__say) window.__say(msg); };
+  const pick = (parts || DL.parts).filter(k => partOk(kind, k));
+  if (!pick.length) { note('받을 영역을 고르세요'); return null; }
+  if (kind === 'pdf') { printParts(pick, true); return null; }
+  note('엑셀 만드는 중…');
+  try {
+    if (!window.FP_EXPORT) await loadJs('export.js');
+    const out = window.FP_EXPORT.xlsx(pick);
+    window.FP_BACKUP.saveBlob(out.blob, out.name);
+    note(`엑셀을 받았습니다 · 시트 ${out.sheets.join(' · ')}`);
+    return out;
+  } catch (err) {
+    note(`엑셀을 만들지 못했습니다: ${err.message}`);
+    return null;
+  }
+}
+function printParts(parts, doPrint) {  // 고른 영역만 보고용 인쇄 모양으로 — 인쇄 뒤(또는 돌려받은 함수로) 원래대로
+  const body = document.body, before = {layout: S.layout, kpi: $('#kpis').hidden, tbl: PD_TBL_OPEN};
+  body.classList.add('printing');
+  for (const [k, , selector] of DL_PARTS) $(selector).classList.toggle('pr-on', parts.includes(k));
+  const cs = getCols(false), fk = focusIdx(cs), t = new Date(), p2 = n => String(n).padStart(2, '0');
+  $('#printHead').innerHTML = `<h1>첫구매 실적 보고</h1><p>${esc(fk >= 0 ? cs[fk].tip : '')} · ${esc(modeName())} · ${esc(cmpLbl())} · 채널 ${esc(selChans().map(chLabel).join('·'))} · 회원구분 ${esc(selSegs().map(segLabel).join('·'))} · 데이터 ~${esc(DAILY.dates.at(-1) || '')} · 출력 ${t.getFullYear()}-${p2(t.getMonth() + 1)}-${p2(t.getDate())} ${p2(t.getHours())}:${p2(t.getMinutes())}</p>`;
+  $('#kpis').hidden = false;
+  if (parts.includes('prod')) PD_TBL_OPEN = true;
+  S.layout = 'stack';  // 3단 비교 = 열이 적어 A4 가로에 들어감
+  render();
+  document.querySelectorAll('.pr-on table.grid').forEach(tb => { const w = tb.scrollWidth; tb.style.zoom = w > 1040 ? (1040 / w).toFixed(3) : ''; });  // 넓은 표는 A4 가로 폭에 맞춰 줄임
+  const restore = () => {
+    body.classList.remove('printing');
+    document.querySelectorAll('.pr-on').forEach(el => el.classList.remove('pr-on'));
+    document.querySelectorAll('table.grid').forEach(tb => { tb.style.zoom = ''; });
+    $('#printHead').innerHTML = '';
+    $('#kpis').hidden = before.kpi;
+    $('#btnKpi').textContent = before.kpi ? '펼치기' : '접기';
+    S.layout = before.layout;
+    PD_TBL_OPEN = before.tbl;
+    render();
+  };
+  if (doPrint) { window.addEventListener('afterprint', restore, {once: true}); setTimeout(() => window.print(), 80); }
+  return restore;
+}
+$('#dlSec').addEventListener('click', e => {
+  const f = e.target.closest('[data-dlf]');
+  if (f) { DL.fmt = f.dataset.dlf; renderDl(); return; }
+  const p = e.target.closest('[data-dlp]');
+  if (p) {
+    if (p.disabled) return;
+    const k = p.dataset.dlp, live = DL_PARTS.map(x => x[0]).filter(x => partOk(DL.fmt, x));
+    if (k === 'all') DL.parts = live.every(x => DL.parts.includes(x)) ? [] : DL_PARTS.map(x => x[0]);
+    else DL.parts = DL.parts.includes(k) ? DL.parts.filter(x => x !== k) : [...DL.parts, k];
+    renderDl();
+    return;
+  }
+  if (e.target.closest('#btnDl')) runDownload(DL.fmt);
+});
+
 /* ---------- 렌더 ---------- */
 function render() {
   syncControls();
@@ -1639,6 +1927,7 @@ function render() {
   renderProd();
   renderApp();
   renderKpi();
+  renderDl();
   save();
 }
 $('#asof').textContent = `데이터 ~${DAILY.dates.at(-1) || LAST} · raw ${D.meta.sources.join(', ')}`;
@@ -1650,8 +1939,14 @@ new ResizeObserver(() => {
   lastW = w; cancelAnimationFrame(rq); rq = requestAnimationFrame(() => { renderCharts(lastCols); renderApp(); });
 }).observe($('#charts'));
 render();
+if (PRINT_HASH) printParts(PRINT_HASH === 'all' ? DL_PARTS.map(p => p[0]) : PRINT_HASH.split(','), false);
 window.__dash = {get state() { return S; }, render, compute, evalCol, getCols, seriesKeys, fmt, MET, METRICS, CHS, SEGS, YEARS, get MODEL() { return MODEL; },
-                 computeKpi, selStats: () => SEL.stats, selTSV, prodState: PD, renderProd, prodView: () => PVIEW, prodReady: () => !!PRD, axVal, AX, AX_ORDER, renderApp};
+                 computeKpi, selStats: () => SEL.stats, selTSV, prodState: PD, renderProd, prodView: () => PVIEW, prodReady: () => !!PRD, axVal, AX, AX_ORDER, renderApp,
+                 // 엑셀 다운로드(export.js)가 화면과 같은 값을 쓰도록
+                 get lastCols() { return lastCols; }, get lastSum() { return LAST_SUM; }, get dataMeta() { return D.meta; },
+                 focusIdx, unitOf, fmtDelta, delta, axFmtDelta, fmtAX, cmpLbl, otherLbl, baseLbl, baseShort, modeName, trNote,
+                 selChans, selSegs, chLabel, segLabel, KPI, printParts, runDownload, renderDl, DL, DL_PARTS,
+                 get prodTblOpen() { return PD_TBL_OPEN; }, set prodTblOpen(v) { PD_TBL_OPEN = !!v; }};
 loadProducts();
 };
 </script>
@@ -1670,6 +1965,7 @@ const say = msg => {
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 7000);
 };
+window.__say = say;
 function idb(mode, fn) {
   return new Promise((resolve, reject) => {
     if (!window.indexedDB) { reject(new Error('이 브라우저는 저장소(IndexedDB)를 쓸 수 없습니다')); return; }

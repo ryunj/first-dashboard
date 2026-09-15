@@ -32,6 +32,8 @@ Streamlit Cloud → New app → Repository `ryunj/first-dashboard` · Branch `ma
 |---|---|
 | `dashboard.html` | 대시보드 (`index.html` 은 이리로 이동) |
 | `merge.js` | 브라우저에서 raw 를 백업에 합치기 |
+| `export.js` | 엑셀(.xlsx) 다운로드 — 라이브러리 없이 서식 포함 파일 생성 (PDF 는 인쇄 창에서 'PDF로 저장') |
+| `app.py` · `requirements.txt` | Streamlit 배포 (Main file path `app.py`) |
 | `build_data.py` | 로컬 raw 폴더 → `data/data.js` · `data/products.js` · 백업 |
 | `kpi.example.js` | KPI 목표 형식 — `kpi.js` 로 복사해 값 입력 |
 

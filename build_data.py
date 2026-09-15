@@ -70,7 +70,7 @@ RATE_TO_COUNT = [('cr', 'sg', 'crn'), ('fpr', 'tr', 'fpn')]
 #   상품관점 일자별 실적 CSV        : 채널 × BPU 첫구매 거래액 실측(100%) → 커버리지 분모
 PRODUCT_XLSX_KEY = '조직 카테고리별'
 PRODUCT_CSV_KEY = '상품관점'
-PRODUCT_TOP_N = 20  # 브랜드 경로(BPU·카테고리·브랜드)별 연간 상위 N 상품만 개별 보관, 나머지는 '기타 상품'
+PRODUCT_TOP_N = None  # None = 모든 상품 개별 보관(기타 없음) · 숫자면 브랜드 경로(BPU·카테고리·브랜드)별 연간 상위 N 만 개별, 나머지는 '기타 상품'
 PRODUCT_COLS = {'date': '결제_일자', 'bpu': 'BPU', 'ch': 'AF대분류', 'cat': '대카테고리', 'brand': '브랜드',
                 'code': '상품코드', 'name': '상품명', 'amt': '거래액', 'cust': '주문고객수'}
 
@@ -497,7 +497,7 @@ def read_product_table(path):
 
 
 def read_product_csv(path):
-    """상품관점 일자별 실적 CSV → {(날짜, 채널, BPU): [거래액, 고객수]} — 회원구분·상품군은 *TOTAL 행만"""
+    """상품관점 일자별 실적 CSV → {(날짜, 채널, BPU): [거래액, 고객수, 상품UV]} — 회원구분·상품군은 *TOTAL 행만 (상품CR = 고객수 ÷ 상품UV)"""
     kind, periods, records = parse_crosstab(read_rows(path))
     out = {}
     if kind != 'daily':
@@ -511,12 +511,12 @@ def read_product_csv(path):
         print(f'  [건너뜀] {path.name}: 기존회원 거래액 비중 {existing / whole:.0%} → MALL 전체 파일로 보고 커버리지에서 뺌')
         return out
     for labels, vals in records:
-        met = {'일평균거래액': 0, '일평균고객수': 1}.get(labels[0])
+        met = {'일평균거래액': 0, '일평균고객수': 1, '상품UV': 2}.get(labels[0])
         if met is None or len(labels) < 5 or labels[1] != '*TOTAL' or labels[4] != '*TOTAL':
             continue
         for p, v in zip(periods, vals):
             if p is not None and v is not None:
-                out.setdefault((p, labels[2], labels[3]), [0.0, 0.0])[met] = v
+                out.setdefault((p, labels[2], labels[3]), [0.0, 0.0, 0.0])[met] = v
     return out
 
 
@@ -595,8 +595,8 @@ def build_products(dirs, last_date, verbose=True):
         o = facts[(day_idx(r[0]), ci[r[2]], p, q)]
         o[0] += r[7]
         o[1] += r[8]
-    covm = defaultdict(lambda: [0.0, 0.0])
-    for (day, ch, bpu), (a, u) in cov_daily.items():
+    covm = defaultdict(lambda: [0.0, 0.0, 0.0])
+    for (day, ch, bpu), (a, u, uv) in cov_daily.items():
         if ch != '*TOTAL' and ch not in ci:
             ci[ch] = len(chs)
             chs.append(ch)
@@ -608,6 +608,7 @@ def build_products(dirs, last_date, verbose=True):
         o = covm[(day_idx(day), -1 if ch == '*TOTAL' else ci[ch], -1 if bpu == '*TOTAL' else bi[bpu])]
         o[0] += a
         o[1] += u
+        o[2] += uv
 
     # 날짜순으로 정렬하고 날짜는 앞 행과의 차이만 저장(대부분 0) → 파일 크기 절약
     flat, prev_d = [], 0
@@ -617,14 +618,14 @@ def build_products(dirs, last_date, verbose=True):
         flat.extend([d - prev_d, c, p, q, round(a), round(u)])
         prev_d = d
     cov, prev_d = [], 0
-    for (d, c, b), (a, u) in sorted(covm.items()):
-        cov.extend([d - prev_d, c, b, round(a), round(u)])
+    for (d, c, b), (a, u, uv) in sorted(covm.items()):
+        cov.extend([d - prev_d, c, b, round(a), round(u), round(uv)])
         prev_d = d
     days = max([k[0] for k in facts] + [k[0] for k in covm]) + 1
     return {
         'meta': {'built': dt.datetime.now().strftime('%Y-%m-%d %H:%M'), 'topN': PRODUCT_TOP_N, 'start': start.isoformat(),
-                 'days': days, 'lastDate': last.isoformat(), 'rows': len(rows), 'products': len(names),
-                 'encoding': 'f=[날짜차분, 채널, 경로, 상품(-1=기타), 거래액, 주문고객수] · cov=[날짜차분, 채널(-1=전체), BPU(-1=전체), 거래액, 고객수]'},
+                 'days': days, 'lastDate': last.isoformat(), 'rows': len(rows), 'products': len(names), 'covFields': 6,
+                 'encoding': 'f=[날짜차분, 채널, 경로, 상품(-1=기타), 거래액, 주문고객수] · cov=[날짜차분, 채널(-1=전체), BPU(-1=전체), 거래액, 고객수, 상품UV]'},
         'ch': chs, 'bpu': bpus, 'cat': cats, 'brand': brands, 'paths': paths, 'prods': prods, 'f': flat, 'cov': cov,
     }
 
@@ -788,7 +789,7 @@ def main(argv):
         OUT_PROD.write_text('window.DASH_PROD = ' + json.dumps(prod, ensure_ascii=False, separators=(',', ':')) + ';\n',
                             encoding='utf-8')
         print(f'상품 원천 {prod["meta"]["rows"]:,}행 → 집계 {len(prod["f"]) // 6:,}건 · 개별 상품 {len(prod["prods"]) // 2:,}개'
-              f' (브랜드별 연간 상위 {PRODUCT_TOP_N}) → {OUT_PROD} ({OUT_PROD.stat().st_size / 1024 / 1024:.1f} MB)')
+              f' ({f"브랜드별 연간 상위 {PRODUCT_TOP_N}" if PRODUCT_TOP_N else "모든 상품 개별"}) → {OUT_PROD} ({OUT_PROD.stat().st_size / 1024 / 1024:.1f} MB)')
     else:
         print('  상품 원천 없음 — 상품 구성 섹션은 숨겨진다')
     bk = write_backup(data, prod)

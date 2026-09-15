@@ -5,9 +5,9 @@
 //     data = data.js 의 DASH_DATA 형태 · prod = products.js 의 DASH_PROD 형태 (없으면 null)
 //     files = File 목록 (CSV · 폴더째 골라도 됨). 같은 날짜 · 주차 값은 새 파일 값으로 바뀌고, None(빈 칸)은 기존 값을 지우지 않는다.
 //
-// 상품 구성: 새 파일에 든 날짜는 그날 상품 행을 통째로 바꾼다(build_data.py 와 같음).
-//   다만 '브랜드별 연간 상위 20 상품' 은 이미 합쳐진 이력(기타 상품)을 다시 풀 수 없어서, 이미 개별로 보관 중인 상품 + 빈 자리 · 기준을 넘는 새 상품만
-//   개별로 두고 나머지는 '기타 상품' 으로 넣는다. 합계(사업부 · 카테고리 · 브랜드 · 채널)는 정확히 같다.
+// 상품 구성: 새 파일에 든 날짜는 그날 상품 행을 통째로 바꾼다(build_data.py 와 같음). 모든 상품을 개별로 보관하는 백업(topN 없음)이면 새 상품도 모두 개별.
+//   예전 백업(브랜드별 연간 상위 N 만 개별)이면 이미 합쳐진 이력을 다시 풀 수 없어 이미 개별인 상품 + 빈 자리 · 기준을 넘는 새 상품만 개별로 둔다(합계는 정확).
+// 커버리지(상품관점 실측)는 [거래액, 고객수, 상품UV] — 예전 백업(상품UV 없음)은 UV 0 으로 채운다.
 (function () {
 'use strict';
 
@@ -16,7 +16,7 @@ const MEMBER = {'*TOTAL': 'T', '1_당월신규': '1', '2_기가입신규': '2', 
 const OVERALL_METRIC = {'일평균거래액': 'amt', '일평균고객수': 'cust'};
 const SIMPLE_FILES = [['당일가입 첫구매율', 'cr'], ['첫구매율', 'fpr'], ['비회원 트래픽', 'tr'], ['비회원트래픽', 'tr'], ['가입자수', 'sg']];
 const RATE_TO_COUNT = [['cr', 'sg', 'crn'], ['fpr', 'tr', 'fpn']];
-const PRODUCT_TABLE_KEY = '조직 카테고리별', PRODUCT_CSV_KEY = '상품관점', TOP_N = 20;
+const PRODUCT_TABLE_KEY = '조직 카테고리별', PRODUCT_CSV_KEY = '상품관점';
 const PRODUCT_COLS = [['date', '결제_일자'], ['bpu', 'BPU'], ['ch', 'AF대분류'], ['cat', '대카테고리'], ['brand', '브랜드'],
                       ['code', '상품코드'], ['name', '상품명'], ['amt', '거래액'], ['cust', '주문고객수']];
 const NEWMEMBER_KEY = '신규회원실적대시보드';
@@ -306,12 +306,12 @@ function readCoverage(rows, name) {  // 상품관점 일자별 CSV → Map('날�
   const whole = total('*TOTAL'), existing = total('3_기존');
   if (whole && existing / whole > MALL_EXISTING_SHARE) return {out, note: `기존회원 거래액 비중 ${Math.round(existing / whole * 100)}% → MALL 전체 파일로 보고 뺌`};
   for (const [labels, vals] of records) {
-    const met = {'일평균거래액': 0, '일평균고객수': 1}[labels[0]];
+    const met = {'일평균거래액': 0, '일평균고객수': 1, '상품UV': 2}[labels[0]];
     if (met === undefined || labels.length < 5 || labels[1] !== '*TOTAL' || labels[4] !== '*TOTAL') continue;
     vals.forEach((v, j) => {
       if (periods[j] == null || v === null) return;
       const key = `${periods[j]}|${labels[2]}|${labels[3]}`;
-      const o = out.get(key) || [0, 0];
+      const o = out.get(key) || [0, 0, 0];
       o[met] = v;
       out.set(key, o);
     });
@@ -436,7 +436,7 @@ function mergeSeries(base, S, sources) {
 }
 
 /* ---------- 합치기: 상품 구성 ---------- */
-const emptyProd = () => ({meta: {built: '', topN: TOP_N, start: null, days: 0, lastDate: null, rows: 0, products: 0}, ch: [], bpu: [], cat: [], brand: [], paths: [], prods: [], f: [], cov: []});
+const emptyProd = () => ({meta: {built: '', topN: null, covFields: 6, start: null, days: 0, lastDate: null, rows: 0, products: 0}, ch: [], bpu: [], cat: [], brand: [], paths: [], prods: [], f: [], cov: []});
 function mergeProducts(prod, byDay, cov, lastDate) {
   prod = prod || emptyProd();
   const stats = {days: [...byDay.keys()].sort(), rows: 0, newProducts: 0, covCells: cov.size};
@@ -482,11 +482,12 @@ function mergeProducts(prod, byDay, cov, lastDate) {
     m.set(code, (m.get(code) || 0) + amt);
     stats.rows++;
   }
-  const keep = new Set();
+  const keep = new Set(), topN = prod.meta.topN || null;  // null = 모든 상품 개별 보관
   for (const [yp, codes] of cand) {
+    if (!topN) { for (const [code] of codes) keep.add(`${yp}|${code}`); continue; }
     const have = kept.get(yp) || new Map();
-    const floor = have.size >= TOP_N ? [...have.values()].sort((a, b) => b - a)[TOP_N - 1] : null;
-    let slots = Math.max(0, TOP_N - have.size);
+    const floor = have.size >= topN ? [...have.values()].sort((a, b) => b - a)[topN - 1] : null;
+    let slots = Math.max(0, topN - have.size);
     const fresh = [...codes].filter(([code]) => { const q = prodIdx.get(code); return !(q !== undefined && have.has(q)); }).sort((a, b) => b[1] - a[1]);
     for (const [code] of codes) { const q = prodIdx.get(code); if (q !== undefined && have.has(q)) keep.add(`${yp}|${code}`); }
     for (const [code, amt] of fresh) {
@@ -511,18 +512,19 @@ function mergeProducts(prod, byDay, cov, lastDate) {
 
   // 커버리지(상품관점 실측) — 같은 날짜 · 채널 · BPU 칸은 새 값으로
   const covMap = new Map();
-  for (let j = 0, day = 0; j < prod.cov.length; j += 5) {
+  const cf = prod.meta.covFields || 5;
+  for (let j = 0, day = 0; j < prod.cov.length; j += cf) {
     day += prod.cov[j];
     const t = start0 + day * DAY, c = prod.cov[j + 1], b = prod.cov[j + 2];
-    covMap.set(`${t}|${c}|${b}`, [t, c, b, prod.cov[j + 3], prod.cov[j + 4]]);
+    covMap.set(`${t}|${c}|${b}`, [t, c, b, prod.cov[j + 3], prod.cov[j + 4], cf >= 6 ? prod.cov[j + 5] : 0]);
   }
   let startT = start0 !== null ? start0 : Infinity;
   for (const x of facts) if (x[0] < startT) startT = x[0];  // Math.min(...42만 개)는 호출 스택을 넘는다
-  for (const [key, [a, u]] of cov) {
+  for (const [key, [a, u, uv]] of cov) {
     const [day, ch, bpu] = key.split('|');
     const c = ch === '*TOTAL' ? -1 : idxOf('ch', ch), b = bpu === '*TOTAL' ? -1 : idxOf('bpu', bpu), t = toUTC(day);
     if (!isFinite(startT) || t < startT) continue;
-    covMap.set(`${t}|${c}|${b}`, [t, c, b, a, u]);
+    covMap.set(`${t}|${c}|${b}`, [t, c, b, a, u, uv || 0]);
   }
   if (!facts.length) return {prod: prod.f.length ? prod : null, stats};
 
@@ -540,14 +542,14 @@ function mergeProducts(prod, byDay, cov, lastDate) {
   const covArr = [...covMap.values()].sort((x, y) => x[0] - y[0] || x[1] - y[1] || x[2] - y[2]);
   const covOut = [];
   prev = 0;
-  for (const [t, c, b, a, u] of covArr) {
+  for (const [t, c, b, a, u, uv] of covArr) {
     const d = Math.round((t - startT) / DAY);
-    covOut.push(d - prev, c, b, roundTo(a, 0), roundTo(u, 0));
+    covOut.push(d - prev, c, b, roundTo(a, 0), roundTo(u, 0), roundTo(uv || 0, 0));
     prev = d;
     maxDay = Math.max(maxDay, d);
   }
   const out = {
-    meta: {...prod.meta, built: nowText(), topN: prod.meta.topN || TOP_N, start: ymd(startT), days: maxDay + 1, lastDate: lastDate || prod.meta.lastDate,
+    meta: {...prod.meta, built: nowText(), topN: prod.meta.topN || null, covFields: 6, start: ymd(startT), days: maxDay + 1, lastDate: lastDate || prod.meta.lastDate,
            rows: (prod.meta.rows || 0) + stats.rows, products: (prod.meta.products || 0) + stats.newProducts},
     ch: lists.ch, bpu: lists.bpu, cat: lists.cat, brand: lists.brand, paths, prods, f, cov: covOut,
   };
