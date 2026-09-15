@@ -1,0 +1,1885 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>첫구매 실적 대시보드</title>
+<style>
+:root{
+  color-scheme:light;
+  --page:#f6f6f3; --surface:#fcfcfb; --surface-2:#efeeea; --ink:#0b0b0b; --ink-2:#52514e; --muted:#898781;
+  --grid:#e1e0d9; --axis:#c3c2b7; --border:rgba(11,11,11,.10); --row-alt:rgba(11,11,11,.025);
+  --prev:#b3b1a9; --neg:#d03b3b; --pos:#006300; --wash:rgba(42,120,214,.07);
+  /* 채널 고유색 — 선택이 바뀌어도 채널 색은 그대로 */
+  --c1:#2a78d6; --c2:#eb6834; --c3:#1baf7a; --c4:#eda100; --c5:#e87ba4; --c6:#008300; --c7:#4a3aa7; --c8:#e34948;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --page:#0d0d0d; --surface:#1a1a19; --surface-2:#262624; --ink:#fff; --ink-2:#c3c2b7; --muted:#898781;
+    --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,.10); --row-alt:rgba(255,255,255,.03);
+    --prev:#6b6a64; --neg:#e66767; --pos:#0ca30c; --wash:rgba(57,135,229,.12);
+    --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#c98500; --c5:#d55181; --c6:#008300; --c7:#9085e9; --c8:#e66767;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --page:#0d0d0d; --surface:#1a1a19; --surface-2:#262624; --ink:#fff; --ink-2:#c3c2b7; --muted:#898781;
+  --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,.10); --row-alt:rgba(255,255,255,.03);
+  --prev:#6b6a64; --neg:#e66767; --pos:#0ca30c; --wash:rgba(57,135,229,.12);
+  --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#c98500; --c5:#d55181; --c6:#008300; --c7:#9085e9; --c8:#e66767;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;background:var(--page);color:var(--ink)}
+body{font:14px/1.5 "Pretendard","Malgun Gothic","Apple SD Gothic Neo",system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+button,select{font:inherit;color:inherit}
+.wrap{max-width:1480px;margin:0 auto;padding-inline:24px}
+@media (max-width:640px){.wrap{padding-inline:16px}.top{position:static}.menu{margin-left:0}}
+
+/* 상단 */
+.top{position:sticky;top:0;z-index:30;isolation:isolate;background:var(--page);background:color-mix(in srgb,var(--page) 94%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+/* 본문은 헤더 아래 레이어에 가둔다 — 스크롤 영역(표)의 sticky 셀·합성 레이어가 헤더 위로 올라오지 않게 */
+main.wrap{position:relative;z-index:0}
+.bar1{display:flex;align-items:center;gap:8px 28px;flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:10px;padding-block:12px}
+.brand h1{font-size:17px;font-weight:700;margin:0;letter-spacing:-.01em}
+.asof{font-size:12px;color:var(--muted)}
+.menu{display:flex;gap:22px;margin-left:auto}
+.menu button{background:none;border:0;padding:15px 0 13px;font-size:14px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer}
+.menu button[aria-pressed="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+.bar2{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding-block:6px}
+.bar2:last-child{padding-bottom:10px}
+.seg{display:inline-flex;background:var(--surface-2);border-radius:8px;padding:2px}
+.seg button{border:0;background:transparent;padding:5px 13px;border-radius:6px;font-size:13px;color:var(--ink-2);cursor:pointer;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);font-weight:600;box-shadow:0 0 0 1px var(--border),0 1px 2px rgba(0,0,0,.06)}
+.field{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.flabel{font-size:12px;color:var(--muted);min-width:48px}
+select{font-size:13px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:4px 6px;cursor:pointer}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:999px;padding:3px 11px 3px 9px;font-size:12.5px;cursor:pointer;white-space:nowrap}
+.chip i{width:8px;height:8px;border-radius:50%;background:var(--sw);opacity:.3}
+.chip svg{opacity:.35}
+.chip[aria-pressed="true"]{color:var(--ink);font-weight:600;border-color:var(--ink-2);background:var(--surface)}
+.chip[aria-pressed="true"] i,.chip[aria-pressed="true"] svg{opacity:1}
+.chip:hover{color:var(--ink)}
+.lnk{border:0;background:none;padding:2px 4px;font-size:12px;color:var(--ink-2);cursor:pointer;text-decoration:underline;text-underline-offset:2px;text-decoration-color:var(--axis)}
+.hint{font-size:11px;color:var(--muted)}
+.seg button:focus-visible,.menu button:focus-visible,select:focus-visible,.btn:focus-visible,.chip:focus-visible,.lnk:focus-visible,svg:focus-visible{outline:2px solid var(--c1);outline-offset:2px}
+
+/* 섹션 */
+.sec-h{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 12px;margin:26px 0 10px}
+.sec-h h2{font-size:14px;font-weight:700;margin:0}
+.sec-h .desc{font-size:12px;color:var(--muted)}
+.sec-h .tools{margin-left:auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px}
+.btn{border:1px solid var(--border);background:var(--surface);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;color:var(--ink-2)}
+.btn:hover{color:var(--ink)}
+
+/* 요약 타일 */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.tile{padding:12px 14px 11px;box-shadow:1px 0 0 var(--grid),0 1px 0 var(--grid)}
+.t-l{font-size:12px;color:var(--ink-2)}
+.t-v{font-size:22px;font-weight:650;letter-spacing:-.01em;margin:2px 0 4px;white-space:nowrap}
+.t-v small{font-size:12px;font-weight:500;color:var(--muted);margin-left:3px}
+.t-r{display:flex;justify-content:space-between;gap:6px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.t-r b{font-weight:600;color:var(--ink)}
+.neg{color:var(--neg)!important}
+.pos{color:var(--pos)!important}
+.est{font-style:italic}
+.est::after{content:"*";font-style:normal;color:var(--muted);margin-left:1px}
+
+/* 차트 */
+.legend{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;font-size:12px;color:var(--ink-2);margin-left:auto}
+.legend span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.legend .lg-g{color:var(--muted);font-size:11px}
+.charts{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:12px}
+.cc{padding:12px 14px 6px;min-width:0}
+.cc-t{font-size:13px;font-weight:650}
+.cc-s{font-size:11px;color:var(--muted)}
+.k{display:inline-block;width:14px;height:2px;border-radius:1px;background:var(--c1);vertical-align:middle}
+.k.prev{background:var(--prev)}
+.cc-b{position:relative;height:184px;margin-top:4px}
+.cc-b svg{display:block;overflow:visible;touch-action:pan-y}
+.gl{stroke:var(--grid);stroke-width:1;shape-rendering:crispEdges}
+.yt,.xt{fill:var(--muted);font-size:10.5px;font-variant-numeric:tabular-nums}
+.yt{text-anchor:end}
+.ln{fill:none;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.ln.prev{stroke:var(--prev)}
+.dot{stroke:var(--surface);stroke-width:2}
+.dot.prev{fill:var(--prev)}
+.endl{fill:var(--ink);font-size:11px;font-weight:600;font-variant-numeric:tabular-nums;paint-order:stroke;stroke:var(--surface);stroke-width:3px}
+.guide{stroke:var(--axis);stroke-width:1}
+.mdiv{stroke:var(--axis);stroke-width:1;shape-rendering:crispEdges}
+.mlab{fill:var(--muted);font-size:10px}
+.fband{fill:var(--wash)}
+input[type=date]{font:inherit;font-size:13px;background:var(--surface);color:inherit;border:1px solid var(--border);border-radius:6px;padding:3px 6px;cursor:pointer}
+#fAt select{max-width:230px}
+.nodata{height:100%;display:grid;place-items:center;color:var(--muted);font-size:12px}
+.tip{position:absolute;top:6px;z-index:5;pointer-events:none;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);padding:8px 10px;font-size:12px;min-width:180px;font-variant-numeric:tabular-nums}
+.tip b{display:block;font-weight:600;margin-bottom:4px}
+.tip .r{display:flex;align-items:center;gap:10px;justify-content:space-between}
+.tip .r span:first-child,.tip .r3 span:first-child{display:inline-flex;align-items:center;gap:5px;color:var(--ink-2)}
+.tip .d{border-top:1px solid var(--grid);margin-top:5px;padding-top:4px}
+.tip .r3{display:grid;grid-template-columns:1fr auto 64px;gap:10px;align-items:center}
+.tip .r3 span:not(:first-child){text-align:right}
+.tip .r3.h{color:var(--muted);font-size:11px;border-bottom:1px solid var(--grid);margin-bottom:2px}
+
+/* 표 */
+.tbl-wrap{overflow:auto;max-height:74vh;border-radius:10px}
+table.grid{border-collapse:separate;border-spacing:0;font-size:12.5px;font-variant-numeric:tabular-nums;min-width:100%}
+.grid th,.grid td{padding:5px 10px;white-space:nowrap;text-align:right;border-bottom:1px solid var(--grid)}
+.grid thead th{position:sticky;top:0;z-index:3;background:var(--surface);font-weight:600;color:var(--ink-2);font-size:12px}
+.grid thead tr.h2 th{top:29px}
+.grid thead th small{display:block;font-weight:400;color:var(--muted);font-size:10.5px;line-height:1.2}
+.grid thead th.band{text-align:center;border-bottom:1px solid var(--grid);height:29px;color:var(--ink)}
+.grid th.stick{position:sticky;left:0;z-index:2;background:var(--surface);text-align:left}
+.grid th.s2{left:var(--s1w,120px)}
+.grid thead th.stick{z-index:4}
+.grid th.p.now{color:var(--ink)}
+.grid th.p.now::after{content:"";display:block;height:2px;background:var(--c1);border-radius:1px;margin-top:2px}
+.grid td.now{background:var(--wash)}
+.grid .bk{border-left:1px solid var(--axis)}
+.grid tr.grp th,.grid tr.grp td{background:var(--surface-2);border-bottom:1px solid var(--grid);font-weight:650;color:var(--ink);text-align:left}
+.grid tr.grp th small{font-weight:400;color:var(--muted);margin-left:6px}
+.grid tbody th.stick{font-weight:500;color:var(--ink)}
+.grid tr.top th.stick{font-weight:650}
+.grid td.pv{color:var(--muted)}
+.grid tr.r-cur td,.grid tr.r-cur th,.grid tr.r-prev td,.grid tr.r-prev th{border-bottom-color:transparent}
+.grid tr.r-prev th.s2,.grid tr.r-yoy th.s2{color:var(--muted);font-weight:400}
+.grid tbody tr:not(.grp):hover td,.grid tbody tr:not(.grp):hover th.stick{background-image:linear-gradient(var(--row-alt),var(--row-alt))}
+.sw{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:0}
+/* 드래그 합계 */
+.grid td[data-v]{cursor:cell;user-select:none}
+.grid td.sel{background:color-mix(in srgb,var(--c1) 18%,var(--surface))!important;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c1) 50%,transparent)}
+#selbar{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:40;display:flex;gap:14px;align-items:center;background:var(--ink);color:var(--surface);border-radius:999px;padding:8px 18px;font-size:12.5px;box-shadow:0 6px 24px rgba(0,0,0,.25);font-variant-numeric:tabular-nums;white-space:nowrap;max-width:calc(100vw - 32px);overflow-x:auto}
+#selbar b{font-weight:650}
+#selbar .hint{opacity:.6;font-size:11.5px}
+#selbar .warn{opacity:.85}
+
+/* KPI */
+.kpis{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.55fr);gap:12px}
+.kpi-wide .kpi-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.kpi-st{display:flex;align-items:baseline;gap:6px;font-size:12.5px;font-weight:650;margin-bottom:6px}
+@media (max-width:1180px){.kpis{grid-template-columns:1fr 1fr}.kpi-wide{grid-column:1/-1}}
+@media (max-width:640px){.kpis{grid-template-columns:1fr}.kpi-wide .kpi-grid{grid-template-columns:1fr}}
+.kpi{padding:14px 16px 12px}
+.kpi-h{display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 8px;margin-bottom:10px}
+.kpi-t{font-size:13px;font-weight:650}
+.kpi-seg{font-size:11px;color:var(--ink-2);background:var(--surface-2);border-radius:4px;padding:1px 6px}
+.kpi-note{font-size:11px;color:var(--muted)}
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 18px}
+.kpi-grid>div+div{border-left:1px solid var(--grid);padding-left:18px}
+.kpi-lab{font-size:11px;color:var(--muted)}
+.kpi-v{font-size:20px;font-weight:650;margin:1px 0 6px;white-space:nowrap}
+.kpi-v small{font-size:11px;font-weight:500;color:var(--muted);margin-left:3px}
+.kpi-r{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;margin-top:2px}
+.kpi-r b{color:var(--ink);font-weight:600}
+.meter{position:relative;height:6px;border-radius:3px;background:color-mix(in srgb,var(--c1) 18%,transparent);margin:8px 0 5px}
+.meter i{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:var(--c1)}
+.meter em{position:absolute;top:-3px;bottom:-3px;width:2px;margin-left:-1px;background:var(--ink);border-radius:1px}
+.kpi-f{display:flex;justify-content:space-between;gap:8px;font-size:11.5px;color:var(--muted);border-top:1px solid var(--grid);margin-top:10px;padding-top:7px;font-variant-numeric:tabular-nums}
+.kpi-f+.kpi-f{border-top:0;margin-top:0;padding-top:2px}
+@media (max-width:640px){.kpi-grid{grid-template-columns:1fr}.kpi-grid>div+div{border-left:0;padding-left:0;border-top:1px solid var(--grid);padding-top:8px;margin-top:6px}}
+
+/* 상품 구성 드릴다운 */
+.pd{padding:14px 16px 12px}
+.crumbs{display:flex;flex-wrap:wrap;align-items:center;gap:2px 4px;font-size:13px;margin-bottom:10px}
+.crumbs button{border:0;background:none;padding:2px 6px;border-radius:5px;color:var(--c1);font-weight:600;cursor:pointer}
+.crumbs button:hover{background:var(--wash)}
+.crumbs button.cur{color:var(--ink);cursor:default}
+.crumbs .sep{color:var(--muted)}
+.crumbs .lvl{color:var(--muted);font-size:12px;margin-left:8px}
+.pb{display:grid;grid-template-columns:minmax(130px,260px) minmax(60px,1fr) minmax(90px,150px) 88px 52px 124px 66px;gap:12px;align-items:center;padding:5px 8px;border-radius:6px;font-size:12.5px;font-variant-numeric:tabular-nums}
+.pb[role=button]{cursor:pointer}
+.pb[role=button]:hover,.pb[role=button]:focus-visible{background:var(--wash);outline:none}
+.pb-h{color:var(--muted);font-size:11px;padding-block:0 4px}
+.pb-n{min-width:0;display:flex;flex-direction:column}
+.pn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pc{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
+.pc code{font-family:ui-monospace,Consolas,monospace}
+a.pc{color:var(--c1);text-decoration:none;font-family:ui-monospace,Consolas,monospace;font-size:11px;align-self:flex-start}
+a.pc:hover{text-decoration:underline}
+.mbar[data-psel]{cursor:pointer}
+.cp{border:1px solid var(--border);background:var(--surface);border-radius:4px;padding:0 6px;font-size:10.5px;color:var(--ink-2);cursor:pointer;line-height:1.6}
+.pb-t{height:14px;background:color-mix(in srgb,var(--ink) 6%,transparent);border-radius:3px;overflow:hidden}
+.pb-t i{display:block;height:100%;border-radius:0 3px 3px 0}
+.pb-v{text-align:right;font-weight:650;white-space:nowrap}
+.pb-s,.pb-d{text-align:right;font-size:11.5px;color:var(--muted);white-space:nowrap}
+.pb-other .pn{color:var(--muted)}
+.pb-rest{font-size:11.5px;color:var(--muted);padding:4px 8px 0}
+.pgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:24px;margin-top:14px;padding-top:14px;border-top:1px solid var(--grid)}
+.pgrid h3{display:flex;align-items:center;flex-wrap:wrap;gap:4px 12px;font-size:12.5px;font-weight:650;margin:0 0 8px}
+.pgrid h3 span{display:inline-flex;align-items:center;gap:5px;font-weight:400;font-size:11px;color:var(--ink-2)}
+.mb{display:grid;grid-template-columns:minmax(80px,130px) minmax(60px,1fr) 80px 38px;gap:10px;align-items:center;font-size:12px;padding:3px 0;font-variant-numeric:tabular-nums}
+.mb.on .pn{font-weight:700}
+.pd-m{position:relative;height:170px}
+.mbar{fill:var(--c1)}
+.mbar.dim{fill:color-mix(in srgb,var(--c1) 30%,transparent)}
+.mprev{stroke:var(--prev);stroke-width:2;stroke-linecap:round}
+.pcap{margin-top:12px;padding-top:9px;border-top:1px solid var(--grid);font-size:11.5px;color:var(--muted);line-height:1.65}
+.pcap b{color:var(--ink);font-weight:600}
+/* 앱 설치 · 수신동의 */
+#appSec .tiles{margin-bottom:12px}
+.app-charts{margin-bottom:12px}
+.app-note{padding:10px 14px;margin-bottom:12px;font-size:12.5px;color:var(--ink-2);border-left:3px solid var(--neg)}
+.t-tag,.ax-tag{font-size:10px;color:var(--muted);font-weight:400;margin-left:4px}
+.grid th.ax-sub{padding-left:26px;font-weight:400!important;color:var(--ink-2)!important}
+.lg-in{display:inline-flex;align-items:center;gap:4px;margin-right:8px;white-space:nowrap}
+.grid td.al,.grid th.al{text-align:left}
+/* 상품 구성 — 채널 구성 띠 · 분산 · 상품×채널 표 */
+.pd-filter{padding-block:0 8px}
+.pmix{display:flex;height:10px;border-radius:3px;overflow:hidden;background:color-mix(in srgb,var(--ink) 6%,transparent)}
+.pmix i{display:block;height:100%}
+.pb-c{text-align:right;font-size:11.5px;color:var(--ink-2);white-space:nowrap}
+.pb-c small{color:var(--muted);font-size:11px}
+.sp-one{color:var(--c2);font-weight:600}
+.sp-even{color:var(--c3);font-weight:600}
+.crumbs .pd-spread{margin-left:auto}
+.pd-spread button{padding:3px 10px;font-size:12px}
+.pmat{max-height:600px;border:1px solid var(--grid);border-radius:8px}
+.pmat .grid th.s1{min-width:220px;max-width:340px;white-space:normal;font-weight:500}
+.pmat .grid th.s1 .pn{display:block;max-width:320px}
+.pmat td[data-ch]{background-image:linear-gradient(90deg,color-mix(in srgb,var(--pmc) 20%,transparent) var(--pmw),transparent var(--pmw))}
+.pmat td.pm-tot{font-weight:650}
+.pmat tr.pm-other th .pn{color:var(--muted)}
+/* 데이터 백업 */
+.bk-tools{display:flex;gap:6px;align-items:center}
+.bk-banner{display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px;margin-top:14px;padding:9px 14px;font-size:12.5px;color:var(--ink-2);border-left:3px solid var(--c4)}
+.bk-banner b{color:var(--ink)}
+/* 새 데이터 추가 */
+dialog.mdlg{width:min(900px,calc(100vw - 32px));max-height:calc(100vh - 48px);border:1px solid var(--border);border-radius:12px;padding:18px 20px;background:var(--surface);color:var(--ink);box-shadow:0 12px 48px rgba(0,0,0,.25)}
+dialog.mdlg::backdrop{background:rgba(0,0,0,.35)}
+dialog.mdlg.drag{outline:3px dashed var(--c1);outline-offset:-8px}
+.mdlg-h{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:15px;margin-bottom:6px}
+.mdlg-d{font-size:12.5px;color:var(--ink-2);margin:0 0 10px;line-height:1.65}
+.mdlg-d ol{margin:4px 0 0;padding-left:18px}
+.mdlg-b,.mdlg-f{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.mdlg-f{justify-content:flex-end;margin-top:12px}
+.btn.primary{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.btn:disabled{opacity:.45;cursor:default}
+.msum{font-size:12.5px;line-height:1.75;margin:12px 0 8px;padding:10px 12px;background:var(--surface-2);border-radius:8px}
+.msum b{font-weight:650}
+.mlog{max-height:300px;overflow:auto;border:1px solid var(--grid);border-radius:8px}
+.mlog table{width:100%;border-collapse:collapse;font-size:12px}
+.mlog td,.mlog th{padding:4px 8px;border-bottom:1px solid var(--grid);text-align:left;vertical-align:top}
+.mlog th{position:sticky;top:0;background:var(--surface);color:var(--muted);font-weight:600}
+.mlog td:first-child{white-space:nowrap}
+.st-ok{color:var(--pos)}
+.st-skip{color:var(--muted)}
+.st-err{color:var(--neg);font-weight:600}
+.merr,.mwarn{color:var(--neg)}
+.merr{font-size:13px;margin-top:10px}
+/* 백업 끌어다 놓기 */
+body.drop-on::after{content:"백업 파일(.json.gz)을 놓으면 불러옵니다";position:fixed;inset:12px;z-index:100;display:grid;place-items:center;border:3px dashed var(--c1);border-radius:16px;background:color-mix(in srgb,var(--c1) 10%,var(--page));font-size:18px;font-weight:650;color:var(--ink);pointer-events:none}
+.drop-empty{max-width:680px;margin:64px auto;padding:36px 32px;border:2px dashed var(--axis);border-radius:14px;background:var(--surface);text-align:center;color:var(--ink-2);line-height:1.7}
+.drop-empty h2{margin:0 0 6px;font-size:20px;color:var(--ink)}
+.drop-empty p{margin:10px 0}
+.drop-empty .btn{font-size:14px;padding:7px 16px}
+@media (max-width:760px){.pb{grid-template-columns:minmax(0,1fr) 84px 50px}.pb-t,.pmix{grid-column:1/-1}.pb-d,.pb-c{display:none}.pgrid{grid-template-columns:1fr}.crumbs .pd-spread{margin-left:0}}
+
+/* 주석 */
+details.notes{margin:28px 0 40px;color:var(--ink-2);font-size:12.5px}
+details.notes summary{cursor:pointer;font-weight:600;color:var(--ink)}
+details.notes ul{margin:8px 0 0;padding-left:18px}
+details.notes li{margin:3px 0}
+.empty{padding:40px;text-align:center;color:var(--ink-2)}
+@media print{.top{position:static}.tbl-wrap{max-height:none;overflow:visible}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="bar1">
+      <div class="brand"><h1>첫구매 실적</h1><span class="asof" id="asof"></span></div>
+      <nav class="menu" aria-label="집계 방식">
+        <button data-set="mode" data-v="avg">일평균</button>
+        <button data-set="mode" data-v="sum">누계</button>
+      </nav>
+      <div class="bk-tools">
+        <button class="btn" id="btnBackup" type="button" title="지금 보고 있는 데이터(실적 · KPI · 상품)를 한 파일로 내려받기">백업 다운로드</button>
+        <button class="btn" id="btnRestore" type="button" title="내려받은 백업 파일(.json.gz)을 올려 그 데이터로 열기">백업 불러오기</button>
+        <input type="file" id="fileRestore" accept=".gz,.json,application/json,application/gzip" hidden>
+        <button class="btn" id="btnMerge" type="button" title="일자별로 내보낸 raw(CSV)를 지금 데이터에 합치기">새 데이터 추가</button>
+        <input type="file" id="fileMerge" accept=".csv,.txt,.xlsx" multiple hidden>
+        <input type="file" id="dirMerge" webkitdirectory multiple hidden>
+      </div>
+    </div>
+    <div class="bar2">
+      <div class="seg" role="group" aria-label="기간 단위">
+        <button data-set="grain" data-v="month">월별</button>
+        <button data-set="grain" data-v="week">주별</button>
+        <button data-set="grain" data-v="day">일별</button>
+      </div>
+      <label class="field">연도 <select id="selYear"></select></label>
+      <span class="field" id="fAt"><span id="atLbl">기준</span> <select id="selAt" aria-label="기준 기간"></select><input type="date" id="dateAt" aria-label="기준 날짜" hidden><button class="lnk" id="btnAtReset" type="button" hidden>최근으로</button></span>
+      <label class="field" id="fRange">범위 <select id="selRange"></select></label>
+      <span class="field">비교</span>
+      <div class="seg" role="group" aria-label="비교 기준">
+        <button data-set="cmp" data-v="yoy">전년 동기간</button>
+        <button data-set="cmp" data-v="pop" id="btnPop">전월</button>
+      </div>
+    </div>
+    <div class="bar2">
+      <span class="flabel">채널</span>
+      <div class="chips" id="chips" role="group" aria-label="채널 선택 (여러 개 선택 가능)"></div>
+      <button class="lnk" data-quick="total">전체만</button>
+      <button class="lnk" data-quick="all">채널 모두</button>
+    </div>
+    <div class="bar2">
+      <span class="flabel">회원구분</span>
+      <div class="chips" id="segChips" role="group" aria-label="회원구분 선택 (여러 개 선택 가능)"></div>
+      <button class="lnk" data-quickseg="total">전체만</button>
+      <button class="lnk" data-quickseg="all">구분 모두</button>
+      <span class="hint">거래액·고객수·객단가에 적용</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" id="main">
+  <div class="card bk-banner" id="bkBanner" role="status" hidden><span id="bkInfo"></span><button class="btn" id="btnBkClear" type="button">원래 데이터로 돌아가기</button></div>
+  <section>
+    <div class="sec-h"><h2>실적 요약</h2><span class="desc" id="sumDesc"></span></div>
+    <div class="tiles" id="tiles"></div>
+  </section>
+
+  <section>
+    <div class="sec-h"><h2 id="chartTitle">흐름</h2><span class="desc" id="chartDesc"></span><div class="legend" id="legend"></div></div>
+    <div class="charts" id="charts"></div>
+  </section>
+
+  <section>
+    <div class="sec-h">
+      <h2 id="tableTitle">실적 표</h2><span class="desc" id="tableDesc"></span>
+      <div class="tools">
+        <div class="seg" role="group" aria-label="표 형태">
+          <button data-set="layout" data-v="block">엑셀형</button>
+          <button data-set="layout" data-v="stack">3단 비교</button>
+        </div>
+        <span class="hint">숫자를 드래그하면 합계</span>
+        <button class="btn" id="btnCsv">CSV</button>
+      </div>
+    </div>
+    <div class="card tbl-wrap" id="tblWrap"></div>
+  </section>
+
+  <section id="prodSec" hidden>
+    <div class="sec-h">
+      <h2>상품 구성 · 첫구매</h2>
+      <span class="desc"><span id="pdDesc"></span> · 연도 · 월별/주별/일별 · 일평균/누계는 상단 필터를 따름 · 회원구분 미적용</span>
+      <div class="tools">
+        <div class="seg" role="group" aria-label="드릴다운 순서">
+          <button type="button" data-pv="bpu">사업부 기준</button>
+          <button type="button" data-pv="ch">채널 기준</button>
+        </div>
+        <label class="field"><span id="pdPeriodLbl">기간</span> <select id="pdPeriod"></select></label>
+        <div class="seg" role="group" aria-label="상품 구성 기준">
+          <button type="button" data-pm="amt">거래액</button>
+          <button type="button" data-pm="cust">주문고객수</button>
+        </div>
+      </div>
+    </div>
+    <div class="bar2 pd-filter"><span class="flabel">채널</span><div class="chips" id="pdChips" role="group" aria-label="상품 구성 채널 필터 (여러 개 선택 가능)"></div><span class="hint">상품 구성에만 적용 · 전체 = 모든 채널 합산</span></div>
+    <div class="card pd" id="pdBody"></div>
+  </section>
+
+  <section id="appSec" hidden>
+    <div class="sec-h"><h2>신규회원 앱 설치 · 앱푸시 수신동의</h2><span class="desc" id="appDesc"></span></div>
+    <div class="card app-note" id="appNote" hidden>앱 설치 원천(APP설치데이터)을 읽지 못해 앱 설치 지표가 비어 있습니다. 파일이 사내 DRM으로 암호화됐다면 엑셀에서 <b>CSV로 저장</b>해 같은 폴더에 넣고 <code>build_data.py</code> 를 다시 실행하세요.</div>
+    <div class="tiles" id="appTiles"></div>
+    <div class="charts app-charts" id="appCharts"></div>
+    <div class="card tbl-wrap app-tbl" id="appTbl"></div>
+  </section>
+
+  <section id="kpiSec" hidden>
+    <div class="sec-h"><h2 id="kpiTitle">KPI 목표</h2><span class="desc" id="kpiDesc"></span></div>
+    <div class="kpis" id="kpis"></div>
+  </section>
+
+  <details class="notes">
+    <summary>지표 정의 · 집계 기준</summary>
+    <ul>
+      <li><b>첫구매</b> = 전체관점 <code>_첫구매</code> raw 기준. 거래액 단위 백만원. <b>회원구분</b>(당월신규 · 기가입신규 · 기존)은 거래액 · 고객수 · 객단가에만 적용된다.</li>
+      <li><b>첫구매율</b> = 태블로 첫구매율 raw(0.1% 단위 반올림)를 트래픽으로 가중해 재집계 · <b>가입률</b> = 가입자수 ÷ 비회원 트래픽 · <b>객단가</b> = 거래액 ÷ 고객수 · <b>당일가입 CR</b> = 당일가입 첫구매자 ÷ 가입자수.</li>
+      <li><b>비회원 트래픽 기준</b> — 일별: 일 트래픽. <b>주별: 태블로 주간(중복 제거) 트래픽</b> → 트래픽 · 가입률 · 첫구매율이 내부 대시보드 주별 값과 같다. <b>월별 · 일별 누계: 일자 트래픽 합(중복 포함)</b> → 월간 중복 제거 raw가 없어서, 내부 대시보드보다 트래픽은 크고 가입률 · 첫구매율은 낮게 나온다(주 기준 약 0.8배 차이).</li>
+      <li><b>주별 · 월별</b> 거래액 · 고객수 · 가입자수는 일자 raw 합산. <b>일평균</b> = 기간 합계 ÷ 데이터 일수. <b>누계</b> = 월별은 월 합계, 주별은 주 합계, 일별은 하루 값이라 일평균과 누계가 같다.</li>
+      <li><b>주차</b> = ISO 주(월~일). 'M월 N주차' 는 그 주 목요일이 속한 달 기준(태블로 라벨과 동일).</li>
+      <li><b>전년비</b> = 364일 전 <b>동기간 · 동요일</b>. 예) 2026-09-01~13 ↔ 2025-09-02~14. 증가는 <span class="pos">+초록</span>, 감소는 <span class="neg">△빨강</span>.</li>
+      <li><b>기준 기간</b>(상단 '기준') — 월별은 월, 주별은 주차, 일별은 날짜를 고른다. 요약 타일 · 표 강조 열 · 차트 음영 · 상품 구성 기본 기간 · 앱 섹션이 모두 그 기간 기준이고, 주별 · 일별 표와 차트는 그 기간에서 끝나는 범위(8주 · 13주 …)를 보여 준다. '최근 · …'(기본)은 데이터가 있는 가장 최근 기간.</li>
+      <li><b>비교</b> — 기본 <b>전년 동기간</b>(전년비). <b>전월 · 전주 · 전일</b>로 바꾸면 표 · 차트 툴팁 · 요약 · 상품 구성 · 앱 섹션의 비교가 모두 직전 기간 대비(전월비 · 전주비 · 전일비)로 바뀐다. 전월은 진행 중인 달이면 같은 일수끼리(예: 9/1~13 ↔ 8/1~13), 끝난 달은 전월 전체. 전주 = 7일 전 같은 요일들, 전일 = 하루 전. 직전 기간 모드에선 차트의 전년선을 숨긴다(값은 툴팁). 요약 타일은 두 비교를 함께 보여 준다. KPI는 항상 전년 동기 누적.</li>
+      <li><b>채널 · 회원구분</b>은 여러 개를 고를 수 있다. 차트 선 하나(채널 1개 × 구분 1개)면 당해 vs 전년, 여러 개면 비교선 — 색 = 채널, 선 모양 = 회원구분. 요약 타일은 선택 중 첫 번째 기준.</li>
+      <li><b>*(기울임)</b> = 전년 일자 raw가 없어 전년 주별 raw를 날짜별로 나눠 채운 추정값.</li>
+      <li><b>KPI 목표</b>(맨 아래)는 <code>kpi.js</code> 의 연간 누적 목표 기준 · 필터와 무관하게 전체 채널. 첫구매 거래액 · 고객수 실적은 <b>신규회원실적대시보드의 총)첫구매 거래액 · 고객수 (당년신규)</b>. 전체관점 당월신규+기가입신규와 비슷하지만 집계 기준이 달라 조금 다르다. 목표 일평균 = 연간 목표 ÷ 연간 일수, 남은 기간 필요 일평균 = (목표 − 누적) ÷ 남은 일수. 트래픽 · 가입자 목표를 넣으면 목표 가입률도 환산된다.</li>
+      <li><b>상품 구성</b>(KPI 위) — <code>조직 카테고리별 첫구매 실적</code> xlsx의 상품 단위 첫구매 실적. <b>기본 = 사업부 기준</b>: 사업부(BPU) → 카테고리 → 브랜드 → 상품을 <b>전 채널 합산</b>으로 드릴다운하고, 채널은 ① 채널 칩(여러 개 선택 · 전체 = 모든 채널) ② 행마다 <b>채널 구성 띠</b>(마우스를 올리면 채널별 비중) ③ <b>주 채널</b>(가장 많이 판 채널 · 비중 · 판매 채널 수) ④ 상품 단계의 <b>상품 × 채널 표</b>로 본다. 카테고리 · 브랜드 · 상품 단계에서 <b>판매 채널 많은 순</b>으로 정렬하면 여러 채널에서 팔린 항목이 위로 온다(같은 수면 값 큰 순). '채널 기준'으로 바꾸면 채널 → 사업부 → 카테고리 → 브랜드 → 상품. 이 원천은 첫구매 거래액의 일부만 담고 있어 캡션에 <b>상품 원천 커버리지</b>(같은 채널·BPU의 상품관점 실측 거래액 대비)를 표시한다. 상품은 브랜드별 연간 상위 20개만 개별로, 나머지는 '기타 상품'으로 합산(합계는 그대로). 주문고객수는 상품별 합이라 한 주문에 여러 상품이면 중복된다. 기간은 상단 월별 · 주별 · 일별과 일평균/누계를 그대로 따르고(추이 막대를 누르면 그 기간 선택), 전년비는 364일 전 동기간 · 동요일. 상품코드를 누르면 LF몰 상품 페이지가 새 탭으로 열린다. 사업부는 e-영업1 → 4 순서 고정.</li>
+      <li><b>신규회원 앱 설치 · 앱푸시 수신동의</b> — 모두 <b>앱 설치자 기준</b>. 흐름 차트(가입 → 설치 → 수신동의 · 추가 · 이탈)는 진행 중인 달 · 주가 뚝 떨어져 보이지 않게 누계 메뉴에서도 일평균으로 그린다(타일 · 표는 메뉴를 따름). 가입자수 → <b>앱 신규 설치</b>(APP설치데이터 '신규 설치', 재설치 제외) → <b>앱푸시 수신동의</b>(PUSH '신규' 회원의 신규추가(+)). 기존 대시보드 '앱푸시수신동의' · '앱푸시(앱포함)/신규회원'과 같은 값이다(원천 대조로 확인). <b>앱푸시 수신동의율(신규회원)</b> = 앱푸시 수신동의 ÷ 가입자수 · <b>가입자 대비 앱 신규 설치율</b> = 앱 신규 설치 ÷ 가입자수(설치에는 비회원도 있어 100%를 넘을 수 있다) · <b>앱 신규 설치 대비 수신동의율</b> = 앱푸시 수신동의 ÷ 앱 신규 설치. 비율은 분자 · 분모가 모두 있는 날만 합산.</li>
+      <li><b>앱푸시 수신동의 회원</b>(PUSH, 앱 설치자 기준): 기존 · 신규(당년 가입) · 합계. 회원 수는 기간 말 값, 추가 · 이탈 · 순증은 기간 합(일평균 메뉴면 ÷ 일수). 이탈 · 삭제는 늘어나면 빨강. 매년 1/1은 전년 신규가 기존으로 재분류되며 추가 · 이탈에 수만 명이 섞여 추가 · 이탈에서 뺀다. 원천 오류일 — 2025-04-18(수신동의 회원 0 · 전원 이탈)은 회원 수와 흐름을 모두 빼고, 2025-04-19 · 2026-04-24(증감 칸에 재고 값)와 2026-04-25(흐름 모두 0)는 흐름만 뺐다. 2026-06-15 이후엔 수신동의 회원이 전날 + 증감과 하루 수십 명씩 어긋난다(원천 그대로 표시).</li>
+      <li><b>앱 설치 상세</b>(APP설치데이터, 2026-03~): 전체 설치 = 신규 설치 + 재설치 · 순증 설치 = 전체 설치 − 삭제 · 스토어 방문 · Push 활성 기기(기간 말 값). 원천에 같은 날짜가 두 번 나오면 뒤 행을 쓴다(7/17 · 7/18은 값이 다름). 2025년 raw가 없어 전년비는 비어 있다.</li>
+      <li><b>표시하지 않는 것</b> — 회원현황 raw(누적 · 유효 · 신규회원수)는 <b>앱 설치자 미포함 기준</b>이고 수신동의 항목이 없어 뺐다. 기존 대시보드의 '앱푸시(앱보유무관)/신규회원'은 raw(앱푸시동의_앱무관)가 없어 아직 표시할 수 없다.</li>
+      <li><b>백업</b> — 상단 <b>백업 다운로드</b>는 지금 보고 있는 데이터(실적 data.js · KPI kpi.js · 상품 products.js)를 한 파일(.json.gz)로 저장한다. <b>백업 불러오기</b>로 그 파일을 올리면 이 브라우저에 저장해 그 데이터로 다시 연다(새로고침해도 유지). 위 안내줄의 '원래 데이터로 돌아가기'를 누르면 해제. <code>build_data.py</code> 도 빌드할 때마다 <code>backup/</code> 에 같은 형식의 백업을 쓴다. 백업 파일에는 실적 원본이 담기니 사내 보안 기준에 맞게 보관할 것.</li>
+      <li><b>새 데이터 추가</b>(일자별 갱신) — 백업(또는 data.js) + 그날 내보낸 raw 폴더(예: <code>2026년/0914</code>)를 올리면 <code>build_data.py</code> 와 같은 규칙으로 합친다: 같은 날짜 · 주차는 새 값으로 바꾸고 빈 칸은 기존 값을 유지, 회원현황이 모두 0인 날(미갱신)은 건너뜀, 상품 표는 그 날짜 행을 통째로 교체. 결과표에서 파일별 읽음 · 건너뜀 · 오류와 새 날짜 · 기존 값과 달라진 칸 수를 확인한 뒤 적용한다. 상품의 '브랜드별 연간 상위 20' 개별 보관은 이미 합쳐진 이력을 다시 풀 수 없어 이미 개별인 상품 + 빈 자리 · 기준을 넘는 새 상품만 개별로 두고 나머지는 '기타 상품'(합계는 정확). 브라우저는 xlsx 를 읽지 않으니 APP설치데이터 · 조직 카테고리별 실적은 CSV로 저장해 올린다.</li>
+      <li><b>드래그 합계</b> — 실적 표에서 숫자를 드래그(또는 클릭 후 Shift+클릭)하면 아래에 합계 · 평균 · 최소 · 최대가 뜬다. 합계는 거래액 · 고객수 · 가입자수 · 트래픽처럼 더할 수 있는 같은 단위일 때만. Ctrl+C로 선택 영역 복사(엑셀에 붙여넣기), Esc로 해제.</li>
+    </ul>
+  </details>
+</main>
+
+<div id="selbar" role="status" aria-live="polite" hidden></div>
+<dialog id="mergeDlg" class="mdlg" aria-labelledby="mergeTitle">
+  <div class="mdlg-h"><b id="mergeTitle">새 데이터 추가</b><button class="lnk" id="mergeClose" type="button">닫기</button></div>
+  <div class="mdlg-d">일자별로 내보낸 raw 파일(CSV)을 올리면 지금 보고 있는 데이터<b id="mergeBase"></b>에 합칩니다. 같은 날짜 · 주차는 새 파일 값으로 바뀌고 없던 날짜는 추가되며, 빈 칸은 기존 값을 지우지 않습니다.
+    <ol><li>(처음 한 번) 전날 받아 둔 <b>백업 불러오기</b> — 또는 data.js 로 열린 상태 그대로</li><li>여기서 그날 폴더(예: 2026년/0914)를 고르거나 파일을 끌어다 놓기 → 결과 확인</li><li><b>적용하고 백업 다운로드</b> → 다음 날은 이 백업 + 새 raw 로 이어서 갱신</li></ol></div>
+  <div class="mdlg-b"><button class="btn" id="mergePickDir" type="button">폴더 고르기</button><button class="btn" id="mergePickFiles" type="button">파일 고르기</button><span class="hint">여기에 끌어다 놓아도 됩니다 · xlsx 는 엑셀에서 CSV로 저장해 올리기</span></div>
+  <div id="mergeOut"></div>
+  <div class="mdlg-f"><button class="btn" id="mergeApplyOnly" type="button" disabled>적용만</button><button class="btn primary" id="mergeApply" type="button" disabled>적용하고 백업 다운로드</button></div>
+</dialog>
+<script>
+window.__dashMain = function () {
+'use strict';
+const D = window.DASH_DATA;
+const $ = s => document.querySelector(s);
+if (!D) {
+  $('#main').innerHTML = '<div class="card empty" style="margin-top:24px">data/data.js 를 찾지 못했습니다.<br><code>python build_data.py</code> 를 먼저 실행하세요.</div>';
+  return;
+}
+
+/* ---------- 날짜 유틸 (UTC 기준 'YYYY-MM-DD') ---------- */
+const DAY = 864e5;
+const pad = n => String(n).padStart(2, '0');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+const toUTC = s => Date.UTC(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10));
+const ymd = t => new Date(t).toISOString().slice(0, 10);
+const addDays = (s, n) => ymd(toUTC(s) + n * DAY);
+const dow = s => new Date(toUTC(s)).getUTCDay();
+const WD = ['일', '월', '화', '수', '목', '금', '토'];
+const md = s => `${+s.slice(5, 7)}/${+s.slice(8, 10)}`;
+const daysInMonth = (y, m) => new Date(Date.UTC(y, m, 0)).getUTCDate();
+const span = (a, b) => { const out = []; for (let t = toUTC(a), e = toUTC(b); t <= e; t += DAY) out.push(ymd(t)); return out; };
+const NF = new Intl.NumberFormat('ko-KR', {maximumFractionDigits: 0});
+const ok = v => v != null && isFinite(v);
+const ISO = new Map();
+function isoWeek(s) {  // → {y, w, m(목요일 월), n(목요일이 그 달 몇 번째인지)}
+  let r = ISO.get(s);
+  if (r) return r;
+  const t = toUTC(s), mon = t - ((new Date(t).getUTCDay() + 6) % 7) * DAY, thu = new Date(mon + 3 * DAY);
+  const y = thu.getUTCFullYear(), jan4 = Date.UTC(y, 0, 4), w1 = jan4 - ((new Date(jan4).getUTCDay() + 6) % 7) * DAY;
+  r = {y, w: Math.round((mon - w1) / (7 * DAY)) + 1, mon: ymd(mon), m: thu.getUTCMonth() + 1, n: Math.ceil(thu.getUTCDate() / 7)};
+  ISO.set(s, r);
+  return r;
+}
+const isoMonday = (y, w) => { const jan4 = Date.UTC(y, 0, 4); return ymd(jan4 - ((new Date(jan4).getUTCDay() + 6) % 7) * DAY + (w - 1) * 7 * DAY); };
+
+/* ---------- 데이터 ---------- */
+// 일자 raw가 기본. 주별 raw는 ① 일자 raw가 없는 날짜를 채우는 보조값(합산 가능한 시리즈만) ② 주별 보기의 주간 트래픽(tru·fpnu)
+const DAILY = {s: D.daily.s, dates: D.daily.p, idx: new Map(D.daily.p.map((d, i) => [d, i]))};
+const WEEKLY = {s: D.weekly.s, p: D.weekly.p, byIso: new Map(D.weekly.p.map((p, i) => [`${p.y}-${p.w}`, i]))};
+const FALLBACK = new Set(['amt', 'cust', 'sg', 'crn']);
+const UNIQUE_TR = new Set(['tr', 'jr', 'fpr']);  // 트래픽 기반 지표 — 주별은 태블로 주간 트래픽 기준
+const wAmt = WEEKLY.s['amt|T|*TOTAL'] || [];
+const wCover = WEEKLY.p.filter((p, i) => wAmt[i] != null);
+const FIRST = [DAILY.dates[0], ...wCover.map(p => p.start)].filter(Boolean).sort()[0];
+const LAST = [DAILY.dates.at(-1), ...wCover.map(p => addDays(p.start, p.d - 1))].filter(Boolean).sort().at(-1);
+const YEARS = [...new Set([...DAILY.dates.map(d => +d.slice(0, 4)), ...wCover.map(p => p.y)])].sort((a, b) => b - a);
+
+function sumBase(base, key, dates, allowWeekly) {
+  const da = DAILY.s[key], wa = allowWeekly && FALLBACK.has(base) ? WEEKLY.s[key] : null;
+  let v = 0, n = 0, gap = false, est = false;
+  const need = new Map();
+  for (const d of dates) {
+    const i = DAILY.idx.get(d);
+    if (i != null) { const x = da ? da[i] : null; if (x != null) { v += x; n++; } continue; }
+    const iw = isoWeek(d), wi = wa ? WEEKLY.byIso.get(`${iw.y}-${iw.w}`) : undefined;
+    if (wi == null || wa[wi] == null) { gap = true; continue; }
+    need.set(wi, (need.get(wi) || 0) + 1);
+  }
+  for (const [wi, cnt] of need) {
+    // 주 합계에서 일자 raw로 이미 아는 날을 빼고, 남은 날들에 균등 배분
+    const p = WEEKLY.p[wi];
+    let known = 0, missing = 0;
+    for (let k = 0; k < p.d; k++) {
+      const i = DAILY.idx.get(addDays(p.start, k));
+      if (i == null) missing++; else if (da && da[i] != null) known += da[i];
+    }
+    if (!missing) continue;
+    v += Math.max(0, wa[wi] - known) / missing * cnt;
+    n += cnt;
+    if (cnt !== missing) est = true;  // 주의 빈 날을 전부 요청했으면 정확
+  }
+  return {v, n, est: est || (gap && n > 0)};
+}
+
+/* ---------- 지표 · 채널 · 회원구분 ---------- */
+const MET = {
+  amt:  {name: '첫구매 거래액', unit: '백만원', type: 'flow', base: 'amt'},
+  cust: {name: '첫구매 고객수', unit: '명', type: 'flow', base: 'cust'},
+  fpr:  {name: '첫구매율', type: 'ratio', pct: true, dp: 2, num: 'fpn', den: 'tr'},
+  aov:  {name: '첫구매 객단가', unit: '원', type: 'ratio', num: 'amt', den: 'cust'},
+  tr:   {name: '비회원 트래픽', unit: '', type: 'flow', base: 'tr'},
+  sg:   {name: '가입자수', unit: '명', type: 'flow', base: 'sg'},
+  jr:   {name: '가입률', type: 'ratio', pct: true, dp: 2, num: 'sg', den: 'tr'},
+  cr:   {name: '당일가입 CR', type: 'ratio', pct: true, dp: 1, num: 'crn', den: 'sg'},
+};
+const METRICS = ['amt', 'cust', 'fpr', 'aov', 'tr', 'sg', 'jr', 'cr'];
+const SEG_METRICS = new Set(['amt', 'cust', 'aov']);
+const keyOf = (base, r) => base === 'amt' || base === 'cust' ? `${base}|${r.seg}|${r.ch}` : `${base}|${r.ch}`;
+const CHS = D.meta.channels;
+const chLabel = ch => ch === '*TOTAL' ? '전체' : ch;
+const chColor = ch => `var(--c${(Math.max(0, CHS.indexOf(ch)) % 8) + 1})`;
+const SEGS = [['T', '전체'], ['1', '당월신규'], ['2', '기가입신규'], ['3', '기존']];
+const SEG_KEYS = SEGS.map(s => s[0]);
+const segLabel = s => (SEGS.find(x => x[0] === s) || SEGS[0])[1];
+const DASH = {T: '', '1': '7 4', '2': '2 3', '3': '10 3 2 3'};  // 회원구분 = 선 모양
+const dashSvg = sg => `<svg width="18" height="8" aria-hidden="true"><line x1="1" y1="4" x2="17" y2="4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-dasharray="${DASH[sg]}"/></svg>`;
+
+function compute(m, row, dates, wi) {
+  const M = MET[m];
+  if (!dates || !dates.length) return {v: null, est: false};
+  if (wi != null && UNIQUE_TR.has(m)) {
+    // 주별 보기: 태블로 주간(중복 제거) 트래픽을 분모로 — 내부 대시보드와 같은 기준
+    if (wi < 0) return {v: null, est: false};
+    const g = k => { const a = WEEKLY.s[k]; return a ? a[wi] : null; };
+    const t = g(`tru|${row.ch}`);
+    if (!t) return {v: null, est: false};
+    if (m === 'tr') return {v: S.mode === 'avg' ? t / WEEKLY.p[wi].d : t, est: false};
+    const num = g(m === 'jr' ? `sg|${row.ch}` : `fpnu|${row.ch}`);
+    return num == null ? {v: null, est: false} : {v: num / t, est: false};
+  }
+  // 요청 기간의 절반도 데이터가 없으면(예: 전년 12월 비교창에 1/1 하루만 걸림) 값을 내지 않는다
+  const enough = n => n > 0 && n * 2 >= dates.length;
+  if (M.type === 'flow') {
+    const r = sumBase(M.base, keyOf(M.base, row), dates, true);
+    return enough(r.n) ? {v: S.mode === 'avg' ? r.v / r.n : r.v, est: r.est} : {v: null, est: false};
+  }
+  // 분자·분모의 기간 커버리지를 맞추려고 둘 다 보조값이 가능할 때만 주별 raw 사용
+  const allow = FALLBACK.has(M.num) && FALLBACK.has(M.den);
+  const a = sumBase(M.num, keyOf(M.num, row), dates, allow), b = sumBase(M.den, keyOf(M.den, row), dates, allow);
+  return enough(a.n) && enough(b.n) && b.v ? {v: a.v / b.v, est: a.est || b.est} : {v: null, est: false};
+}
+function delta(m, c, p) {
+  if (!ok(c) || !ok(p)) return null;
+  const M = MET[m];
+  if (M.pct) return {v: (c - p) * 100, unit: '%p', dp: M.dp};
+  if (p <= 0) return null;
+  return {v: (c / p - 1) * 100, unit: '%', dp: 1};
+}
+const wkOf = (col, which) => col.wk ? (col.wk[which] ?? -1) : null;
+function evalCol(m, row, col) {
+  const c = compute(m, row, col.cur, wkOf(col, 'cur')), p = compute(m, row, col.prev, wkOf(col, 'prev'));
+  return {c: c.v, p: p.v, ce: c.est, pe: p.est, d: delta(m, c.v, p.v)};
+}
+
+/* ---------- 포맷 ---------- */
+function fmt(m, v) {
+  if (!ok(v)) return '–';
+  const M = MET[m];
+  if (M.pct) return (v * 100).toFixed(M.dp) + '%';
+  const x = m === 'amt' ? v / 1e6 : v;
+  if (Math.abs(x) < 10 && Math.abs(x - Math.round(x)) > 1e-9) return x.toFixed(1);
+  return NF.format(Math.round(x));
+}
+function fmtDelta(d) {  // 증가 = +초록, 감소 = △빨강
+  if (!d) return {t: '–', c: ''};
+  const s = Math.abs(d.v).toFixed(d.dp);
+  if (+s === 0) return {t: s + d.unit, c: ''};
+  return d.v < 0 ? {t: '△' + s + d.unit, c: 'neg'} : {t: '+' + s + d.unit, c: 'pos'};
+}
+const unitOf = m => MET[m].pct ? '%' : (MET[m].unit || '');
+// 드래그 합계용 원값: 화면에 보이는 단위의 숫자 + 단위 키 (같은 단위끼리만 합산)
+const SEL_UNIT = {amt: '백만원', cust: '명', sg: '명', tr: '트래픽', aov: '원'};
+const rawOf = (m, v) => ok(v) ? [+(MET[m].pct ? v * 100 : m === 'amt' ? v / 1e6 : v).toFixed(6), MET[m].pct ? '%' : SEL_UNIT[m]] : null;
+
+/* ---------- 상태 ---------- */
+const DEF = {mode: 'avg', grain: 'month', year: YEARS[0], chans: ['*TOTAL'], segs: ['T'],
+             range: {week: '13', day: '30'}, layout: 'block', cmp: 'yoy', at: {month: '', week: '', day: ''}};
+const STORE_KEY = 'fp-dashboard-v4';
+const ALLOWED = {mode: ['avg', 'sum'], grain: ['month', 'week', 'day'], layout: ['block', 'stack'], cmp: ['yoy', 'pop']};
+let S = (() => {
+  let s = JSON.parse(JSON.stringify(DEF));
+  try {
+    const x = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+    if (x) s = {...s, ...x, range: {...s.range, ...(x.range || {})}, at: {...s.at, ...(x.at || {})}};
+  } catch (e) { /* 저장소 사용 불가 — 기본값 */ }
+  // 주소 해시(#grain=week&chans=*TOTAL,직접&segs=T,1 …)가 있으면 우선 — 보기 공유·즐겨찾기용
+  const h = new URLSearchParams(location.hash.slice(1));
+  for (const k of Object.keys(ALLOWED)) if (h.has(k)) s[k] = h.get(k);
+  if (h.has('year')) s.year = +h.get('year');
+  if (h.has('chans')) s.chans = h.get('chans').split(',');
+  if (h.has('segs')) s.segs = h.get('segs').split(',');
+  if (h.get('range') && s.grain !== 'month') s.range[s.grain] = h.get('range');
+  if (h.get('at')) s.at[s.grain] = h.get('at');
+  // 기준 기간 id: 월 YYYY-MM · 주 YYYY-Www · 일 YYYY-MM-DD (없는 기간이면 화면에서 '최근'으로 처리)
+  const AT_RE = {month: /^\d{4}-\d{2}$/, week: /^\d{4}-W\d{2}$/, day: /^\d{4}-\d{2}-\d{2}$/};
+  s.at = Object.fromEntries(Object.keys(AT_RE).map(g => [g, typeof (s.at || {})[g] === 'string' && AT_RE[g].test(s.at[g]) ? s.at[g] : '']));
+  for (const [k, vs] of Object.entries(ALLOWED)) if (!vs.includes(s[k])) s[k] = DEF[k];
+  if (!YEARS.includes(s.year)) s.year = DEF.year;
+  s.chans = CHS.filter(c => (s.chans || []).includes(c));
+  if (!s.chans.length) s.chans = DEF.chans.slice();
+  s.segs = SEG_KEYS.filter(c => (s.segs || []).includes(c));
+  if (!s.segs.length) s.segs = DEF.segs.slice();
+  return s;
+})();
+const selChans = () => CHS.filter(c => S.chans.includes(c));
+const selSegs = () => SEG_KEYS.filter(k => S.segs.includes(k));
+const save = () => {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) { /* 무시 */ }
+  if (/selftest/.test(location.hash)) return;
+  const h = new URLSearchParams({mode: S.mode, grain: S.grain, year: S.year, chans: selChans().join(','), segs: selSegs().join(','), layout: S.layout});
+  if (S.grain !== 'month') h.set('range', S.range[S.grain]);
+  if (S.cmp !== 'yoy') h.set('cmp', S.cmp);
+  if (S.at[S.grain]) h.set('at', S.at[S.grain]);
+  if (PRD) {
+    if (PD.view !== 'bpu') h.set('pv', PD.view);
+    if (PD.path.length) h.set('pd', PD.path.join(','));
+    if (PD.chans.length) h.set('pch', PD.chans.join(','));
+  } else for (const k of ['pv', 'pd', 'pch']) if (PD_HASH.get(k)) h.set(k, PD_HASH.get(k));  // 상품 데이터를 불러오기 전에는 받은 값을 유지
+  history.replaceState(null, '', '#' + h);
+};
+// 지표별 계열: 채널 × (회원구분 적용 지표면 선택 구분, 아니면 전체)
+const seriesKeys = m => { const out = []; for (const ch of selChans()) for (const seg of (SEG_METRICS.has(m) ? selSegs() : ['T'])) out.push({ch, seg}); return out; };
+const multiSeg = m => SEG_METRICS.has(m) && selSegs().length > 1;
+const rowLabel = (m, r) => chLabel(r.ch) + (SEG_METRICS.has(m) && (selSegs().length > 1 || r.seg !== 'T') ? ` · ${segLabel(r.seg)}` : '');
+const modeName = () => S.grain === 'day' ? '일평균 = 누계' : S.mode === 'avg' ? '일평균' : {month: '월 합계', week: '주 합계'}[S.grain];
+const trNote = m => UNIQUE_TR.has(m) && S.grain === 'month' ? '일자 합산 트래픽 기준' : '';
+
+/* ---------- 기간 열: 각 열 = 당해 날짜 목록(cur) + 비교 날짜 목록(prev) ----------
+   비교 기준 S.cmp — yoy: 364일 전 동기간·동요일(prevY) · pop: 직전 기간 = 전월·전주·전일(prevP). 두 쪽을 다 들고 있고 선택한 쪽을 prev 로 쓴다. */
+const clip = dates => dates.filter(d => d >= FIRST && d <= LAST);
+const back = dates => dates.map(d => addDays(d, -364));
+const rangeTxt = ds => ds.length ? (ds.length === 1 ? `${ds[0]}` : `${ds[0]} ~ ${md(ds.at(-1))}`) : '';
+const CMP_NAME = {month: '전월', week: '전주', day: '전일'};
+const cmpPop = () => S.cmp === 'pop';
+const cmpLbl = () => cmpPop() ? `${CMP_NAME[S.grain]}비` : '전년비';          // 선택한 비교
+const otherLbl = () => cmpPop() ? '전년비' : `${CMP_NAME[S.grain]}비`;        // 나머지 비교(요약 타일 둘째 줄)
+const baseShort = () => cmpPop() ? CMP_NAME[S.grain] : '전년';                 // 비교 기간 값 이름
+const baseLbl = () => cmpPop() ? CMP_NAME[S.grain] : `${S.year - 1} 동기간`;
+const cmpDesc = () => cmpPop()
+  ? `${cmpLbl()} = 직전 ${{month: '달', week: '주', day: '날'}[S.grain]} 대비${S.grain === 'month' ? '(진행 중인 달은 같은 일수끼리)' : ''}`
+  : '전년비 = 364일 전 동기간·동요일';
+function pickCmp(col) {  // 선택한 비교 기준을 prev · ptip · wk.prev 에 싣는다
+  const pop = cmpPop();
+  col.prev = pop ? col.prevP : col.prevY;
+  col.ptip = pop ? col.ptipP : col.ptipY;
+  if (col.wk) col.wk = {cur: col.wk.cur, prev: pop ? col.wkP : col.wkY};
+  return col;
+}
+function monthCols(y) {
+  const cols = [];
+  for (let m = 1; m <= 12; m++) {
+    const all = span(`${y}-${pad(m)}-01`, `${y}-${pad(m)}-${pad(daysInMonth(y, m))}`), cur = clip(all);
+    const partial = cur.length > 0 && cur.length < all.length && cur.at(-1) === LAST;
+    const sub = partial ? `~${+LAST.slice(8)}일` : '';
+    // 전년: 당해 데이터가 아직 없는 달도 전년 흐름은 보이도록 전년 한 달치를 채운다 (전년비는 비어 있음)
+    const prevY = back(cur.length ? cur : all);
+    // 전월: 진행 중인 달은 전월의 같은 일수, 끝난 달은 전월 전체, 데이터 없는 달은 비움
+    const py = m === 1 ? y - 1 : y, pm = m === 1 ? 12 : m - 1;
+    const allP = span(`${py}-${pad(pm)}-01`, `${py}-${pad(pm)}-${pad(daysInMonth(py, pm))}`);
+    const prevP = !cur.length ? [] : partial ? allP.slice(0, Math.min(cur.length, allP.length)) : allP;
+    cols.push(pickCmp({id: `${y}-${pad(m)}`, label: `${m}월`, sub, partial, cur, prevY, prevP,
+      opt: `${m}월${partial ? ` (1~${+LAST.slice(8)}일)` : ''}`,
+      tip: `${y}년 ${m}월${partial ? ` (1~${+LAST.slice(8)}일)` : ''}`, ptipY: rangeTxt(prevY),
+      ptipP: prevP.length ? `${py}년 ${pm}월${partial ? ` (1~${prevP.length}일)` : ''}` : ''}));
+  }
+  return cols;
+}
+function weekCols(y) {
+  const cols = [];
+  for (let mon = isoMonday(y, 1); isoWeek(mon).y === y && mon <= LAST; mon = addDays(mon, 7)) {
+    const cur = clip(span(mon, addDays(mon, 6)));
+    if (!cur.length) continue;
+    const w = isoWeek(mon), pv = back(cur), pw = isoWeek(pv[0]), pp = cur.map(d => addDays(d, -7)), qw = isoWeek(pp[0]);
+    cols.push(pickCmp({id: `${w.y}-W${pad(w.w)}`, label: `${w.m}월 ${w.n}주`, sub: `${md(mon)}~`, partial: cur.length < 7, cur, prevY: pv, prevP: pp,
+      wk: {cur: WEEKLY.byIso.get(`${w.y}-${w.w}`)}, wkY: WEEKLY.byIso.get(`${pw.y}-${pw.w}`), wkP: WEEKLY.byIso.get(`${qw.y}-${qw.w}`),
+      opt: `${w.m}월 ${w.n}주차 (${md(cur[0])}~${md(cur.at(-1))})`,
+      tip: `${w.y}년 ${w.m}월 ${w.n}주차 (${md(cur[0])}~${md(cur.at(-1))})`,
+      ptipY: `${pw.y}년 ${pw.m}월 ${pw.n}주차 (${md(pv[0])}~${md(pv.at(-1))})`,
+      ptipP: `${qw.y}년 ${qw.m}월 ${qw.n}주차 (${md(pp[0])}~${md(pp.at(-1))})`}));
+  }
+  return cols;
+}
+function dayCols(y) {
+  // 하루는 일평균 = 누계 — 일평균/누계 메뉴와 상관없이 그날 값 하나
+  return clip(span(`${y}-01-01`, `${y}-12-31`)).map(d => {
+    const pd = addDays(d, -364), qd = addDays(d, -1);
+    return pickCmp({id: d, date: d, label: md(d), sub: WD[dow(d)], partial: false, cur: [d], prevY: [pd], prevP: [qd],
+      opt: `${d} (${WD[dow(d)]})`, tip: `${d} (${WD[dow(d)]})`, ptipY: `${pd} (${WD[dow(pd)]})`, ptipP: `${qd} (${WD[dow(qd)]})`});
+  });
+}
+const latestIdx = cols => { for (let k = cols.length - 1; k >= 0; k--) if (cols[k].cur.length) return k; return -1; };
+function focusIdx(cols) {  // 기준 기간(S.at) — 비었거나 그 기간 데이터가 없으면 가장 최근 기간
+  const id = S.at[S.grain];
+  if (id) { const i = cols.findIndex(c => c.id === id && c.cur.length); if (i >= 0) return i; }
+  return latestIdx(cols);
+}
+const fullCols = () => S.grain === 'month' ? monthCols(S.year) : S.grain === 'week' ? weekCols(S.year) : dayCols(S.year);
+const focusSet = () => { const id = S.at[S.grain]; return !!id && fullCols().some(c => c.id === id && c.cur.length); };
+function getCols(all) {  // all = 연도 전체 · 아니면 주별·일별은 기준 기간에서 끝나는 범위
+  const full = fullCols();
+  if (all || S.grain === 'month' || S.range[S.grain] === 'all') return full;
+  const k = focusIdx(full);
+  return full.slice(Math.max(0, k + 1 - +S.range[S.grain]), k + 1);
+}
+
+/* 한 번 렌더할 때 지표 × 계열 값을 한 번만 계산해 차트·표·CSV가 같이 쓴다 */
+let lastCols = [], MODEL = {};
+function buildModel(cols) {
+  const mdl = {};
+  for (const m of METRICS) mdl[m] = seriesKeys(m).map(r => ({...r, label: rowLabel(m, r), vals: cols.map(c => evalCol(m, r, c))}));
+  return mdl;
+}
+
+/* ---------- 컨트롤 ---------- */
+const RANGES = {week: [['8', '8주'], ['13', '13주'], ['26', '26주'], ['all', '연간 전체']],
+                day: [['14', '14일'], ['30', '30일'], ['60', '60일'], ['90', '90일'], ['all', '연간 전체']]};
+const AT_LBL = {month: '기준 월', week: '기준 주', day: '기준 일'};
+function syncControls() {
+  document.querySelectorAll('[data-set]').forEach(b => b.setAttribute('aria-pressed', String(S[b.dataset.set] === b.dataset.v)));
+  $('#selYear').innerHTML = YEARS.map(y => `<option value="${y}"${y === S.year ? ' selected' : ''}>${y}년</option>`).join('');
+  $('#fRange').hidden = S.grain === 'month';
+  if (S.grain !== 'month') {
+    $('#selRange').innerHTML = RANGES[S.grain].map(([v, t]) => `<option value="${v}"${v === S.range[S.grain] ? ' selected' : ''}>${t}</option>`).join('');
+  }
+  // 기준 기간: 월·주는 목록, 일은 날짜 입력 · '최근'(빈 값)이면 데이터가 있는 가장 최근 기간
+  const avail = fullCols().filter(c => c.cur.length), latest = avail[avail.length - 1];
+  const atOk = !!S.at[S.grain] && avail.some(c => c.id === S.at[S.grain]);
+  $('#atLbl').textContent = AT_LBL[S.grain];
+  $('#btnPop').textContent = CMP_NAME[S.grain];
+  $('#selAt').hidden = S.grain === 'day';
+  $('#dateAt').hidden = S.grain !== 'day';
+  $('#btnAtReset').hidden = !atOk;
+  if (S.grain === 'day') {
+    Object.assign($('#dateAt'), {min: avail.length ? avail[0].id : '', max: latest ? latest.id : ''});
+    $('#dateAt').value = atOk ? S.at.day : (latest ? latest.id : '');
+  } else {
+    $('#selAt').innerHTML = `<option value="">최근 · ${latest ? esc(latest.opt) : '데이터 없음'}</option>`
+      + avail.slice().reverse().map(c => `<option value="${c.id}"${atOk && c.id === S.at[S.grain] ? ' selected' : ''}>${esc(c.opt)}</option>`).join('');
+  }
+  $('#chips').innerHTML = CHS.map(ch => `<button class="chip" data-chan="${esc(ch)}" aria-pressed="${S.chans.includes(ch)}" style="--sw:${chColor(ch)}"><i></i>${esc(chLabel(ch))}</button>`).join('');
+  $('#segChips').innerHTML = SEGS.map(([k, t]) => `<button class="chip" data-seg="${k}" aria-pressed="${S.segs.includes(k)}">${dashSvg(k)}${t}</button>`).join('');
+}
+const toggle = (list, v) => list.includes(v) ? (list.length > 1 ? list.filter(x => x !== v) : list) : [...list, v];  // 최소 하나는 남긴다
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-set],[data-chan],[data-seg],[data-quick],[data-quickseg]');
+  if (!t) return;
+  if (t.dataset.set) S[t.dataset.set] = t.dataset.v;
+  else if (t.dataset.chan) S.chans = toggle(S.chans, t.dataset.chan);
+  else if (t.dataset.seg) S.segs = toggle(S.segs, t.dataset.seg);
+  else if (t.dataset.quick) S.chans = t.dataset.quick === 'total' ? ['*TOTAL'] : CHS.filter(x => x !== '*TOTAL');
+  else if (t.dataset.quickseg) S.segs = t.dataset.quickseg === 'total' ? ['T'] : SEG_KEYS.filter(x => x !== 'T');
+  render();
+});
+$('#selYear').addEventListener('change', e => { S.year = +e.target.value; S.at = {month: '', week: '', day: ''}; PD.sel = null; render(); });
+// 기준 기간을 바꾸면 상품 구성 기간도 그 기간으로 따라간다
+const setAt = v => { S.at[S.grain] = v || ''; PD.sel = null; render(); };
+$('#selAt').addEventListener('change', e => setAt(e.target.value));
+$('#dateAt').addEventListener('change', e => { const v = e.target.value, avail = fullCols().filter(c => c.cur.length); setAt(avail.length && v === avail[avail.length - 1].id ? '' : v); });
+$('#btnAtReset').addEventListener('click', () => setAt(''));
+$('#selRange').addEventListener('change', e => { S.range[S.grain] = e.target.value; render(); });
+$('#btnCsv').addEventListener('click', exportCsv);
+
+/* ---------- 요약 ---------- */
+function renderSummary(cols) {
+  const k = focusIdx(cols), ch0 = selChans()[0], seg0 = selSegs()[0];
+  const rowFor = m => ({ch: ch0, seg: SEG_METRICS.has(m) ? seg0 : 'T'});
+  if (k < 0) {
+    $('#tiles').innerHTML = METRICS.map(m => `<div class="tile"><div class="t-l">${esc(MET[m].name)}</div><div class="t-v">–</div></div>`).join('');
+    $('#sumDesc').textContent = '선택한 연도의 데이터가 없습니다';
+    return;
+  }
+  const col = cols[k], pop = cmpPop();
+  // 둘째 줄 = 선택하지 않은 쪽 비교 (전년비 ↔ 전월·전주·전일비)
+  const oPrev = pop ? col.prevY : col.prevP, oWk = col.wk ? ((pop ? col.wkY : col.wkP) ?? -1) : null;
+  const multi = selChans().length > 1 || selSegs().length > 1;
+  const who = chLabel(ch0) + (seg0 !== 'T' ? ` · ${segLabel(seg0)}` : '') + (multi ? ' (선택 중 첫 번째)' : '');
+  $('#sumDesc').textContent = `${col.tip} · ${modeName()} · ${who} · ${cmpLbl()}: ${col.ptip || '비교 기간 없음'}${pop ? '' : '(동요일)'} 대비`;
+  $('#tiles').innerHTML = METRICS.map(m => {
+    const r = rowFor(m), v = evalCol(m, r, col), main = fmtDelta(v.d);
+    const other = oPrev && oPrev.length ? fmtDelta(delta(m, v.c, compute(m, r, oPrev, oWk).v)) : {t: '–', c: ''};
+    const u = MET[m].pct ? '' : unitOf(m);
+    return `<div class="tile"><div class="t-l">${esc(MET[m].name)}</div>
+      <div class="t-v">${fmt(m, v.c)}${u && ok(v.c) ? `<small>${esc(u)}</small>` : ''}</div>
+      <div class="t-r"><span>${cmpLbl()}</span><b class="${main.c}${v.pe && v.d ? ' est' : ''}">${main.t}</b></div>
+      <div class="t-r"><span>${otherLbl()}</span><b class="${other.c}">${other.t}</b></div>
+      <div class="t-r"><span>${baseShort()}</span><span class="${v.pe && ok(v.p) ? 'est' : ''}">${fmt(m, v.p)}</span></div></div>`;
+  }).join('');
+}
+
+/* ---------- 차트 ---------- */
+function niceTicks(lo, hi, count) {
+  const raw = (hi - lo) / count, mag = Math.pow(10, Math.floor(Math.log10(raw))), n = raw / mag;
+  const step = (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * mag;
+  const min = Math.floor(lo / step) * step, max = Math.ceil(hi / step) * step, ticks = [];
+  for (let v = min; v <= max + step * 1e-6 && ticks.length < 20; v += step) ticks.push(+v.toPrecision(12));
+  return {min, max, step, ticks};
+}
+const LABEL_GAP = {month: 34, week: 64, day: 40};  // x축 라벨 최소 간격(px) — 첫 라벨은 왼쪽 정렬이라 글자 폭의 1.5배
+function labelIdx(n, width, minGap) {  // 첫·마지막 라벨은 항상 보이고, 사이 라벨은 겹치지 않게 솎는다
+  if (n <= 1) return n ? [0] : [];
+  const gap = width / (n - 1), step = Math.max(1, Math.ceil(minGap / gap)), out = [];
+  for (let i = 0; i < n - 1; i += step) out.push(i);
+  if (out.length > 1 && (n - 1 - out[out.length - 1]) * gap < minGap) out.pop();
+  out.push(n - 1);
+  return out;
+}
+const decOf = x => x >= 1 ? 0 : Math.min(4, Math.ceil(-Math.log10(x) - 1e-9));
+function tickFmt(m, step) {
+  if (MET[m].pct) { const dd = decOf(step * 100); return v => (v * 100).toFixed(dd) + '%'; }
+  if (m === 'amt') { const dd = decOf(step / 1e6); return v => dd ? (v / 1e6).toFixed(dd) : NF.format(v / 1e6); }
+  if (step >= 1e4) { const dd = decOf(step / 1e4); return v => (v / 1e4).toFixed(dd) + '만'; }
+  const dd = decOf(step);
+  return v => dd ? v.toFixed(dd) : NF.format(v);
+}
+// o.series = [{name, color, dash, cur[], prev[], pest[]}] · o.single 이면 전년선을 함께 그린다
+function lineChart(host, o) {
+  const W = Math.max(240, Math.floor(host.clientWidth)), H = 184;
+  const L = 44, R = 10, T = 16, B = 24, pw = W - L - R, ph = H - T - B, n = o.labels.length, SR = o.series;
+  let vmin = Infinity, vmax = -Infinity;
+  for (const sr of SR) for (const arr of (o.single && !o.noPrev ? [sr.cur, sr.prev] : [sr.cur])) for (const v of arr) if (ok(v)) { if (v < vmin) vmin = v; if (v > vmax) vmax = v; }
+  if (vmin === Infinity) { host.innerHTML = '<div class="nodata">데이터 없음</div>'; return; }
+  // 값이 사실상 같으면(부동소수 오차 수준) 평평한 선으로 보고 축 폭을 따로 잡는다
+  const sp = vmax - vmin > Math.abs(vmax) * 1e-6 ? vmax - vmin : (Math.abs(vmax) * 0.1 || 1);
+  let lo = vmin - sp * 0.12;
+  const hi = vmax + sp * 0.12;
+  if (vmin >= 0 && lo < 0) lo = 0;
+  const t = niceTicks(lo, hi, 4), tf = tickFmt(o.m, t.step);
+  const X = i => L + (n <= 1 ? pw / 2 : i * pw / (n - 1));
+  const Y = v => T + ph * (1 - (v - t.min) / ((t.max - t.min) || 1));
+  let s = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" tabindex="0" aria-label="${esc(o.aria)}">`;
+  for (const v of t.ticks) { const y = Y(v).toFixed(1); s += `<line class="gl" x1="${L}" x2="${W - R}" y1="${y}" y2="${y}"/><text class="yt" x="${L - 6}" y="${y}" dy="0.32em">${tf(v)}</text>`; }
+  if (o.focus != null && o.focus >= 0 && o.focus < n) {  // 기준 기간 음영
+    const fw = n > 1 ? Math.max(6, pw / (n - 1) * 0.8) : 24;
+    s += `<rect class="fband" x="${(X(o.focus) - fw / 2).toFixed(1)}" y="${T}" width="${fw.toFixed(1)}" height="${ph}"/>`;
+  }
+  for (const i of labelIdx(n, pw, LABEL_GAP[o.grain] || 40)) {
+    const anchor = n > 1 && i === n - 1 ? 'end' : (n > 1 && i === 0 ? 'start' : 'middle');
+    s += `<text class="xt" x="${X(i).toFixed(1)}" y="${H - 6}" text-anchor="${anchor}">${esc(o.labels[i])}</text>`;
+  }
+  // o.breaks[i] = 월 누계가 새로 시작하는 날(1일) — 선을 끊고 월 경계선을 그어 '뚝 떨어지는' 선으로 보이지 않게 한다
+  const brk = i => !!(o.breaks && o.breaks[i]);
+  for (let i = 1; i < n; i++) {
+    if (!brk(i)) continue;
+    const xm = ((X(i - 1) + X(i)) / 2).toFixed(1);
+    s += `<line class="mdiv" x1="${xm}" x2="${xm}" y1="${T - 6}" y2="${T + ph}"/><text class="mlab" x="${(+xm + 3).toFixed(1)}" y="${T - 7}">${esc(o.breaks[i])}</text>`;
+  }
+  const path = arr => { let d = '', pen = false; arr.forEach((v, i) => { if (brk(i)) pen = false; if (!ok(v)) { pen = false; return; } d += (pen ? 'L' : 'M') + X(i).toFixed(1) + ',' + Y(v).toFixed(1); pen = true; }); return d; };
+  const many = n > 16;
+  const dots = (arr, attr, r, all) => arr.map((v, i) => {
+    const lone = ok(v) && !ok(arr[i - 1]) && !ok(arr[i + 1]);
+    return ok(v) && (all || lone) ? `<circle ${attr} cx="${X(i).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="${r}"/>` : '';
+  }).join('');
+  if (o.single && !o.noPrev) s += `<path class="ln prev" d="${path(SR[0].prev)}"/>` + dots(SR[0].prev, 'class="dot prev"', 3.5, !many);
+  SR.forEach(sr => { s += `<path class="ln" style="stroke:${sr.color}${sr.dash ? `;stroke-dasharray:${sr.dash}` : ''}" d="${path(sr.cur)}"/>`; });
+  SR.forEach(sr => { s += dots(sr.cur, `class="dot" style="fill:${sr.color}"`, o.single ? 4 : 3, o.single && !many); });
+  const ends = SR.map(sr => { let li = -1; sr.cur.forEach((v, i) => { if (ok(v)) li = i; }); return li < 0 ? null : {sr, i: li, x: X(li), y: Y(sr.cur[li]), v: sr.cur[li]}; }).filter(Boolean);
+  const kept = [];
+  ends.slice().sort((a, b) => a.y - b.y).forEach(e => { if (kept.every(k => Math.abs(k.y - e.y) >= 14)) kept.push(e); });  // 끝값 라벨은 겹치지 않는 것만
+  for (const e of ends) if (many || !o.single) s += `<circle class="dot" style="fill:${e.sr.color}" cx="${e.x.toFixed(1)}" cy="${e.y.toFixed(1)}" r="3.5"/>`;
+  for (const e of kept) {
+    const anchor = e.x > W - R - 40 ? 'end' : (e.x < L + 40 ? 'start' : 'middle');
+    s += `<text class="endl" x="${e.x.toFixed(1)}" y="${(e.y - 9).toFixed(1)}" text-anchor="${anchor}">${fmt(o.m, e.v)}</text>`;
+  }
+  s += `<line class="guide" x1="0" x2="0" y1="${T}" y2="${T + ph}" visibility="hidden"/>`;
+  if (o.single && !o.noPrev) s += `<circle class="dot prev hp" r="4.5" visibility="hidden"/>`;
+  SR.forEach((sr, k) => { s += `<circle class="dot hs" data-s="${k}" style="fill:${sr.color}" r="4.5" visibility="hidden"/>`; });
+  s += `<rect x="${L - 8}" y="0" width="${pw + 16}" height="${H}" fill="transparent"/></svg><div class="tip" hidden></div>`;
+  host.innerHTML = s;
+
+  const svg = host.querySelector('svg'), tip = host.querySelector('.tip'), guide = svg.querySelector('.guide');
+  const hp = svg.querySelector('.hp'), hs = [...svg.querySelectorAll('.hs')];
+  const lastI = Math.max(-1, ...ends.map(e => e.i));
+  let cur = -1;
+  const place = (el, i, v) => { if (el && ok(v)) { el.setAttribute('cx', X(i)); el.setAttribute('cy', Y(v)); el.setAttribute('visibility', 'visible'); } else if (el) el.setAttribute('visibility', 'hidden'); };
+  const u = MET[o.m].pct ? '' : ' ' + unitOf(o.m);
+  const key = sr => sr.dash ? `<svg width="14" height="6" aria-hidden="true"><line x1="1" y1="3" x2="13" y2="3" stroke="${sr.color}" stroke-width="2" stroke-dasharray="${sr.dash}"/></svg>` : `<i class="k" style="background:${sr.color}"></i>`;
+  const show = i => {
+    cur = i;
+    guide.setAttribute('x1', X(i)); guide.setAttribute('x2', X(i)); guide.setAttribute('visibility', 'visible');
+    SR.forEach((sr, k) => place(hs[k], i, sr.cur[i]));
+    if (o.single) {
+      const sr = SR[0], d = fmtDelta(delta(o.m, sr.cur[i], sr.prev[i])), est = sr.pest[i] && ok(sr.prev[i]) ? ' est' : '';
+      place(hp, i, sr.prev[i]);
+      tip.innerHTML = `<b>${esc(o.tips[i])}</b>
+        <div class="r"><span>${key(sr)}${esc(sr.name)}</span><span>${fmt(o.m, sr.cur[i])}${ok(sr.cur[i]) ? esc(u) : ''}</span></div>
+        <div class="r"><span><i class="k prev"></i>${esc(o.ptips[i])}</span><span class="${est}">${fmt(o.m, sr.prev[i])}</span></div>
+        <div class="r d"><span>${esc(o.cmpLbl || '전년비')}</span><span class="${d.c}${est}">${d.t}</span></div>`;
+    } else {
+      tip.innerHTML = `<b>${esc(o.tips[i])}</b><div class="r3 h"><span></span><span>${esc(unitOf(o.m) || '값')}</span><span>${esc(o.cmpLbl || '전년비')}</span></div>`
+        + SR.map(sr => { const d = fmtDelta(delta(o.m, sr.cur[i], sr.prev[i])), est = sr.pest[i] && d.t !== '–' ? ' est' : '';
+          return `<div class="r3"><span>${key(sr)}${esc(sr.name)}</span><span>${fmt(o.m, sr.cur[i])}</span><span class="${d.c}${est}">${d.t}</span></div>`; }).join('');
+    }
+    tip.hidden = false;
+    const tw = tip.offsetWidth, x = X(i);
+    tip.style.left = (x + 14 + tw > W ? Math.max(0, x - 14 - tw) : x + 14) + 'px';
+  };
+  const hide = () => { cur = -1; tip.hidden = true; [guide, hp, ...hs].forEach(e => e && e.setAttribute('visibility', 'hidden')); };
+  svg.addEventListener('pointermove', ev => {
+    const r = svg.getBoundingClientRect(), px = (ev.clientX - r.left) * W / r.width;
+    show(Math.max(0, Math.min(n - 1, n <= 1 ? 0 : Math.round((px - L) / (pw / (n - 1))))));
+  });
+  svg.addEventListener('pointerleave', hide);
+  svg.addEventListener('blur', hide);
+  svg.addEventListener('keydown', ev => {
+    if (ev.key !== 'ArrowLeft' && ev.key !== 'ArrowRight') return;
+    ev.preventDefault();
+    show(Math.max(0, Math.min(n - 1, (cur < 0 ? lastI : cur) + (ev.key === 'ArrowLeft' ? -1 : 1))));
+  });
+}
+function renderCharts(cols) {
+  const y = S.year, chans = selChans(), segs = selSegs(), host = $('#charts'), pop = cmpPop();
+  const anySingle = METRICS.some(m => MODEL[m].length === 1), focus = focusSet() ? focusIdx(cols) : null;
+  $('#chartTitle').textContent = `${{month: '월별', week: '주별', day: '일별'}[S.grain]} 흐름`;
+  $('#chartDesc').textContent = `${modeName()} · ${pop ? `${y} · 마우스를 올리면 ${cmpLbl()}` : anySingle && chans.length === 1 ? `${y} vs ${y - 1} 동기간·동요일` : `${y} 비교 · 마우스를 올리면 전년비`}${focus != null ? ' · 음영 = 기준 기간' : ''}`;
+  const lg = [];
+  if (anySingle) lg.push(`<span><i class="k" style="background:${chColor(chans[0])}"></i>${y}</span>${pop ? '' : `<span><i class="k prev"></i>${y - 1} 동기간</span>`}`);
+  if (chans.length > 1) lg.push(chans.map(ch => `<span><i class="k" style="background:${chColor(ch)}"></i>${esc(chLabel(ch))}</span>`).join(''));
+  if (segs.length > 1) lg.push(`<span class="lg-g">회원구분</span>` + segs.map(sg => `<span>${dashSvg(sg)}${esc(segLabel(sg))}</span>`).join(''));
+  $('#legend').innerHTML = lg.join('');
+  host.innerHTML = METRICS.map((m, k) => {
+    const single = MODEL[m].length === 1, hasPrev = single && MODEL[m][0].vals.some(v => ok(v.p));
+    const sub = [single ? MODEL[m][0].label : '', unitOf(m) === '%' ? '' : unitOf(m), trNote(m), single && !hasPrev && !pop ? '전년 없음' : ''].filter(Boolean).join(' · ');
+    return `<div class="card cc"><div class="cc-t">${esc(MET[m].name)}</div><div class="cc-s">${esc(sub) || '&nbsp;'}</div><div class="cc-b" data-k="${k}"></div></div>`;
+  }).join('');
+  METRICS.forEach((m, k) => {
+    const single = MODEL[m].length === 1;
+    lineChart(host.querySelector(`[data-k="${k}"]`), {
+      m, grain: S.grain, single, noPrev: pop, cmpLbl: cmpLbl(), focus,
+      labels: cols.map(c => c.label), tips: cols.map(c => c.tip), ptips: cols.map(c => c.ptip),
+      series: MODEL[m].map(r => ({name: r.label, color: chColor(r.ch), dash: multiSeg(m) ? DASH[r.seg] : '',
+                                   cur: r.vals.map(v => v.c), prev: r.vals.map(v => v.p), pest: r.vals.map(v => v.pe)})),
+      aria: `${MET[m].name} ${single ? `${MODEL[m][0].label} ${y}년${pop ? '' : `과 ${y - 1}년 동기간`}` : `${MODEL[m].map(r => r.label).join(', ')} 비교`} 추이`,
+    });
+  });
+}
+
+/* ---------- 표 ---------- */
+function renderTable(cols) {
+  const y = S.year, now = focusIdx(cols), n = cols.length, block = S.layout === 'block';
+  const head = (c, k, extra = '') => `<th class="p${k === now ? ' now' : ''}${extra}" title="${esc(c.tip)}">${esc(c.label)}${c.sub ? `<small>${esc(c.sub)}</small>` : ''}</th>`;
+  const cell = (t, k, cls, est, raw) => `<td class="${[cls, k === now ? 'now' : '', est ? 'est' : ''].filter(Boolean).join(' ')}"${raw ? ` data-v="${raw[0]}" data-u="${raw[1]}"` : ''}>${t}</td>`;
+  const dCell = (v, k, cls) => { const f = fmtDelta(v.d); return cell(f.t, k, [f.c, cls].filter(Boolean).join(' '), v.pe && v.d, v.d ? [+v.d.v.toFixed(6), 'Δ' + v.d.unit] : null); };
+  let anyEst = false;
+  let h = '<table class="grid"><thead>';
+  if (block) {
+    h += `<tr><th class="stick s1" rowspan="2">구분</th><th class="band" colspan="${n}">${y} 실적</th><th class="band bk" colspan="${n}">${cmpLbl()}</th><th class="band bk" colspan="${n}">${esc(cmpPop() ? `${CMP_NAME[S.grain]} (직전 기간)` : `${y - 1} 동기간`)}</th></tr>`;
+    h += `<tr class="h2">${cols.map((c, k) => head(c, k)).join('')}${cols.map((c, k) => head(c, k, k === 0 ? ' bk' : '')).join('')}${cols.map((c, k) => head(c, -9, k === 0 ? ' bk' : '')).join('')}</tr>`;
+  } else {
+    h += `<tr><th class="stick s1">구분</th><th class="stick s2">기준</th>${cols.map((c, k) => head(c, k)).join('')}</tr>`;
+  }
+  h += '</thead><tbody>';
+  const sticky = block ? 1 : 2, rest = block ? n * 3 : n;
+  for (const m of METRICS) {
+    const sub = [unitOf(m), trNote(m)].filter(Boolean).join(' · ');
+    h += `<tr class="grp"><th class="stick s1" colspan="${sticky}">${esc(MET[m].name)}<small>${esc(sub)}</small></th><td colspan="${rest}"></td></tr>`;
+    for (const r of MODEL[m]) {
+      const vals = r.vals, cls = r.ch === '*TOTAL' && r.seg === 'T' ? 'top' : 'ch';
+      if (vals.some(v => v.pe && ok(v.p))) anyEst = true;
+      const lab = `<i class="sw" style="background:${chColor(r.ch)}"></i>${esc(r.label)}`;
+      if (block) {
+        h += `<tr class="${cls}"><th class="stick s1">${lab}</th>`
+          + vals.map((v, k) => cell(fmt(m, v.c), k, '', v.ce, rawOf(m, v.c))).join('')
+          + vals.map((v, k) => dCell(v, k, k === 0 ? 'bk' : '')).join('')
+          + vals.map((v, k) => cell(fmt(m, v.p), -9, 'pv' + (k === 0 ? ' bk' : ''), v.pe && ok(v.p), rawOf(m, v.p))).join('') + '</tr>';
+      } else {
+        h += `<tr class="${cls} r-cur"><th class="stick s1">${lab}</th><th class="stick s2">${y}</th>${vals.map((v, k) => cell(fmt(m, v.c), k, '', v.ce, rawOf(m, v.c))).join('')}</tr>`
+          + `<tr class="${cls} r-prev"><th class="stick s1"></th><th class="stick s2">${cmpPop() ? CMP_NAME[S.grain] : y - 1}</th>${vals.map((v, k) => cell(fmt(m, v.p), k, 'pv', v.pe && ok(v.p), rawOf(m, v.p))).join('')}</tr>`
+          + `<tr class="${cls} r-yoy"><th class="stick s1"></th><th class="stick s2">${cmpLbl()}</th>${vals.map((v, k) => dCell(v, k, '')).join('')}</tr>`;
+      }
+    }
+  }
+  h += '</tbody></table>';
+  const wrap = $('#tblWrap'), st = wrap.scrollTop;
+  wrap.innerHTML = h;
+  clearSel();
+  if (!block) { const s1 = wrap.querySelector('thead th.s1'); if (s1) wrap.style.setProperty('--s1w', s1.offsetWidth + 'px'); }
+  wrap.scrollTop = st;
+  // 기준 기간 열이 보이게 가로 스크롤
+  const th = now < 0 ? null : block ? wrap.querySelectorAll('thead tr.h2 th')[now] : wrap.querySelectorAll('thead th')[now + 2];
+  wrap.scrollLeft = th ? Math.max(0, th.offsetLeft + th.offsetWidth - wrap.clientWidth + 40) : 0;
+  $('#tableTitle').textContent = `${{month: '월별', week: '주별', day: '일별'}[S.grain]} 실적 (${modeName()})`;
+  const segTxt = selSegs().length > 1 || selSegs()[0] !== 'T' ? ` · 회원구분 ${selSegs().map(segLabel).join('·')}` : '';
+  $('#tableDesc').textContent = `${selChans().map(chLabel).join(' · ')}${segTxt} · ${cmpDesc()}${anyEst ? ' · * 주별 raw 일할 추정' : ''}`;
+}
+
+function exportCsv() {
+  const cols = lastCols, y = S.year, q = v => `"${String(v).replace(/"/g, '""')}"`, lines = [];
+  const pv = (m, v) => fmt(m, v.p) + (v.pe && ok(v.p) ? '*' : '');
+  if (S.layout === 'block') {
+    lines.push(['지표', '단위', '구분', ...cols.map(c => `${y} ${c.label}`), ...cols.map(c => `${cmpLbl()} ${c.label}`), ...cols.map(c => `${baseLbl()} ${c.label}`)]);
+    METRICS.forEach(m => MODEL[m].forEach(r => lines.push([MET[m].name, unitOf(m), r.label,
+      ...r.vals.map(v => fmt(m, v.c)), ...r.vals.map(v => fmtDelta(v.d).t), ...r.vals.map(v => pv(m, v))])));
+  } else {
+    lines.push(['지표', '단위', '구분', '기준', ...cols.map(c => c.label)]);
+    METRICS.forEach(m => MODEL[m].forEach(r => {
+      lines.push([MET[m].name, unitOf(m), r.label, y, ...r.vals.map(v => fmt(m, v.c))]);
+      lines.push([MET[m].name, unitOf(m), r.label, cmpPop() ? CMP_NAME[S.grain] : y - 1, ...r.vals.map(v => pv(m, v))]);
+      lines.push([MET[m].name, unitOf(m), r.label, cmpLbl(), ...r.vals.map(v => fmtDelta(v.d).t)]);
+    }));
+  }
+  const blob = new Blob(['﻿' + lines.map(l => l.map(q).join(',')).join('\r\n')], {type: 'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `첫구매실적_${{month: '월별', week: '주별', day: '일별'}[S.grain]}_${modeName()}_${cmpLbl()}_${y}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+/* ---------- 표 드래그 합계 — 엑셀 상태 표시줄처럼 선택 영역의 합계·평균 ---------- */
+const SEL = {a: null, f: null, drag: false, stats: null};
+const ADDITIVE = new Set(['백만원', '명', '트래픽']);
+const SUFFIX = {'백만원': ' 백만원', '명': '명', '트래픽': '', '원': '원', '%': '%', 'Δ%': '%', 'Δ%p': '%p'};
+const posOf = td => ({r: td.parentElement.rowIndex, c: td.cellIndex});
+function selCells() {
+  const table = $('#tblWrap table');
+  if (!SEL.a || !table) return [];
+  const r0 = Math.min(SEL.a.r, SEL.f.r), r1 = Math.max(SEL.a.r, SEL.f.r), c0 = Math.min(SEL.a.c, SEL.f.c), c1 = Math.max(SEL.a.c, SEL.f.c);
+  const out = [];
+  for (let r = r0; r <= r1; r++) {
+    const row = table.rows[r];
+    if (!row) continue;
+    for (let c = c0; c <= c1; c++) { const td = row.cells[c]; if (td && td.hasAttribute('data-v')) out.push(td); }
+  }
+  return out;
+}
+function fmtSel(x, u) {
+  if (!ok(x)) return '–';
+  const dp = u === '%' || u === 'Δ%p' ? 2 : u === 'Δ%' ? 1 : u === '백만원' && Math.abs(x) < 1000 ? 1 : (Math.abs(x) < 10 && x % 1 ? 1 : 0);
+  return x.toLocaleString('ko-KR', {minimumFractionDigits: dp, maximumFractionDigits: dp}) + (SUFFIX[u] ?? '');
+}
+function paintSel() {
+  const bar = $('#selbar');
+  $('#tblWrap').querySelectorAll('td.sel').forEach(td => td.classList.remove('sel'));
+  const cells = selCells();
+  cells.forEach(td => td.classList.add('sel'));
+  if (!cells.length) { SEL.stats = null; bar.hidden = true; return; }
+  const vals = cells.map(td => +td.dataset.v), units = new Set(cells.map(td => td.dataset.u));
+  const unit = units.size === 1 ? [...units][0] : null, n = vals.length, sum = vals.reduce((a, b) => a + b, 0);
+  const s = SEL.stats = {n, unit, sum: unit && ADDITIVE.has(unit) ? sum : null, avg: unit ? sum / n : null,
+                         min: unit ? Math.min(...vals) : null, max: unit ? Math.max(...vals) : null};
+  bar.innerHTML = `<b>${n}칸</b>` + (unit
+    ? (s.sum != null ? `<span>합계 <b>${fmtSel(s.sum, unit)}</b></span>` : '') + `<span>평균 <b>${fmtSel(s.avg, unit)}</b></span><span>최소 ${fmtSel(s.min, unit)}</span><span>최대 ${fmtSel(s.max, unit)}</span>`
+    : '<span class="warn">단위가 다른 셀이 섞여 있어 합계를 내지 않아요</span>') + '<span class="hint">Ctrl+C 복사 · Esc 해제</span>';
+  bar.hidden = n < 2;
+}
+function clearSel() { SEL.a = SEL.f = null; SEL.drag = false; paintSel(); }
+function selTSV() {
+  const rows = new Map();
+  for (const td of selCells()) { const r = td.parentElement.rowIndex; if (!rows.has(r)) rows.set(r, []); rows.get(r).push(td.textContent.trim()); }
+  return [...rows.values()].map(a => a.join('\t')).join('\n');
+}
+function copyText(text) {
+  const fallback = () => {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch (e) { /* 복사 불가 환경 */ }
+    ta.remove();
+  };
+  if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).catch(fallback); else fallback();
+}
+$('#tblWrap').addEventListener('mousedown', e => {
+  const td = e.target.closest('td[data-v]');
+  if (!td || e.button !== 0) return;
+  e.preventDefault();
+  const p = posOf(td);
+  if (e.shiftKey && SEL.a) SEL.f = p; else { SEL.a = p; SEL.f = p; }
+  SEL.drag = true;
+  paintSel();
+});
+$('#tblWrap').addEventListener('mouseover', e => {
+  if (!SEL.drag) return;
+  const td = e.target.closest('td[data-v]');
+  if (!td) return;
+  const p = posOf(td);
+  if (p.r !== SEL.f.r || p.c !== SEL.f.c) { SEL.f = p; paintSel(); }
+});
+document.addEventListener('mouseup', () => { SEL.drag = false; });
+document.addEventListener('mousedown', e => { if (SEL.a && !(e.target.closest && e.target.closest('#tblWrap td[data-v], #selbar'))) clearSel(); });
+document.addEventListener('keydown', e => {
+  if (!SEL.a) return;
+  if (e.key === 'Escape') clearSel();
+  else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c') {
+    e.preventDefault();
+    copyText(selTSV());
+    const h = $('#selbar .hint');
+    if (h) h.textContent = '복사했어요 · 엑셀에 붙여넣기';
+  }
+});
+
+/* ---------- KPI 목표 (kpi.js) — 필터와 무관하게 목표 연도 · 전체 채널 누적 ---------- */
+const KPI = window.DASH_KPI;
+function computeKpi() {
+  if (!KPI || !KPI.targets) return null;
+  const y = KPI.year, yearAll = span(`${y}-01-01`, `${y}-12-31`), dates = yearAll.filter(d => DAILY.idx.has(d));
+  if (!dates.length) return null;
+  const segs = KPI.segs && KPI.segs.length ? KPI.segs : ['T'], prevDates = back(dates), T = KPI.targets;
+  // 실적 원천: 신규회원실적대시보드 총)첫구매 거래액·고객수 (당년신규) — 없으면 전체관점 회원구분(segs) 합
+  const NY = {amt: 'nya', cust: 'nyc'};
+  const fromNew = KPI.source === 'newmember' && !!DAILY.s['nya|*TOTAL'] && !!DAILY.s['nyc|*TOTAL'];
+  const total = (base, ds, bySeg) => {
+    let v = 0, n = 0;
+    const keys = !bySeg ? [[base, `${base}|*TOTAL`]] : fromNew ? [[NY[base], `${NY[base]}|*TOTAL`]] : segs.map(sg => [base, `${base}|${sg}|*TOTAL`]);
+    for (const [b, k] of keys) { const r = sumBase(b, k, ds, true); v += r.v; n = Math.max(n, r.n); }
+    return n ? v : null;
+  };
+  const K = {y, el: dates.length, yearDays: yearAll.length, from: dates[0], to: dates.at(-1), prevFrom: prevDates[0], prevTo: prevDates.at(-1), rows: {}, src: fromNew ? '신규회원실적대시보드 총)첫구매 (당년신규)' : '전체관점 당월신규+기가입신규'};
+  K.left = K.yearDays - K.el;
+  K.pace = K.el / K.yearDays;
+  for (const [m, bySeg] of [['amt', true], ['cust', true], ['tr', false], ['sg', false]]) {
+    const act = total(m, dates, bySeg), prev = total(m, prevDates, bySeg), target = T[m] ?? null;
+    K.rows[m] = {act, prev, target,
+      avg: act == null ? null : act / K.el, prevAvg: prev == null ? null : prev / prevDates.length,
+      tAvg: target == null ? null : target / K.yearDays, ach: target && act != null ? act / target : null,
+      need: target != null && act != null && K.left > 0 ? Math.max(0, target - act) / K.left : null};
+  }
+  const R = K.rows;
+  K.jr = {act: R.sg.act && R.tr.act ? R.sg.act / R.tr.act : null, prev: R.sg.prev && R.tr.prev ? R.sg.prev / R.tr.prev : null,
+          target: T.sg != null && T.tr ? T.sg / T.tr : null};
+  K.aov = {target: T.amt && T.cust ? T.amt / T.cust : null, act: R.amt.act && R.cust.act ? R.amt.act / R.cust.act : null};
+  return K;
+}
+function renderKpi() {
+  const K = computeKpi();
+  $('#kpiSec').hidden = !K;
+  if (!K) return;
+  const NAME = {amt: '첫구매 거래액', cust: '첫구매 고객수', tr: '비회원 트래픽', sg: '가입자수'};
+  const UNIT = {amt: '백만원', cust: '명', tr: '', sg: '명'};
+  const num = (m, v) => {
+    if (!ok(v)) return '–';
+    const x = m === 'amt' ? v / 1e6 : v, dp = m === 'amt' ? (Math.abs(x) < 1000 ? 1 : 0) : (Math.abs(x) < 10 && x % 1 ? 1 : 0);
+    return x.toLocaleString('ko-KR', {minimumFractionDigits: dp, maximumFractionDigits: dp});
+  };
+  const pct = (x, dp = 1) => ok(x) ? (x * 100).toFixed(dp) + '%' : '–';
+  $('#kpiTitle').textContent = `${K.y} KPI 목표`;
+  $('#kpiDesc').textContent = `전체 채널 · 실적 = ${K.src} · ${md(K.from)}~${md(K.to)} ${K.el}일 경과 / ${K.yearDays}일 (${pct(K.pace)}) · 막대 눈금 = 연간 경과율 · 전년 동기 = ${K.prevFrom} ~ ${md(K.prevTo)}(364일 전 동요일)`;
+  const card = m => {
+    const r = K.rows[m], has = r.target != null, yoy = fmtDelta(delta(m, r.act, r.prev));
+    const unit = UNIT[m] ? `<small>${UNIT[m]}</small>` : '', vsAvg = has && r.tAvg ? r.avg / r.tAvg : null;
+    const meter = has ? `<div class="meter" role="img" aria-label="달성률 ${pct(r.ach)}, 연간 경과 ${pct(K.pace)}"><i style="width:${Math.min(100, (r.ach || 0) * 100).toFixed(1)}%"></i><em style="left:${(K.pace * 100).toFixed(1)}%"></em></div>` : '';
+    const aov = m === 'amt' && K.aov.target ? `<div class="kpi-f"><span>목표 환산 객단가 ${NF.format(Math.round(K.aov.target))}원</span><span>실적 ${NF.format(Math.round(K.aov.act))}원</span></div>` : '';
+    return `<div class="card kpi" data-kpi="${m}">
+      <div class="kpi-h"><span class="kpi-t">${NAME[m]}</span><span class="kpi-seg">${esc(m === 'amt' || m === 'cust' ? (KPI.segLabel || '전체') : '전체')}</span>${m === 'tr' ? '<span class="kpi-note">일자 합산 트래픽</span>' : ''}</div>
+      <div class="kpi-grid">
+        <div><div class="kpi-lab">누적</div><div class="kpi-v">${num(m, r.act)}${unit}</div>
+          <div class="kpi-r"><span>연간 목표</span><b>${has ? num(m, r.target) : '미입력'}</b></div>${meter}
+          <div class="kpi-r"><span>달성률</span><b>${pct(r.ach)}</b></div></div>
+        <div><div class="kpi-lab">일평균</div><div class="kpi-v">${num(m, r.avg)}${unit}</div>
+          <div class="kpi-r"><span>목표 일평균</span><b>${has ? num(m, r.tAvg) : '–'}</b></div>
+          <div class="kpi-r"><span>목표 대비</span><b class="${vsAvg == null ? '' : vsAvg >= 1 ? 'pos' : 'neg'}">${pct(vsAvg)}</b></div>
+          <div class="kpi-r"><span>남은 ${K.left}일 필요</span><b>${has ? num(m, r.need) : '–'}</b></div></div>
+      </div>
+      <div class="kpi-f"><span>전년 동기 누적 ${num(m, r.prev)} · 일평균 ${num(m, r.prevAvg)}</span><b class="${yoy.c}">${yoy.t}</b></div>${aov}
+    </div>`;
+  };
+  // 트래픽 · 가입자수 · 가입률은 한 박스(넓게)로 — 거래액 · 고객수 카드와 한 줄
+  const J = K.jr, jd = fmtDelta(delta('jr', J.act, J.prev)), jt = J.target != null ? fmtDelta(delta('jr', J.act, J.target)) : null;
+  const flow = m => {
+    const r = K.rows[m], has = r.target != null, yoy = fmtDelta(delta(m, r.act, r.prev));
+    return `<div data-kpi="${m}"><div class="kpi-st">${NAME[m]}${m === 'tr' ? '<span class="kpi-note">일자 합산</span>' : ''}</div>
+        <div class="kpi-lab">누적</div><div class="kpi-v">${num(m, r.act)}${UNIT[m] ? `<small>${UNIT[m]}</small>` : ''}</div>
+        <div class="kpi-r"><span>일평균</span><b>${num(m, r.avg)}</b></div>
+        <div class="kpi-r"><span>${has ? '달성률' : '연간 목표'}</span><b>${has ? pct(r.ach) : '미입력'}</b></div>
+        <div class="kpi-r"><span>전년비</span><b class="${yoy.c}">${yoy.t}</b></div></div>`;
+  };
+  const wide = `<div class="card kpi kpi-wide">
+      <div class="kpi-h"><span class="kpi-t">유입 · 가입</span><span class="kpi-seg">전체</span></div>
+      <div class="kpi-grid">${flow('tr')}${flow('sg')}
+        <div data-kpi="jr"><div class="kpi-st">가입률 환산</div>
+          <div class="kpi-lab">가입자 ÷ 트래픽</div><div class="kpi-v">${pct(J.act, 2)}</div>
+          <div class="kpi-r"><span>전년 동기</span><b>${pct(J.prev, 2)}</b></div>
+          <div class="kpi-r"><span>${jt ? '목표 대비' : '목표 환산'}</span><b class="${jt ? jt.c : ''}">${jt ? jt.t : '–'}</b></div>
+          <div class="kpi-r"><span>전년비</span><b class="${jd.c}">${jd.t}</b></div></div>
+      </div>
+      <div class="kpi-f"><span>전년 동기 누적 트래픽 ${num('tr', K.rows.tr.prev)} · 가입자 ${num('sg', K.rows.sg.prev)}</span><span>${J.target == null ? 'kpi.js에 트래픽·가입자 목표를 넣으면 달성률·목표 가입률 표시' : `목표 가입률 ${pct(J.target, 2)}`}</span></div>
+    </div>`;
+  $('#kpis').innerHTML = card('amt') + card('cust') + wide;
+}
+
+/* ---------- 상품 구성 드릴다운 (data/products.js · 조직 카테고리별 첫구매 실적, 일 단위) ---------- */
+// 기본 = 사업부 기준: BPU → 카테고리 → 브랜드 → 상품을 전 채널 합산으로 본다. 채널은 필터 칩 · 행마다 채널 구성 띠 · 판매 채널 수(분산) ·
+// 상품 단계의 상품 × 채널 표로 보여 준다. '채널 기준'이면 채널 → BPU → … 순서. 기간은 상단 기간 단위와 일평균/누계를 그대로 따른다.
+let PRD = null, PF = null, PC = null, PSTART = 0, PVIEW = null, prodLoad = 'idle';
+const PD_HASH = new URLSearchParams(location.hash.slice(1));  // 첫 렌더가 주소를 덮어쓰기 전에 드릴 위치를 잡아 둔다
+const PD = {view: 'bpu', path: [], chans: [], sort: 'v', sel: null, metric: 'amt'};  // path = 보기 순서대로 고른 값 · chans = 채널 필터(빈 배열 = 전체)
+const PCODE = ['채널', '사업부(BPU)', '카테고리', '브랜드', '상품'];  // 차원 코드 0~4
+const PDIMS = {bpu: [1, 2, 3, 4], ch: [0, 1, 2, 3, 4]};
+const pDims = () => PDIMS[PD.view];
+const LF_PRODUCT_URL = 'https://www.lfmall.co.kr/app/product/';
+// 정렬 — v: 값 큰 순(기본) · n: 판매 채널 많은 순(여러 채널에서 팔린 항목이 위로). 채널 · 사업부 단계는 순서 고정
+const ONE_SHARE = 0.8, EVEN_SHARE = 0.5, EVEN_MIN = 3;
+function applyProdHash() {  // 주소 해시 pv=보기 · pd=드릴 위치 인덱스 · pch=채널 필터 인덱스
+  const h = PD_HASH, lists = [PRD.ch, PRD.bpu, PRD.cat, PRD.brand];
+  if (h.get('pv') === 'ch') PD.view = 'ch';
+  const dims = pDims(), pd = (h.get('pd') || '').split(',').filter(Boolean).map(Number);
+  if (pd.length && pd.length < dims.length && pd.every((k, i) => Number.isInteger(k) && k >= 0 && k < lists[dims[i]].length)) PD.path = pd;
+  const pch = (h.get('pch') || '').split(',').filter(Boolean).map(Number);
+  if (pch.length && pch.every(k => Number.isInteger(k) && k >= 0 && k < PRD.ch.length)) PD.chans = [...new Set(pch)].sort((a, b) => a - b);
+  if (['amt', 'cust'].includes(h.get('pm'))) PD.metric = h.get('pm');
+}
+function loadProducts() {  // 8MB가 넘는 파일이라 대시보드를 먼저 그리고 뒤에서 불러온다
+  const done = () => {
+    PRD = window.DASH_PROD || null;
+    prodLoad = PRD ? 'ready' : 'missing';
+    if (PRD) applyProdHash();
+    renderProd();
+    if (/selftest/.test(location.hash) && !$('#selftestScript')) {
+      const t = document.createElement('script');
+      t.id = 'selftestScript'; t.src = 'selftest.js';
+      document.body.appendChild(t);
+    }
+  };
+  // 상품 데이터가 없는 백업으로 열었으면 지금 폴더의 products.js 를 섞지 않는다
+  if (window.DASH_PROD || (window.DASH_BACKUP && !window.DASH_BACKUP.hasProd)) { done(); return; }
+  prodLoad = 'loading';
+  renderProd();
+  const sc = document.createElement('script');
+  sc.src = `data/products.js?v=${encodeURIComponent(D.meta.built || Date.now())}`;  // 빌드가 바뀌면 새로 받는다
+  sc.onload = done;
+  sc.onerror = done;
+  document.body.appendChild(sc);
+}
+function prodInit() {
+  if (PF || !PRD) return;
+  PSTART = toUTC(PRD.meta.start);
+  const f = PRD.f, n = f.length / 6;
+  PF = {n, d: new Uint16Array(n), c: new Uint16Array(n), p: new Uint32Array(n), q: new Int32Array(n), a: new Float64Array(n), u: new Float64Array(n)};
+  for (let i = 0, j = 0, day = 0; i < n; i++, j += 6) {  // 날짜는 앞 행과의 차이로 저장돼 있다
+    day += f[j];
+    PF.d[i] = day; PF.c[i] = f[j + 1]; PF.p[i] = f[j + 2]; PF.q[i] = f[j + 3]; PF.a[i] = f[j + 4]; PF.u[i] = f[j + 5];
+  }
+  const cv = PRD.cov, m = cv.length / 5;
+  PC = {n: m, d: new Uint16Array(m), c: new Int16Array(m), b: new Int16Array(m), a: new Float64Array(m)};
+  for (let i = 0, j = 0, day = 0; i < m; i++, j += 5) { day += cv[j]; PC.d[i] = day; PC.c[i] = cv[j + 1]; PC.b[i] = cv[j + 2]; PC.a[i] = cv[j + 3]; }
+}
+const pDay = s => Math.round((toUTC(s) - PSTART) / DAY);
+const pInRange = ds => ds.length > 0 && pDay(ds[0]) >= 0 && pDay(ds[ds.length - 1]) < PRD.meta.days;
+function pMask(lists) {
+  const mask = new Uint8Array(PRD.meta.days);
+  for (const ds of lists) for (const x of ds) { const k = pDay(x); if (k >= 0 && k < mask.length) mask[k] = 1; }
+  return mask;
+}
+const pVal = (i, code) => code === 'd' ? PF.d[i] : code === 0 ? PF.c[i] : code === 4 ? PF.q[i] : PRD.paths[PF.p[i] * 3 + code - 1];
+const pCond = () => PD.path.map((k, i) => [pDims()[i], k]);  // [[차원 코드, 값]]
+function pChanMask() {  // 채널 필터 — null = 전체 채널
+  if (!PD.chans.length) return null;
+  const m = new Uint8Array(PRD.ch.length);
+  for (const k of PD.chans) m[k] = 1;
+  return m;
+}
+function pAgg(code, cond, mask, chm, mix) {  // code = 묶을 차원(null = 하나로, 'd' = 날짜) · mix = 채널별 값도 모은다
+  const out = new Map(), nch = PRD.ch.length;
+  outer: for (let i = 0; i < PF.n; i++) {
+    if (!mask[PF.d[i]]) continue;
+    const c = PF.c[i];
+    if (chm && !chm[c]) continue;
+    for (let j = 0; j < cond.length; j++) if (pVal(i, cond[j][0]) !== cond[j][1]) continue outer;
+    const k = code == null ? 0 : pVal(i, code);
+    let o = out.get(k);
+    if (!o) {
+      out.set(k, o = {a: 0, u: 0});
+      if (mix) { o.ca = new Float64Array(nch); o.cu = new Float64Array(nch); }
+    }
+    o.a += PF.a[i]; o.u += PF.u[i];
+    if (mix) { o.ca[c] += PF.a[i]; o.cu[c] += PF.u[i]; }
+  }
+  return out;
+}
+const pName = (code, k) => code === 0 ? PRD.ch[k] : code === 1 ? PRD.bpu[k] : code === 2 ? PRD.cat[k] : code === 3 ? PRD.brand[k]
+  : (k < 0 ? `기타 상품 (브랜드 연간 상위 ${PRD.meta.topN} 외)` : PRD.prods[k * 2 + 1] || PRD.prods[k * 2]);
+const pColor = (code, k) => code === 0 ? chColor(PRD.ch[k]) : 'var(--c1)';
+const bpuRank = name => { const m = /^e-영업(\d+)$/.exec(name || ''); return m ? +m[1] : 99; };
+function pSort(code, list) {  // 사업부는 e-영업1 → 4 순서 고정, 나머지는 값이 큰 순
+  if (code !== 1) return list.sort((x, y) => y.v - x.v);
+  return list.sort((x, y) => bpuRank(PRD.bpu[x.k]) - bpuRank(PRD.bpu[y.k]) || String(PRD.bpu[x.k]).localeCompare(String(PRD.bpu[y.k])));
+}
+function pSpread(arr) {  // 채널별 값 → 판매 채널 수 · 최대 채널 · 그 비중 · 분류(one 집중 / even 고르게 / mid)
+  let tot = 0, n = 0, top = -1;
+  for (let c = 0; c < arr.length; c++) if (arr[c] > 0) { tot += arr[c]; n++; if (top < 0 || arr[c] > arr[top]) top = c; }
+  const share = tot > 0 ? arr[top] / tot : 0;
+  return {n, top, share, kind: !n ? 'none' : share >= ONE_SHARE ? 'one' : n >= EVEN_MIN && share < EVEN_SHARE ? 'even' : 'mid'};
+}
+const spreadTip = sp => sp.n ? `판매 채널 ${sp.n}개 · 최대 ${PRD.ch[sp.top]} ${(sp.share * 100).toFixed(0)}%` : '판매 없음';
+// 주 채널 = 가장 많이 판 채널과 그 비중 · N개 = 판매한 채널 수
+const spreadTxt = sp => !sp.n ? '–' : `${esc(PRD.ch[sp.top])} ${(sp.share * 100).toFixed(0)}%<small> · ${sp.n}개</small>`;
+function mixBar(arr) {  // 채널 구성 띠 — 채널 고유색, 마우스를 올리면 채널별 비중
+  const tot = arr.reduce((a, v) => a + Math.max(0, v), 0);
+  if (!tot) return '<span class="pmix"></span>';
+  const parts = arr.map((v, c) => [c, v]).filter(x => x[1] > 0);
+  const tip = parts.slice().sort((a, b) => b[1] - a[1]).map(([c, v]) => `${PRD.ch[c]} ${(v / tot * 100).toFixed(0)}%`).join(' · ');
+  return `<span class="pmix" title="${esc(tip)}">${parts.map(([c, v]) => `<i style="width:${(v / tot * 100).toFixed(2)}%;background:${chColor(PRD.ch[c])}"></i>`).join('')}</span>`;
+}
+const fmtM = v => { if (!ok(v)) return '–'; const x = v / 1e6, ax = Math.abs(x); return (ax >= 100 ? NF.format(Math.round(x)) : x.toFixed(ax >= 1 ? 1 : 2)) + '백만'; };
+const pFmt = v => PD.metric === 'amt' ? fmtM(v) : ok(v) ? NF.format(Math.round(v)) + '명' : '–';
+function trendBars(host, bars) {
+  const n = bars.length, W = Math.max(260, Math.floor(host.clientWidth)), H = 170, L = 46, R = 8, T = 10, B = 22, pw = W - L - R, ph = H - T - B;
+  const vals = bars.flatMap(x => [x.c, x.p]).filter(ok);
+  if (!n || !vals.length) { host.innerHTML = '<div class="nodata">데이터 없음</div>'; return; }
+  const hi = Math.max(0, ...vals), lo = Math.min(0, ...vals);
+  const t = niceTicks(lo, hi > lo ? hi : lo + 1, 3), tf = tickFmt(PD.metric === 'amt' ? 'amt' : 'cust', t.step);
+  const Yp = v => T + ph * (1 - (v - t.min) / ((t.max - t.min) || 1)), slot = pw / n, bw = Math.max(1, Math.min(22, slot * 0.55));
+  let s = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${{month: '월별', week: '주별', day: '일별'}[S.grain]} ${PD.metric === 'amt' ? '거래액' : '주문고객수'} 당해와 전년">`;
+  for (const v of t.ticks) { const y = Yp(v).toFixed(1); s += `<line class="gl" x1="${L}" x2="${W - R}" y1="${y}" y2="${y}"/><text class="yt" x="${L - 6}" y="${y}" dy="0.32em">${tf(v)}</text>`; }
+  bars.forEach((x, i) => {
+    const cx = L + slot * (i + 0.5);
+    if (ok(x.c)) {
+      const y0 = Yp(0), y1 = Yp(x.c), top = Math.min(y0, y1), h = Math.max(1, Math.abs(y0 - y1));
+      s += `<rect class="mbar${x.on ? '' : ' dim'}" data-psel="${esc(x.key)}" x="${(cx - bw / 2).toFixed(1)}" y="${top.toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="2"><title>${esc(x.tip)} ${pFmt(x.c)}${ok(x.p) ? ` · 전년 ${pFmt(x.p)}` : ''}</title></rect>`;
+    }
+    if (ok(x.p)) {
+      const hw = Math.max(1, slot * 0.4), y = Yp(x.p).toFixed(1);
+      s += `<line class="mprev" x1="${(cx - hw).toFixed(1)}" x2="${(cx + hw).toFixed(1)}" y1="${y}" y2="${y}"><title>전년 ${pFmt(x.p)}</title></line>`;
+    }
+  });
+  for (const i of labelIdx(n, slot * (n - 1), LABEL_GAP[S.grain] || 40)) {
+    s += `<text class="xt" x="${(L + slot * (i + 0.5)).toFixed(1)}" y="${H - 6}" text-anchor="middle">${esc(bars[i].label)}</text>`;
+  }
+  host.innerHTML = s + '</svg>';
+}
+function renderProd() {
+  const sec = $('#prodSec');
+  if (!PRD) {
+    sec.hidden = prodLoad !== 'loading';
+    if (!sec.hidden) $('#pdBody').innerHTML = '<div class="nodata" style="height:120px">상품 데이터 불러오는 중…</div>';
+    return;
+  }
+  prodInit();
+  sec.hidden = false;
+  const Y = S.year, gName = {month: '월별', week: '주별', day: '일별'}[S.grain];
+  const cols = getCols(false);
+  const ytdCur = clip(span(`${Y}-01-01`, `${Y}-12-31`));
+  const ytd = {key: 'ytd', tip: `${Y}년 누계${ytdCur.length ? ` (${md(ytdCur[0])}~${md(ytdCur[ytdCur.length - 1])})` : ''}`, cur: ytdCur, prev: back(ytdCur), ptip: rangeTxt(back(ytdCur))};
+  const opts = cols.filter(c => c.cur.length).map(c => ({...c, key: c.tip})).reverse();
+  const fk = focusIdx(cols), fkey = fk >= 0 ? cols[fk].tip : null;
+  const all = [ytd, ...opts], sel = all.find(o => o.key === PD.sel) || all.find(o => o.key === fkey) || opts[0] || ytd;  // 기본 = 상단 기준 기간
+  PD.sel = sel.key;
+  const cLbl = sel === ytd ? '전년비' : cmpLbl(), noPrevLine = sel !== ytd && cmpPop();  // 연간 누계는 늘 전년 동기와 비교
+  $('#pdPeriodLbl').textContent = `${gName.slice(0, 1)} 선택`;
+  $('#pdPeriod').innerHTML = all.map(o => `<option value="${esc(o.key)}">${esc(o.tip)}</option>`).join('');
+  $('#pdPeriod').value = sel.key;
+  document.querySelectorAll('[data-pm]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.pm === PD.metric)));
+  document.querySelectorAll('[data-pv]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.pv === PD.view)));
+  $('#pdDesc').textContent = PD.view === 'bpu'
+    ? '사업부(BPU) → 카테고리 → 브랜드 → 상품 · 전 채널 합산 · 행마다 채널 구성 띠 · 상품 단계는 상품 × 채널 표'
+    : '채널 → 사업부(BPU) → 카테고리 → 브랜드 → 상품';
+  $('#pdChips').innerHTML = `<button type="button" class="chip" data-pch="-1" aria-pressed="${!PD.chans.length}">전체</button>`
+    + PRD.ch.map((ch, k) => `<button type="button" class="chip" data-pch="${k}" aria-pressed="${PD.chans.includes(k)}" style="--sw:${chColor(ch)}"><i></i>${esc(ch)}</button>`).join('');
+  if (!pInRange(sel.cur)) { $('#pdBody').innerHTML = `<div class="nodata" style="height:120px">${Y}년 상품 데이터가 없습니다</div>`; PVIEW = null; return; }
+
+  const dims = pDims(), lv = PD.path.length, code = dims[lv];
+  const mk = PD.metric === 'amt' ? 'a' : 'u', mkc = mk === 'a' ? 'ca' : 'cu', avg = S.mode === 'avg' && S.grain !== 'day';  // 일별은 일평균 = 누계
+  const dv = (v, ds) => v == null ? null : (avg && ds.length ? v / ds.length : v);
+  const hasPrev = pInRange(sel.prev);
+  const curMask = pMask([sel.cur]), prevMask = hasPrev ? pMask([sel.prev]) : null;
+  const chm = pChanMask(), cond = pCond();
+  const cur = pAgg(code, cond, curMask, chm, true), prev = hasPrev ? pAgg(code, cond, prevMask, chm, false) : new Map();
+  const items = [...cur].map(([k, o]) => ({k, v: dv(o[mk], sel.cur), p: prev.has(k) ? dv(prev.get(k)[mk], sel.prev) : null,
+    mix: Array.from(o[mkc], x => dv(x, sel.cur)), sp: pSpread(o[mkc])})).filter(x => x.v !== 0);
+  const total = items.reduce((a, x) => a + x.v, 0);  // 구성비 분모 = 분산 필터 전 합계
+  const sortOn = code !== 0 && code !== 1, shown = items;
+  const other = code === 4 ? shown.find(x => x.k === -1) : null;
+  const ranked = pSort(code, shown.filter(x => x !== other));
+  if (sortOn && PD.sort === 'n') ranked.sort((a, b) => b.sp.n - a.sp.n || b.v - a.v);
+  const LIMIT = code === 4 ? 20 : 10;
+  const top = code === 1 ? ranked : ranked.slice(0, LIMIT), rest = code === 1 ? [] : ranked.slice(LIMIT);
+  const restSum = rest.reduce((a, x) => a + x.v, 0), shownSum = shown.reduce((a, x) => a + x.v, 0);
+  const max = Math.max(1e-9, ...top.map(x => x.v), other ? other.v : 0);
+  const share = v => total ? (v / total * 100).toFixed(1) + '%' : '–';
+  const yoyOf = x => hasPrev ? fmtDelta(delta('amt', x.v, x.p)) : {t: '–', c: ''};
+  const restLine = rest.length ? `<div class="pb-rest">그 외 ${rest.length.toLocaleString()}개 · ${pFmt(restSum)} (${share(restSum)})</div>` : '';
+  const empty = '<div class="nodata" style="height:80px">이 조건의 상품 데이터가 없습니다</div>';
+  let body, chCols = [];
+  if (code === 4) {
+    // 상품 × 채널 표 — 이 범위에서 팔린 채널만 열로, 칸 배경 막대 = 그 상품 안에서의 채널 비중
+    chCols = PRD.ch.map((_, c) => c).filter(c => (!chm || chm[c]) && items.some(x => x.mix[c]));
+    const rowsHtml = [...top, ...(other ? [other] : [])].map(x => {
+      const name = pName(4, x.k), pcode = x.k >= 0 ? PRD.prods[x.k * 2] : '', yoy = yoyOf(x);
+      return `<tr${x === other ? ' class="pm-other"' : ''}><th class="stick s1"><span class="pn" title="${esc(name)}">${esc(name)}</span>`
+        + (pcode ? `<a class="pc" href="${LF_PRODUCT_URL}${encodeURIComponent(pcode)}" target="_blank" rel="noopener" title="LF몰 상품 페이지 열기">${esc(pcode)} ↗</a>` : '') + '</th>'
+        + `<td class="pm-tot" data-x="${x.v}">${pFmt(x.v)}</td>`
+        + chCols.map(c => {
+          const v = x.mix[c], r = x.v ? v / x.v : 0;
+          return `<td data-ch="${c}" data-x="${v}" style="--pmw:${(Math.max(0, Math.min(1, r)) * 100).toFixed(1)}%;--pmc:${chColor(PRD.ch[c])}" title="${esc(`${PRD.ch[c]} ${pFmt(v)} · ${(r * 100).toFixed(0)}%`)}">${v ? pFmt(v) : '–'}</td>`;
+        }).join('')
+        + `<td class="pb-c" title="${esc(spreadTip(x.sp))}">${spreadTxt(x.sp)}</td><td class="${yoy.c}" title="${sel === ytd ? '전년' : baseShort()} ${esc(pFmt(x.p))}">${yoy.t}</td></tr>`;
+    }).join('');
+    body = shown.length
+      ? `<div class="tbl-wrap pmat"><table class="grid"><thead><tr><th class="stick s1">상품</th><th>합계${avg ? '(일평균)' : ''}</th>${chCols.map(c => `<th><i class="sw" style="background:${chColor(PRD.ch[c])}"></i>${esc(PRD.ch[c])}</th>`).join('')}<th title="가장 많이 판 채널과 그 비중 · N개 = 판매한 채널 수">주 채널</th><th>${cLbl}</th></tr></thead><tbody>${rowsHtml}</tbody></table></div>${restLine}`
+      : empty;
+  } else {
+    const row = x => {
+      const name = pName(code, x.k), yoy = yoyOf(x);
+      return `<div class="pb" role="button" tabindex="0" data-pk="${x.k}" aria-label="${esc(name)} 하위 단계 보기">
+      <span class="pb-n"><span class="pn" title="${esc(name)}">${esc(name)}</span></span><span class="pb-t"><i style="width:${Math.max(0, x.v / max * 100).toFixed(1)}%;background:${pColor(code, x.k)}"></i></span>
+      ${mixBar(x.mix)}<span class="pb-v">${pFmt(x.v)}</span><span class="pb-s">${share(x.v)}</span>
+      <span class="pb-c" title="${esc(spreadTip(x.sp))}">${spreadTxt(x.sp)}</span><span class="pb-d ${yoy.c}">${yoy.t}</span></div>`;
+    };
+    body = shown.length
+      ? `<div class="pb pb-h"><span>${PCODE[code]}</span><span></span><span>채널 구성</span><span class="pb-v">${PD.metric === 'amt' ? '거래액' : '주문고객수'}${avg ? '(일평균)' : ''}</span><span class="pb-s">구성비</span><span class="pb-c" title="가장 많이 판 채널과 그 비중 · N개 = 판매한 채널 수">주 채널</span><span class="pb-d">${cLbl}</span></div>`
+        + top.map(row).join('') + restLine
+      : empty;
+  }
+  const chTxt = chm ? ` (${PD.chans.map(k => PRD.ch[k]).join('·')})` : '';
+  const crumbs = `<button type="button" data-plv="0"${lv === 0 ? ' class="cur"' : ''}>전체${esc(chTxt)}</button>`
+    + PD.path.map((k, i) => `<span class="sep">›</span><button type="button" data-plv="${i + 1}"${i + 1 === lv ? ' class="cur"' : ''}>${esc(pName(dims[i], k))}</button>`).join('');
+  const spreadSeg = sortOn ? `<div class="seg pd-spread" role="group" aria-label="정렬">${[['v', PD.metric === 'amt' ? '거래액 큰 순' : '고객수 많은 순'], ['n', '판매 채널 많은 순']].map(([v, t]) => `<button type="button" data-psort="${v}" aria-pressed="${PD.sort === v}">${t}</button>`).join('')}</div>` : '';
+  const lvlTxt = `${PCODE[code]} ${shown.length.toLocaleString()}개${ranked.length > LIMIT && code !== 1 ? ` 중 상위 ${LIMIT}` : ''}${code < 4 ? ' · 막대를 누르면 하위 단계' : ' · 상품코드를 누르면 LF몰 상품 페이지'}`;
+
+  // 옆 패널: 채널 구성(현재 범위가 어느 채널에서 팔렸는지) — 채널 기준 첫 단계에서만 사업부 구성
+  const sideCode = PD.view === 'ch' && lv === 0 ? 1 : 0;
+  const sideCond = sideCode === 0 ? cond.filter(c => c[0] !== 0) : cond;
+  const sAll = pSort(sideCode, [...pAgg(sideCode, sideCond, curMask, PD.view === 'bpu' ? chm : null, false)].map(([k, o]) => ({k, v: dv(o[mk], sel.cur)})).filter(x => x.v));
+  const sItems = sAll.slice(0, 8), sTot = sAll.reduce((a, x) => a + x.v, 0), sMax = Math.max(1e-9, ...sItems.map(x => x.v));
+  const curCh = cond.find(c => c[0] === 0);
+  const sideScope = sideCond.length ? sideCond.map(([cd, k]) => pName(cd, k)).join(' › ') : '전체';
+  const sideTitle = sideCode === 1 ? '사업부(BPU) 구성 · 전체 채널' : `채널 구성 · ${sideScope}`;
+  const sideHtml = sItems.map(x => `<div class="mb${sideCode === 0 && curCh && curCh[1] === x.k ? ' on' : ''}"><span class="pn" title="${esc(pName(sideCode, x.k))}">${esc(pName(sideCode, x.k))}</span><span class="pb-t"><i style="width:${(Math.max(0, x.v) / sMax * 100).toFixed(1)}%;background:${pColor(sideCode, x.k)}"></i></span><span class="pb-v">${pFmt(x.v)}</span><span class="pb-s">${sTot ? (x.v / sTot * 100).toFixed(0) + '%' : ''}</span></div>`).join('');
+
+  // 추이: 표·차트와 같은 기간 열 — 당해 막대 + 전년(364일 전 동요일) 가로선, 막대를 누르면 그 기간 선택
+  const gd = pAgg('d', cond, pMask([...cols.map(c => c.cur), ...cols.map(c => c.prev)]), chm, false);
+  const daySum = ds => ds.reduce((a, x) => { const o = gd.get(pDay(x)); return a + (o ? o[mk] : 0); }, 0);
+  const tbars = cols.map(c => ({key: c.tip, tip: c.tip, label: c.label + (c.partial ? '*' : ''),
+    c: pInRange(c.cur) ? dv(daySum(c.cur), c.cur) : null, p: !cmpPop() && pInRange(c.prev) ? dv(daySum(c.prev), c.prev) : null,  // 직전 기간 모드에선 전년 가로선 숨김
+    on: sel === ytd || c.tip === sel.key}));
+
+  // 커버리지: 같은 채널·BPU 범위의 상품관점 실측 거래액 대비 상품 원천 합계
+  let coverage = null, covTxt = '';
+  if (PD.metric === 'amt') {
+    const bc = cond.find(c => c[0] === 1), sb = bc ? bc[1] : -1;
+    const chList = curCh ? [curCh[1]] : chm ? PD.chans : null;  // null = 전체 채널
+    let exact = 0;
+    for (let j = 0; j < PC.n; j++) {
+      if (!curMask[PC.d[j]] || PC.b[j] !== sb) continue;
+      const c = PC.c[j];
+      if (chList ? chList.includes(c) : (sb < 0 ? c === -1 : c >= 0)) exact += PC.a[j];
+    }
+    const scope = pAgg(null, [bc, curCh].filter(Boolean), curMask, curCh ? null : chm, false).get(0);
+    const scopeName = [curCh ? PRD.ch[curCh[1]] : chm ? PD.chans.map(k => PRD.ch[k]).join('·') : '전체 채널', bc ? PRD.bpu[bc[1]] : ''].filter(Boolean).join(' · ');
+    if (exact > 0 && scope) {
+      coverage = scope.a / exact;
+      covTxt = ` · 상품 원천 커버리지 <b>${(coverage * 100).toFixed(1)}%</b> (${esc(scopeName)} 첫구매 거래액 ${fmtM(dv(exact, sel.cur))} 중 ${fmtM(dv(scope.a, sel.cur))})`;
+    }
+  }
+  $('#pdBody').innerHTML = `<div class="crumbs">${crumbs}<span class="lvl">${lvlTxt}</span>${spreadSeg}</div>
+    <div class="pbars" id="pdBars">${body}</div>
+    <div class="pgrid">
+      <div><h3>${esc(sideTitle)}</h3>${sideHtml || '<div class="nodata" style="height:60px">데이터 없음</div>'}</div>
+      <div><h3>${gName} 추이${avg ? ' (일평균)' : ''}<span><i class="k"></i>${Y}</span>${cmpPop() ? '' : '<span><i class="k prev"></i>전년 동기간</span>'}<span>막대를 누르면 그 기간 선택</span></h3><div class="pd-m" id="pdTrend"></div></div>
+    </div>
+    <div class="pcap">${esc(sel.tip)} · ${PD.view === 'bpu' ? '사업부 기준' : '채널 기준'} · ${chm ? `채널 ${esc(PD.chans.map(k => PRD.ch[k]).join('·'))}` : '전 채널'} · 첫구매 · 표시 ${avg ? '일평균' : '합계'} <b>${pFmt(total)}</b>${covTxt} · ${cLbl} = ${hasPrev ? `${esc(sel.ptip)}${noPrevLine ? '' : ' (364일 전 동요일)'}` : '비교 데이터 없음'} · 주 채널 = 가장 많이 판 채널과 비중 · N개 = 판매한 채널 수 (판매 채널 많은 순으로 정렬하면 여러 채널에서 팔린 항목이 위로) · 상품은 브랜드별 연간 상위 ${PRD.meta.topN}개, 나머지는 '기타 상품'${PD.metric === 'cust' ? ' · 주문고객수는 상품별 합이라 한 주문에 여러 상품이면 중복돼 실제 첫구매 고객수보다 클 수 있음' : ''}</div>`;
+  trendBars($('#pdTrend'), tbars);
+  PVIEW = {view: PD.view, lv, code, total, itemCount: items.length, shownCount: shown.length, sort: sortOn ? PD.sort : 'v',
+    top: top.map(x => ({k: x.k, v: x.v, p: x.p, mixSum: x.mix.reduce((a, y) => a + y, 0), sp: x.sp})), restCount: rest.length, restSum, other,
+    coverage, key: sel.key, cur: sel.cur, prev: sel.prev, hasPrev, optCount: all.length, trendN: tbars.length,
+    names: top.map(x => pName(code, x.k)), sideCode, sideNames: sItems.map(x => pName(sideCode, x.k)), sideTotal: sTot, chCols,
+    crumb: PD.path.map((k, i) => pName(dims[i], k)).join(' › ')};
+}
+$('#prodSec').addEventListener('click', e => {
+  const pk = e.target.closest('[data-pk]');
+  if (pk) { if (PD.path.length < pDims().length - 1) { PD.path = [...PD.path, +pk.dataset.pk]; renderProd(); save(); } return; }
+  const plv = e.target.closest('[data-plv]');
+  if (plv) { PD.path = PD.path.slice(0, +plv.dataset.plv); renderProd(); save(); return; }
+  const ps = e.target.closest('[data-psel]');
+  if (ps) { PD.sel = ps.getAttribute('data-psel'); renderProd(); return; }
+  const pm = e.target.closest('[data-pm]');
+  if (pm) { PD.metric = pm.dataset.pm; renderProd(); return; }
+  const pv = e.target.closest('[data-pv]');
+  if (pv) { if (PD.view !== pv.dataset.pv) { PD.view = pv.dataset.pv; PD.path = []; } renderProd(); save(); return; }
+  const pch = e.target.closest('[data-pch]');
+  if (pch && PRD) {
+    const k = +pch.dataset.pch;
+    PD.chans = k < 0 ? [] : PD.chans.includes(k) ? PD.chans.filter(x => x !== k) : [...PD.chans, k].sort((a, b) => a - b);
+    if (PD.chans.length === PRD.ch.length) PD.chans = [];  // 모두 고르면 전체와 같다
+    renderProd(); save(); return;
+  }
+  const psort = e.target.closest('[data-psort]');
+  if (psort) { PD.sort = psort.dataset.psort; renderProd(); }
+});
+$('#prodSec').addEventListener('keydown', e => {
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[data-pk]')) { e.preventDefault(); e.target.click(); }
+});
+$('#pdPeriod').addEventListener('change', e => { PD.sel = e.target.value; renderProd(); });
+
+/* ---------- 앱 설치 · 앱푸시 수신동의 — 신규회원 기준, 모두 앱 설치자 기준 (APP설치데이터 · PUSH) ---------- */
+// 흐름(flow) = 기간 합(일평균 메뉴면 ÷ 데이터 일수) · 재고(stock) = 기간 마지막 날 값 · 비율 = 분자·분모가 모두 있는 날의 합끼리 나눔
+MET.xcnt = {name: '', unit: '', type: 'flow'};
+MET.xpct = {name: '', type: 'ratio', pct: true, dp: 1};
+const G_NEW = '신규회원 · 앱 설치자 기준', G_PUSH = '앱푸시 수신동의 회원 · 앱 설치자 기준', G_APP = '앱 설치 상세 · APP설치데이터';
+const AX = {
+  sg:      {grp: G_NEW, name: '가입자수', type: 'flow', key: 'sg|*TOTAL', unit: '명'},
+  appNew:  {grp: G_NEW, name: '앱 신규 설치', type: 'flow', key: 'app|new', unit: '건'},
+  pNyAdd:  {grp: G_NEW, name: '앱푸시 수신동의 (신규회원)', type: 'flow', key: 'push|ny_add', unit: '명'},
+  rNy:     {grp: G_NEW, name: '앱푸시 수신동의율 (신규회원)', type: 'ratio', num: 'push|ny_add', den: 'sg|*TOTAL', pct: true, formula: '앱푸시 수신동의(신규회원) ÷ 가입자수'},
+  rApp:    {grp: G_NEW, name: '가입자 대비 앱 신규 설치율', type: 'ratio', num: 'app|new', den: 'sg|*TOTAL', pct: true, formula: '앱 신규 설치 ÷ 가입자수'},
+  rConv:   {grp: G_NEW, name: '앱 신규 설치 대비 수신동의율', type: 'ratio', num: 'push|ny_add', den: 'app|new', pct: true, formula: '앱푸시 수신동의(신규회원) ÷ 앱 신규 설치'},
+  pTot:    {grp: G_PUSH, name: '수신동의 회원', type: 'stock', key: 'push|tot_stock', unit: '명'},
+  pEx:     {grp: G_PUSH, name: '기존 회원', type: 'stock', key: 'push|ex_stock', unit: '명', sub: true},
+  pNy:     {grp: G_PUSH, name: '신규 회원 (당년 가입)', short: '신규 회원', type: 'stock', key: 'push|ny_stock', unit: '명', sub: true},
+  pAdd:    {grp: G_PUSH, name: '수신동의 추가', type: 'flow', key: 'push|tot_add', unit: '명'},
+  pExAdd:  {grp: G_PUSH, name: '기존 회원 추가', type: 'flow', key: 'push|ex_add', unit: '명', sub: true},
+  pNyAddB: {grp: G_PUSH, name: '신규 회원 추가', type: 'flow', key: 'push|ny_add', unit: '명', sub: true},
+  pOut:    {grp: G_PUSH, name: '수신동의 이탈', type: 'flow', key: 'push|tot_out', unit: '명', inv: true},
+  pExOut:  {grp: G_PUSH, name: '기존 회원 이탈', short: '기존 회원', type: 'flow', key: 'push|ex_out', unit: '명', sub: true, inv: true},
+  pNyOut:  {grp: G_PUSH, name: '신규 회원 이탈', type: 'flow', key: 'push|ny_out', unit: '명', sub: true, inv: true},
+  pChg:    {grp: G_PUSH, name: '수신동의 순증', type: 'flow', key: 'push|tot_chg', unit: '명'},
+  appAll:  {grp: G_APP, name: '전체 설치', type: 'flow', key: 'app|all', unit: '건'},
+  appRe:   {grp: G_APP, name: '재설치', type: 'flow', key: 'app|re', unit: '건', sub: true},
+  appVisit: {grp: G_APP, name: '스토어 방문', type: 'flow', key: 'app|visit', unit: '건'},
+  appDel:  {grp: G_APP, name: '삭제', type: 'flow', key: 'app|del', unit: '건', inv: true},
+  appNet:  {grp: G_APP, name: '순증 설치', type: 'flow', key: 'app|net', unit: '건'},
+  appDev:  {grp: G_APP, name: 'Push 활성 기기', type: 'stock', key: 'app|pushdev', unit: '대'},
+};
+const AX_ORDER = Object.keys(AX);
+function axVal(id, dates, mode) {  // mode 를 주면 상단 일평균/누계 대신 그 방식
+  const M = AX[id];
+  if (!dates || !dates.length) return null;
+  const at = (k, d) => { const a = DAILY.s[k], i = DAILY.idx.get(d); return a && i != null ? a[i] : null; };
+  if (M.type === 'flow') {
+    let v = 0, n = 0;
+    for (const d of dates) { const x = at(M.key, d); if (x != null) { v += x; n++; } }
+    if (!n || n * 2 < dates.length) return null;  // 기간의 절반 넘게 비면 값을 내지 않는다
+    return (mode || S.mode) === 'avg' ? v / n : v;
+  }
+  if (M.type === 'stock') {
+    for (let i = dates.length - 1; i >= 0; i--) { const x = at(M.key, dates[i]); if (x != null) return x; }
+    return null;
+  }
+  let a = 0, b = 0, n = 0;  // ratio
+  for (const d of dates) { const x = at(M.num, d), y = at(M.den, d); if (x != null && y != null) { a += x; b += y; n++; } }
+  return n && b && n * 2 >= dates.length ? a / b : null;
+}
+const axDelta = (id, c, p) => !ok(c) || !ok(p) ? null : AX[id].pct ? {v: (c - p) * 100, unit: '%p', dp: 2} : (p > 0 ? {v: (c / p - 1) * 100, unit: '%', dp: 1} : null);
+// 이탈 · 삭제는 늘어나면 나쁜 지표 → 색만 반대로 (+빨강 / △초록)
+const axFmtDelta = (id, c, p) => { const f = fmtDelta(axDelta(id, c, p)); return AX[id].inv && f.c ? {...f, c: f.c === 'pos' ? 'neg' : 'pos'} : f; };
+function fmtAX(id, v) {
+  if (!ok(v)) return '–';
+  if (AX[id].pct) return (v * 100).toFixed(2) + '%';
+  return Math.abs(v) < 10 && Math.abs(v - Math.round(v)) > 1e-9 ? v.toFixed(1) : NF.format(Math.round(v));
+}
+function renderApp() {
+  const sec = $('#appSec');
+  if (!DAILY.s['push|tot_stock'] && !DAILY.s['app|new']) { sec.hidden = true; return; }
+  sec.hidden = false;
+  const cols = getCols(false), y = S.year, k = focusIdx(cols), col = k >= 0 ? cols[k] : null, pop = cmpPop();
+  const appMissing = !DAILY.s['app|new'];
+  $('#appNote').hidden = !appMissing;
+  const lastOf = key => { const a = DAILY.s[key]; if (!a) return null; for (let i = a.length - 1; i >= 0; i--) if (a[i] != null) return DAILY.dates[i]; return null; };
+  const appLast = lastOf('app|new'), allLast = DAILY.dates.at(-1);
+  $('#appDesc').textContent = `가입 → 앱 신규 설치 → 앱푸시 수신동의 · 모두 앱 설치자 기준 · ${col ? col.tip : '데이터 없음'} · 흐름 ${modeName()}, 회원·기기 수는 기간 말 · ${cmpDesc()}${appLast && appLast < allLast ? ` · 앱 설치 raw ~${md(appLast)}` : ''} · 채널/회원구분 필터 미적용`;
+  const TILES = ['sg', 'appNew', 'pNyAdd', 'rNy', 'rApp', 'rConv', ['pTot', 'pNy'], ['pOut', 'pExOut']];
+  const APP_DEP = new Set(['appNew', 'rApp', 'rConv']);  // 앱 설치 raw 가 있어야 계산되는 타일
+  $('#appTiles').innerHTML = col ? TILES.map(t => {
+    const [id, subId] = Array.isArray(t) ? t : [t, null];
+    const M = AX[id], c = axVal(id, col.cur), p = axVal(id, col.prev), dl = axFmtDelta(id, c, p);
+    const sub = subId ? `<div class="t-r"><span>${esc(AX[subId].short || AX[subId].name)}</span><span>${fmtAX(subId, axVal(subId, col.cur))}</span></div>`
+      : APP_DEP.has(id) && !ok(c) && appLast && col.cur[0] > appLast  // 고른 기간에 앱 설치 raw 가 아직 없음(갱신 전)
+        ? `<div class="t-r"><span>앱 설치 데이터</span><span>~${md(appLast)}까지</span></div>`
+        : `<div class="t-r"><span>${pop ? CMP_NAME[S.grain] : '전년 동기간'}</span><span>${fmtAX(id, p)}</span></div>`;
+    return `<div class="tile" data-ax="${id}"${M.formula ? ` title="${esc(M.formula)}"` : ''}><div class="t-l">${esc(M.name)}${M.type === 'stock' ? '<span class="t-tag">기간 말</span>' : ''}</div>
+      <div class="t-v">${fmtAX(id, c)}${M.unit && ok(c) ? `<small>${M.unit}</small>` : ''}</div>
+      <div class="t-r"><span>${cmpLbl()}</span><b class="${dl.c}">${dl.t}</b></div>${sub}</div>`;
+  }).join('') : '';
+  const ser = (id, color, name, mode) => ({name: name || AX[id].name, color, dash: '', cur: cols.map(c => axVal(id, c.cur, mode)), prev: cols.map(c => axVal(id, c.prev, mode)), pest: cols.map(() => false)});
+  // 흐름 차트는 늘 일평균 — 누계면 진행 중인 달·주(예: 9월 1~13일, 앱 설치는 ~9/12)가 뚝 떨어진 것처럼 보인다
+  const AVG = S.grain === 'day' ? '일 값' : `일평균${S.mode === 'sum' ? ' (누계 메뉴에서도 일평균으로 그림)' : ''}`;
+  const charts = [
+    {t: '가입 → 앱 신규 설치 → 앱푸시 수신동의', s: AVG, m: 'xcnt', single: false,
+     series: [ser('sg', 'var(--c1)', '', 'avg'), ser('appNew', 'var(--c2)', appMissing ? '앱 신규 설치(데이터 없음)' : '앱 신규 설치', 'avg'), ser('pNyAdd', 'var(--c3)', '앱푸시 수신동의(신규회원)', 'avg')]},
+    {t: '앱푸시 수신동의율 (신규회원)', s: '앱푸시 수신동의 ÷ 가입자수', m: 'xpct', single: true, series: [ser('rNy', 'var(--c3)')]},
+    {t: '앱푸시 수신동의 회원', s: '기간 말 · 앱 설치자 기준', m: 'xcnt', single: true, series: [ser('pTot', 'var(--c1)')]},
+    {t: '수신동의 추가 · 이탈', s: AVG, m: 'xcnt', single: false, series: [ser('pAdd', 'var(--c3)', '', 'avg'), ser('pOut', 'var(--c8)', '', 'avg')]},
+  ];
+  const host = $('#appCharts');
+  host.innerHTML = charts.map((c, i) => {
+    const lg = c.single ? `<span class="lg-in"><i class="k" style="background:${c.series[0].color}"></i>${y}</span>${pop ? '' : `<span class="lg-in"><i class="k prev"></i>${y - 1}</span>`}`
+      : c.series.map(sr => `<span class="lg-in"><i class="k" style="background:${sr.color}"></i>${esc(sr.name)}</span>`).join('');
+    return `<div class="card cc"><div class="cc-t">${esc(c.t)}</div><div class="cc-s">${esc(c.s)} · ${lg}</div><div class="cc-b" data-ak="${i}"></div></div>`;
+  }).join('');
+  const focus = focusSet() ? k : null;
+  charts.forEach((c, i) => lineChart(host.querySelector(`[data-ak="${i}"]`), {m: c.m, grain: S.grain, single: c.single, noPrev: pop, cmpLbl: cmpLbl(), focus,
+    labels: cols.map(x => x.label), tips: cols.map(x => x.tip), ptips: cols.map(x => x.ptip), series: c.series, aria: c.t}));
+
+  let h = `<table class="grid"><thead><tr><th class="stick s1">지표</th>${cols.map((c, i) => `<th class="p${i === k ? ' now' : ''}" title="${esc(c.tip)}">${esc(c.label)}${c.sub ? `<small>${esc(c.sub)}</small>` : ''}</th>`).join('')}<th class="p bk">${esc(col ? `${col.label} ${cmpLbl()}` : cmpLbl())}</th></tr></thead><tbody>`;
+  let grp = '';
+  for (const id of AX_ORDER) {
+    const M = AX[id];
+    if (M.grp !== grp) { grp = M.grp; h += `<tr class="grp"><th class="stick s1">${esc(grp)}</th><td colspan="${cols.length + 1}"></td></tr>`; }
+    const last = col ? axFmtDelta(id, axVal(id, col.cur), axVal(id, col.prev)) : {t: '–', c: ''};
+    h += `<tr class="${M.sub ? 'ch' : 'top'}"><th class="stick s1${M.sub ? ' ax-sub' : ''}"${M.formula ? ` title="${esc(M.formula)}"` : ''}>${esc(M.name)}${M.type === 'stock' ? '<small class="ax-tag">기간 말</small>' : ''}</th>`
+      + cols.map((c, i) => {
+        const v = axVal(id, c.cur), p = axVal(id, c.prev), dl = axFmtDelta(id, v, p);
+        return `<td class="${i === k ? 'now' : ''}" title="${esc(`${c.tip} · ${baseShort()} ${fmtAX(id, p)} · ${cmpLbl()} ${dl.t}`)}">${fmtAX(id, v)}</td>`;
+      }).join('') + `<td class="bk ${last.c}">${last.t}</td></tr>`;
+  }
+  const wrap = $('#appTbl');
+  wrap.innerHTML = h + '</tbody></table>';
+  wrap.scrollLeft = wrap.scrollWidth;
+}
+
+/* ---------- 렌더 ---------- */
+function render() {
+  syncControls();
+  const cols = getCols(false);
+  lastCols = cols;
+  MODEL = buildModel(cols);
+  renderSummary(S.grain === 'month' ? cols : getCols(true));
+  renderCharts(cols);
+  renderTable(cols);
+  renderProd();
+  renderApp();
+  renderKpi();
+  save();
+}
+$('#asof').textContent = `데이터 ~${DAILY.dates.at(-1) || LAST} · raw ${D.meta.sources.join(', ')}`;
+$('#asof').title = `빌드 ${D.meta.built}`;
+let rq = 0, lastW = $('#charts').clientWidth;
+new ResizeObserver(() => {
+  const w = $('#charts').clientWidth;
+  if (w === lastW) return;
+  lastW = w; cancelAnimationFrame(rq); rq = requestAnimationFrame(() => { renderCharts(lastCols); renderApp(); });
+}).observe($('#charts'));
+render();
+window.__dash = {get state() { return S; }, render, compute, evalCol, getCols, seriesKeys, fmt, MET, METRICS, CHS, SEGS, YEARS, get MODEL() { return MODEL; },
+                 computeKpi, selStats: () => SEL.stats, selTSV, prodState: PD, renderProd, prodView: () => PVIEW, prodReady: () => !!PRD, axVal, AX, AX_ORDER, renderApp};
+loadProducts();
+};
+</script>
+<script>
+/* ---------- 데이터 백업 · 불러오기 ----------
+   백업 다운로드 = 지금 보고 있는 데이터(DASH_DATA · DASH_KPI · DASH_PROD)를 한 파일(.json.gz)로 저장.
+   백업 불러오기 = 그 파일을 검증해 IndexedDB 에 저장하고 새로고침 → 부팅할 때 저장된 백업으로 대시보드를 연다. */
+(function () {
+'use strict';
+const FORMAT = 'fp-dashboard-backup', DB = 'fp-dashboard-backup', STORE = 'kv', KEY = 'active';
+const $id = id => document.getElementById(id);
+function idb(mode, fn) {
+  return new Promise((resolve, reject) => {
+    if (!window.indexedDB) { reject(new Error('이 브라우저는 저장소(IndexedDB)를 쓸 수 없습니다')); return; }
+    const open = indexedDB.open(DB, 1);
+    open.onupgradeneeded = () => open.result.createObjectStore(STORE);
+    open.onerror = () => reject(open.error);
+    open.onsuccess = () => {
+      const db = open.result, tx = db.transaction(STORE, mode), req = fn(tx.objectStore(STORE));
+      tx.oncomplete = () => { db.close(); resolve(req ? req.result : undefined); };
+      tx.onerror = tx.onabort = () => { db.close(); reject(tx.error || new Error('저장 실패')); };
+    };
+  });
+}
+const loadScript = src => new Promise((resolve, reject) => {
+  const el = document.createElement('script');
+  el.src = src; el.onload = resolve; el.onerror = () => reject(new Error(`${src} 를 불러오지 못했습니다`));
+  document.body.appendChild(el);
+});
+async function ensureProducts() {
+  if (!window.DASH_PROD && !(window.DASH_BACKUP && !window.DASH_BACKUP.hasProd)) {
+    try { await loadScript(`data/products.js?v=${encodeURIComponent((window.DASH_DATA && window.DASH_DATA.meta.built) || Date.now())}`); } catch (e) { /* 상품 데이터 없이 백업 */ }
+  }
+  return window.DASH_PROD || null;
+}
+function validate(o) {
+  const fail = what => { throw new Error(`첫구매 대시보드 백업 파일이 아닙니다 (${what})`); };
+  if (!o || typeof o !== 'object' || o.format !== FORMAT) fail('형식');
+  if (!(o.version >= 1)) fail('버전');
+  const d = o.data;
+  if (!d || !d.daily || !Array.isArray(d.daily.p) || !d.daily.s || typeof d.daily.s !== 'object'
+      || !d.weekly || !Array.isArray(d.weekly.p) || !d.meta || !Array.isArray(d.meta.channels)) fail('실적 데이터');
+  for (const [k, arr] of Object.entries(d.daily.s)) if (!Array.isArray(arr) || arr.length !== d.daily.p.length) fail(`일별 ${k}`);
+  if (o.prod != null && (!o.prod.meta || !Array.isArray(o.prod.f) || !Array.isArray(o.prod.ch) || !Array.isArray(o.prod.cov))) fail('상품 데이터');
+  if (o.kpi != null && (typeof o.kpi !== 'object' || !o.kpi.targets)) fail('KPI');
+  return o;
+}
+async function blobOf(payload) {  // 백업 payload → .json.gz (압축을 못 쓰는 브라우저면 .json)
+  const json = new Blob([JSON.stringify(payload)], {type: 'application/json'});
+  if (!window.CompressionStream) return {blob: json, ext: 'json'};
+  const gz = await new Response(json.stream().pipeThrough(new CompressionStream('gzip'))).blob();
+  return {blob: new Blob([gz], {type: 'application/gzip'}), ext: 'json.gz'};
+}
+async function makeBlob() {
+  if (!window.DASH_DATA) throw new Error('지금 열린 데이터가 없습니다');
+  const prod = await ensureProducts(), d = window.DASH_DATA;
+  return blobOf({format: FORMAT, version: 1, created: new Date().toISOString(),
+                 source: window.DASH_BACKUP ? window.DASH_BACKUP.name : 'data/data.js',
+                 lastDate: d.meta.lastDate, built: d.meta.built, data: d, kpi: window.DASH_KPI || null, prod});
+}
+const backupName = (lastDate, ext) => `첫구매대시보드_백업_데이터${String(lastDate || '').replace(/-/g, '')}_${stamp(new Date())}.${ext}`;
+function saveBlob(blob, name) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+}
+async function parseFile(file) {
+  const head = new Uint8Array(await file.slice(0, 2).arrayBuffer());
+  let text;
+  if (head[0] === 0x1f && head[1] === 0x8b) {
+    if (!window.DecompressionStream) throw new Error('이 브라우저는 압축(.gz) 백업을 풀 수 없습니다');
+    try { text = await new Response(file.stream().pipeThrough(new DecompressionStream('gzip'))).text(); }
+    catch (e) { throw new Error('압축을 풀 수 없습니다 (파일 손상)'); }
+  } else text = await file.text();
+  let o;
+  try { o = JSON.parse(text); } catch (e) { throw new Error('백업 파일을 읽을 수 없습니다 (JSON 아님)'); }
+  return validate(o);
+}
+const stamp = t => { const p = n => String(n).padStart(2, '0'); return `${t.getFullYear()}${p(t.getMonth() + 1)}${p(t.getDate())}_${p(t.getHours())}${p(t.getMinutes())}`; };
+async function download() {
+  const btn = $id('btnBackup'), label = btn.textContent;
+  btn.disabled = true; btn.textContent = '백업 만드는 중…';
+  try {
+    const {blob, ext} = await makeBlob();
+    saveBlob(blob, backupName(window.DASH_DATA.meta.lastDate, ext));
+  } catch (e) { alert(`백업을 만들지 못했습니다: ${e.message}`); }
+  finally { btn.disabled = false; btn.textContent = label; }
+}
+async function restore(file, opts = {}) {
+  const o = await parseFile(file);
+  const info = {name: file.name || '백업 파일', loaded: new Date().toISOString(), created: o.created || '', hasProd: !!o.prod,
+                lastDate: o.lastDate || o.data.meta.lastDate || '', built: o.built || o.data.meta.built || ''};
+  await idb('readwrite', st => st.put({info, data: o.data, kpi: o.kpi || null, prod: o.prod || null}, KEY));
+  if (opts.reload !== false) location.reload();
+  return info;
+}
+async function clear(reload = true) {
+  await idb('readwrite', st => st.delete(KEY));
+  if (reload) location.reload();
+}
+const read = () => idb('readonly', st => st.get(KEY));
+/* ---------- 새 데이터 추가 (merge.js — build_data.py 규칙을 옮긴 합치기) ---------- */
+async function loadMerge() { if (!window.FP_MERGE) await loadScript('merge.js'); return window.FP_MERGE; }
+async function mergeFiles(files) {
+  const M = await loadMerge(), prod = window.DASH_DATA ? await ensureProducts() : null;
+  return M.merge({data: window.DASH_DATA || null, kpi: window.DASH_KPI || null, prod}, files);
+}
+async function applyMerged(res, opts = {}) {  // 합친 결과를 브라우저에 저장(백업 불러오기와 같은 자리) · 원하면 백업 파일도 내려받기
+  const payload = validate({format: FORMAT, version: 1, created: new Date().toISOString(), source: '새 데이터 추가',
+    lastDate: res.data.meta.lastDate, built: res.data.meta.built, data: res.data, kpi: res.kpi || null, prod: res.prod || null});
+  if (opts.download) { const {blob, ext} = await blobOf(payload); saveBlob(blob, backupName(payload.lastDate, ext)); }
+  const info = {name: `새 데이터 반영 (~${payload.lastDate})`, loaded: new Date().toISOString(), created: payload.created,
+                hasProd: !!payload.prod, lastDate: payload.lastDate, built: payload.built};
+  await idb('readwrite', st => st.put({info, data: payload.data, kpi: payload.kpi, prod: payload.prod}, KEY));
+  if (opts.reload !== false) setTimeout(() => location.reload(), opts.download ? 1500 : 0);  // 내려받기가 시작될 틈을 둔다
+  return info;
+}
+const escHtml = x => String(x).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+let MERGED = null;
+function showMerge(res) {
+  const sm = res.summary, list = ds => ds.length ? ` (${ds.slice(0, 7).join(', ')}${ds.length > 7 ? ' …' : ''})` : '';
+  const lines = [
+    `기준 데이터 ~${escHtml(sm.before || '없음')} → 합친 뒤 <b>~${escHtml(sm.after || '없음')}</b> · 파일 읽음 ${sm.read} · 건너뜀 ${sm.skipped} · <span class="${sm.errors ? 'mwarn' : ''}">오류 ${sm.errors}</span>`,
+    `새 날짜 <b>${sm.newDates.length}일</b>${escHtml(list(sm.newDates))} · 값이 들어온 기존 날짜 ${sm.filledDates}일 · 주차 새로 ${sm.newWeeks} · 갱신 ${sm.updatedWeeks}`,
+    `기존 값과 달라진 칸 <b class="${sm.changedCells ? 'mwarn' : ''}">${sm.changedCells.toLocaleString()}</b>${sm.changedEx.length ? ` — 예: ${sm.changedEx.map(escHtml).join(' / ')}` : ' (겹치는 기간은 기존 값과 같음)'}`,
+    `상품 ${sm.productDays.length ? `${escHtml(sm.productDays.join(', '))} · ${sm.productRows.toLocaleString()}행 · 새 개별 상품 ${sm.newProducts}` : '추가 없음'} · 상품 커버리지 ${sm.coverageCells.toLocaleString()}칸`,
+    ...sm.warn.map(w => `<span class="mwarn">⚠ ${escHtml(w)}</span>`),
+    sm.changed ? '' : '<span class="mwarn">합칠 새 데이터가 없습니다 — 파일을 확인하세요</span>',
+  ].filter(Boolean);
+  const cls = {'읽음': 'st-ok', '건너뜀': 'st-skip', '오류': 'st-err'};
+  $id('mergeOut').innerHTML = `<div class="msum">${lines.join('<br>')}</div><div class="mlog"><table><thead><tr><th>결과</th><th>파일</th><th>내용</th></tr></thead><tbody>`
+    + res.log.map(x => `<tr><td class="${cls[x.status] || ''}">${x.status}</td><td>${escHtml(x.file)}</td><td>${escHtml(x.note)}</td></tr>`).join('') + '</tbody></table></div>';
+  $id('mergeApply').disabled = $id('mergeApplyOnly').disabled = !sm.changed;
+}
+async function runMerge(files) {
+  if (!files.length) return;
+  MERGED = null;
+  $id('mergeApply').disabled = $id('mergeApplyOnly').disabled = true;
+  $id('mergeOut').innerHTML = `<div class="msum">파일 ${files.length}개를 읽고 합치는 중… (상품 데이터가 커서 몇 초 걸릴 수 있어요)</div>`;
+  try { MERGED = await mergeFiles(files); showMerge(MERGED); }
+  catch (err) { $id('mergeOut').innerHTML = `<div class="merr">합치지 못했습니다: ${escHtml(err.message)}</div>`; }
+}
+window.FP_BACKUP = {makeBlob, blobOf, parseFile, restore, clear, read, validate, loadMerge, mergeFiles, applyMerged};
+
+const dlg = $id('mergeDlg');
+$id('btnMerge').addEventListener('click', () => {
+  const d = window.DASH_DATA;
+  $id('mergeBase').textContent = d ? ` (데이터 ~${d.meta.lastDate}${window.DASH_BACKUP ? ` · ${window.DASH_BACKUP.name}` : ' · data.js'})` : ' (열린 데이터 없음 — 올린 파일로 새로 만듦)';
+  dlg.showModal();
+});
+$id('mergeClose').addEventListener('click', () => dlg.close());
+$id('mergePickFiles').addEventListener('click', () => $id('fileMerge').click());
+$id('mergePickDir').addEventListener('click', () => $id('dirMerge').click());
+for (const id of ['fileMerge', 'dirMerge']) $id(id).addEventListener('change', e => { const fs = [...e.target.files]; e.target.value = ''; runMerge(fs); });
+dlg.addEventListener('dragover', e => { e.preventDefault(); dlg.classList.add('drag'); });
+dlg.addEventListener('dragleave', e => { if (e.target === dlg) dlg.classList.remove('drag'); });
+dlg.addEventListener('drop', e => { e.preventDefault(); dlg.classList.remove('drag'); runMerge([...e.dataTransfer.files]); });
+const applyBtn = download => async () => {
+  if (!MERGED) return;
+  $id('mergeApply').disabled = $id('mergeApplyOnly').disabled = true;
+  try {
+    await applyMerged(MERGED, {download});
+    $id('mergeOut').insertAdjacentHTML('beforeend', `<div class="msum">반영했습니다${download ? ' · 백업 파일을 내려받는 중' : ''} — 곧 새로고침합니다</div>`);
+  } catch (err) {
+    alert(`적용하지 못했습니다: ${err.message}`);
+    $id('mergeApply').disabled = $id('mergeApplyOnly').disabled = false;
+  }
+};
+$id('mergeApply').addEventListener('click', applyBtn(true));
+$id('mergeApplyOnly').addEventListener('click', applyBtn(false));
+// 백업 파일을 화면 어디에나 끌어다 놓으면 불러온다(새 데이터 추가 창이 열려 있으면 그 창이 raw 로 받는다)
+const fileDrag = e => !!e.dataTransfer && [...e.dataTransfer.types].includes('Files');
+window.addEventListener('dragover', e => { if (!fileDrag(e) || dlg.open) return; e.preventDefault(); document.body.classList.add('drop-on'); });
+window.addEventListener('dragleave', e => { if (!e.relatedTarget) document.body.classList.remove('drop-on'); });
+window.addEventListener('drop', async e => {
+  if (!fileDrag(e) || dlg.open) return;
+  e.preventDefault();
+  document.body.classList.remove('drop-on');
+  const f = [...e.dataTransfer.files].find(x => /\.(gz|json)$/i.test(x.name));
+  if (!f) { alert('백업 파일(.json.gz)을 놓아 주세요 — 일자별 raw(CSV)는 상단 새 데이터 추가 창에 놓습니다'); return; }
+  try { await restore(f); } catch (err) { alert(`불러오지 못했습니다: ${err.message}`); }
+});
+
+$id('btnBackup').addEventListener('click', download);
+$id('btnRestore').addEventListener('click', () => $id('fileRestore').click());
+$id('fileRestore').addEventListener('change', async e => {
+  const f = e.target.files[0];
+  e.target.value = '';
+  if (!f) return;
+  const btn = $id('btnRestore'), label = btn.textContent;
+  btn.disabled = true; btn.textContent = '불러오는 중…';
+  try { await restore(f); } catch (err) { alert(`불러오지 못했습니다: ${err.message}`); btn.disabled = false; btn.textContent = label; }
+});
+$id('btnBkClear').addEventListener('click', () => clear().catch(err => alert(err.message)));
+
+// 부팅 — 브라우저에 불러온 백업이 있으면 그 데이터로 연다(#selftest 는 항상 원래 데이터)
+(async () => {
+  // 이 폴더의 data.js · kpi.js — 주소 뒤에 시각을 붙여 매번 새로 받는다(브라우저가 예전 data.js 를 캐시로 보여 주지 않게).
+  // 웹 배포본처럼 파일이 없으면 그냥 넘어가고 백업(불러오기 · 끌어다 놓기)으로만 연다
+  const bust = `?t=${Date.now()}`;
+  await Promise.all(['data/data.js', 'kpi.js'].map(src => loadScript(src + bust).catch(() => null)));
+  window.DASH_LOCAL = window.DASH_DATA ? {lastDate: window.DASH_DATA.meta.lastDate, built: window.DASH_DATA.meta.built} : null;
+  let rec = null, boot = 'skip';
+  if (!/selftest/.test(location.hash)) {
+    // 저장소가 막히거나 응답이 없어도(사생활 보호 모드 · 다른 탭 잠금 등) 대시보드는 떠야 한다 → 1.5초 안에 답이 없으면 원래 데이터로
+    const timeout = new Promise(resolve => setTimeout(() => resolve('timeout'), 1500));
+    try {
+      const r = await Promise.race([read(), timeout]);
+      if (r === 'timeout') boot = 'timeout'; else { rec = r || null; boot = rec ? 'backup' : 'none'; }
+    } catch (e) { boot = 'error'; }
+  }
+  document.documentElement.dataset.boot = boot;  // 점검용: skip · none · backup · timeout · error
+  if (rec && rec.data) {
+    window.DASH_DATA = rec.data;
+    if (rec.kpi) window.DASH_KPI = rec.kpi;
+    window.DASH_PROD = rec.prod || undefined;
+    window.DASH_BACKUP = rec.info;
+    const i = rec.info, t = s => {  // 저장은 ISO(UTC) — 화면엔 이 PC 시각으로
+      const x = new Date(s), p = n => String(n).padStart(2, '0');
+      return isNaN(x) ? '' : `${x.getFullYear()}-${p(x.getMonth() + 1)}-${p(x.getDate())} ${p(x.getHours())}:${p(x.getMinutes())}`;
+    };
+    $id('bkInfo').innerHTML = '';
+    $id('bkInfo').append('백업 데이터로 보는 중 · ', Object.assign(document.createElement('b'), {textContent: i.name}),
+      ` · 데이터 ~${i.lastDate} · 빌드 ${i.built} · 불러온 시각 ${t(i.loaded)}${i.hasProd ? '' : ' · 상품 데이터 없음'}`);
+    const local = window.DASH_LOCAL;
+    if (local && (local.lastDate || '') > (i.lastDate || '')) {  // 폴더의 data.js 가 더 최신인데 예전 백업을 보고 있으면
+      $id('bkInfo').append(Object.assign(document.createElement('span'), {className: 'mwarn',
+        textContent: ` · ⚠ 이 폴더의 데이터(~${local.lastDate})가 더 최신입니다 — '원래 데이터로 돌아가기'를 누르면 최신 데이터로 봅니다`}));
+    }
+    $id('btnBkClear').textContent = local ? '원래 데이터로 돌아가기' : '백업 데이터 지우기';
+    $id('bkBanner').hidden = false;
+  }
+  if (!window.DASH_DATA) {
+    $id('main').innerHTML = `<div class="drop-empty"><h2>첫구매 실적 대시보드</h2>
+      <p>백업 파일(<code>.json.gz</code>)을 이 화면에 끌어다 놓거나<br><button class="btn primary" type="button" id="btnRestoreEmpty">백업 파일 열기</button></p>
+      <p class="hint">파일은 서버로 올라가지 않고 이 브라우저에만 저장됩니다(지우기: 위쪽 안내줄의 '백업 데이터 지우기').<br>일자별 raw 가 있으면 상단 <b>새 데이터 추가</b> · 로컬 폴더에서는 <code>python build_data.py</code></p></div>`;
+    $id('btnRestoreEmpty').addEventListener('click', () => $id('fileRestore').click());
+    return;
+  }
+  window.__dashMain();
+})();
+})();
+</script>
+</body>
+</html>
