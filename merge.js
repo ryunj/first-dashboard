@@ -482,7 +482,7 @@ function mergeProducts(prod, byDay, cov, lastDate) {
     m.set(code, (m.get(code) || 0) + amt);
     stats.rows++;
   }
-  const keep = new Set(), topN = prod.meta.topN || null;  // null = 모든 상품 개별 보관
+  const keep = new Set(), topN = null;  // 새로 들어오는 상품은 늘 개별 보관 — 예전 백업(상위 N만 개별)에 합쳐도 새 날짜는 기타로 묶지 않는다
   for (const [yp, codes] of cand) {
     if (!topN) { for (const [code] of codes) keep.add(`${yp}|${code}`); continue; }
     const have = kept.get(yp) || new Map();
@@ -549,7 +549,7 @@ function mergeProducts(prod, byDay, cov, lastDate) {
     maxDay = Math.max(maxDay, d);
   }
   const out = {
-    meta: {...prod.meta, built: nowText(), topN: prod.meta.topN || null, covFields: 6, start: ymd(startT), days: maxDay + 1, lastDate: lastDate || prod.meta.lastDate,
+    meta: {...prod.meta, built: nowText(), topN: null, legacyTopN: prod.meta.topN || prod.meta.legacyTopN || null, covFields: 6, start: ymd(startT), days: maxDay + 1, lastDate: lastDate || prod.meta.lastDate,
            rows: (prod.meta.rows || 0) + stats.rows, products: (prod.meta.products || 0) + stats.newProducts},
     ch: lists.ch, bpu: lists.bpu, cat: lists.cat, brand: lists.brand, paths, prods, f, cov: covOut,
   };
