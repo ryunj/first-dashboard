@@ -254,6 +254,9 @@ a.pc:hover{text-decoration:underline}
 .grid td.al,.grid th.al{text-align:left}
 /* 상품 구성 — 채널 구성 띠 · 분산 · 상품×채널 표 */
 .pd-filter{padding-block:0 8px}
+.tag-b{margin-left:6px;padding:1px 6px;border-radius:5px;font-size:10.5px;font-weight:600;background:color-mix(in srgb,var(--c1) 12%,var(--surface));color:var(--c1);vertical-align:1px}
+.tag-b.off{background:var(--wash);color:var(--muted)}
+.bar2.off .chips{opacity:.45;pointer-events:none}
 .pmix{display:flex;height:10px;border-radius:3px;overflow:hidden;background:color-mix(in srgb,var(--ink) 6%,transparent)}
 .pmix i{display:block;height:100%}
 .pb-c{text-align:right;font-size:11.5px;color:var(--ink-2);white-space:nowrap}
@@ -351,14 +354,14 @@ details.notes li{margin:3px 0}
 .memo-t ul,.memo-in ul{margin:4px 0;padding-left:18px}
 .memo-t mark,.memo-in mark{background:#fff3a3;color:inherit}
 /* 상품 구성 카테고리 — 체크박스 태그 */
-#pdCatChips{gap:5px}
-#pdCatChips .chip{gap:6px;padding:3px 10px 3px 7px;font-size:12px;font-weight:500;color:var(--muted);background:var(--surface);border:1px solid var(--grid);border-radius:7px;transition:background .12s,border-color .12s,color .12s}
-#pdCatChips .chip::before{content:"";flex:none;width:13px;height:13px;border-radius:4px;border:1.5px solid var(--axis);background:var(--surface);box-sizing:border-box}
-#pdCatChips .chip[aria-pressed="true"]{color:var(--ink);font-weight:500;background:color-mix(in srgb,var(--c1) 8%,var(--surface));border-color:color-mix(in srgb,var(--c1) 34%,var(--grid))}
-#pdCatChips .chip[aria-pressed="true"]::before{border-color:var(--c1);background:var(--c1) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.2 5 8.6 9.6 3.6' fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/11px no-repeat}
-#pdCatChips .chip.all{font-weight:650;color:var(--ink)}
-#pdCatChips .chip.all.part::before{border-color:var(--c1);background:var(--c1) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 6h6' fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E") center/11px no-repeat}
-#pdCatChips .chip:hover{border-color:var(--axis);color:var(--ink)}
+#pdCatChips,#bpuChips{gap:5px}
+#pdCatChips .chip,#bpuChips .chip{gap:6px;padding:3px 10px 3px 7px;font-size:12px;font-weight:500;color:var(--muted);background:var(--surface);border:1px solid var(--grid);border-radius:7px;transition:background .12s,border-color .12s,color .12s}
+#pdCatChips .chip::before,#bpuChips .chip::before{content:"";flex:none;width:13px;height:13px;border-radius:4px;border:1.5px solid var(--axis);background:var(--surface);box-sizing:border-box}
+#pdCatChips .chip[aria-pressed="true"],#bpuChips .chip[aria-pressed="true"]{color:var(--ink);font-weight:500;background:color-mix(in srgb,var(--c1) 8%,var(--surface));border-color:color-mix(in srgb,var(--c1) 34%,var(--grid))}
+#pdCatChips .chip[aria-pressed="true"]::before,#bpuChips .chip[aria-pressed="true"]::before{border-color:var(--c1);background:var(--c1) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.2 5 8.6 9.6 3.6' fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/11px no-repeat}
+#pdCatChips .chip.all,#bpuChips .chip.all{font-weight:650;color:var(--ink)}
+#pdCatChips .chip.all.part::before,#bpuChips .chip.all.part::before{border-color:var(--c1);background:var(--c1) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 6h6' fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E") center/11px no-repeat}
+#pdCatChips .chip:hover,#bpuChips .chip:hover{border-color:var(--axis);color:var(--ink)}
 .pd-cat-n{font-size:11.5px;font-weight:600;color:var(--ink-2);white-space:nowrap;font-variant-numeric:tabular-nums}
 #pdCatBar{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 10px;align-items:start}
 #pdCatBar .flabel{padding-top:4px}
@@ -469,18 +472,28 @@ body.pdfcap .pgrid{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr)!important
         <button data-set="cmp" data-v="pop" id="btnPop">전월</button>
       </div>
     </div>
+    <div class="bar2" id="segBar">
+      <span class="flabel">회원구분</span>
+      <div class="chips" id="segChips" role="group" aria-label="회원구분 선택 (여러 개 선택 가능)"></div>
+      <button class="lnk" data-quickseg="total">전체만</button>
+      <button class="lnk" data-quickseg="all">구분 모두</button>
+      <span class="hint" id="segHint">거래액·고객수·객단가에 적용</span>
+    </div>
     <div class="bar2">
       <span class="flabel">채널</span>
       <div class="chips" id="chips" role="group" aria-label="채널 선택 (여러 개 선택 가능)"></div>
       <button class="lnk" data-quick="total">전체만</button>
       <button class="lnk" data-quick="all">채널 모두</button>
     </div>
-    <div class="bar2">
-      <span class="flabel">회원구분</span>
-      <div class="chips" id="segChips" role="group" aria-label="회원구분 선택 (여러 개 선택 가능)"></div>
-      <button class="lnk" data-quickseg="total">전체만</button>
-      <button class="lnk" data-quickseg="all">구분 모두</button>
-      <span class="hint">거래액·고객수·객단가에 적용</span>
+    <div class="bar2" id="bpuBar" hidden>
+      <span class="flabel">BPU</span>
+      <div class="chips" id="bpuChips" role="group" aria-label="BPU 선택 (여러 개 선택 가능)"></div>
+      <span class="hint" id="bpuHint">고르면 거래액·고객수·객단가가 상품 기준으로 바뀜</span>
+    </div>
+    <div class="bar2" id="pdCatBar" hidden>
+      <span class="flabel">카테고리</span>
+      <div class="chips" id="pdCatChips" role="group" aria-label="카테고리 선택 (여러 개 선택 가능)"></div>
+      <div class="pd-cat-meta"><span class="pd-cat-n" id="pdCatN"></span><span class="hint">누르면 빼기/넣기 · 전체 = 모두 선택 ↔ 해제 · 거르면 커버리지 · 상품UV · CR 숨김</span></div>
     </div>
   </div>
 </header>
@@ -549,8 +562,6 @@ body.pdfcap .pgrid{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr)!important
         </div>
       </div>
     </div>
-    <div class="bar2 pd-filter"><span class="flabel">채널</span><div class="chips" id="pdChips" role="group" aria-label="상품 구성 채널 필터 (여러 개 선택 가능)"></div><span class="hint">상품 구성에만 적용 · 전체 = 모든 채널 합산</span></div>
-    <div class="bar2 pd-filter" id="pdCatBar"><span class="flabel">카테고리</span><div class="chips" id="pdCatChips" role="group" aria-label="상품 구성 카테고리 필터 (여러 개 선택 가능)"></div><div class="pd-cat-meta"><span class="pd-cat-n" id="pdCatN"></span><span class="hint">누르면 빼기/넣기 · 전체 = 모두 선택 ↔ 해제 · 거르면 커버리지 · 상품UV · CR 숨김</span></div></div>
     <div class="card app-note" id="pdOld" hidden></div>
     <div class="card pd" id="pdBody"></div>
   </section>
@@ -589,6 +600,7 @@ body.pdfcap .pgrid{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr)!important
       <li><b>기준 기간</b>(상단 '기준') — 월별은 월, 주별은 주차, 일별은 날짜를 고른다. 요약 타일 · 표 강조 열 · 차트 음영 · 상품 구성 기본 기간 · 앱 섹션이 모두 그 기간 기준이고, 주별 · 일별 표와 차트는 그 기간에서 끝나는 범위(8주 · 13주 …)를 보여 준다. '최근 · …'(기본)은 데이터가 있는 가장 최근 기간.</li>
       <li><b>비교</b> — 기본 <b>전년 동기간</b>(전년비). <b>전월 · 전주 · 전일</b>로 바꾸면 표 · 차트 툴팁 · 요약 · 상품 구성 · 앱 섹션의 비교가 모두 직전 기간 대비(전월비 · 전주비 · 전일비)로 바뀐다. 전월은 진행 중인 달이면 같은 일수끼리(예: 9/1~13 ↔ 8/1~13), 끝난 달은 전월 전체. 전주 = 7일 전 같은 요일들, 전일 = 하루 전. 직전 기간 모드에선 차트의 전년선을 숨긴다(값은 툴팁). 요약 타일은 두 비교를 함께 보여 준다. KPI는 항상 전년 동기 누적.</li>
       <li><b>채널 · 회원구분</b>은 여러 개를 고를 수 있다. 차트 선 하나(채널 1개 × 구분 1개)면 당해 vs 전년, 여러 개면 비교선 — 색 = 채널, 선 모양 = 회원구분. 요약 타일은 선택 중 첫 번째 기준.</li>
+      <li><b>BPU · 카테고리</b>(상단 필터, 상품 데이터가 있을 때만) — 고르면 <b>거래액 · 고객수 · 객단가</b>가 <b>상품 기준</b>으로 다시 계산된다(그 지표에 '상품 기준' 꼬리표). 상품 원천에는 회원구분이 없어 회원구분은 전체로 고정되고, <b>트래픽 · 가입자수 · 가입률 · 당일가입 CR · 첫구매율</b>과 앱 설치 · 수신동의는 그대로 <b>전체 기준</b>이다('전체 기준' 꼬리표). 상품 기준 거래액은 <b>결제 완료(양수)</b> 건만 더한 값이라 전체 첫구매 거래액보다 작고(취소 · 환불 · 상품 미매칭 제외), 고객수는 상품별 <b>주문고객수의 합</b>이라 한 사람이 여러 상품을 사면 여러 번 센다. 상단 채널 · BPU · 카테고리는 <b>상품 구성</b> 영역에도 그대로 적용된다(드릴다운 · 기간별 표 · 상품군 표). 카테고리를 거르면 커버리지 · 상품UV · CR은 숨긴다.</li>
       <li><b>*(기울임)</b> = 전년 일자 raw가 없어 전년 주별 raw를 날짜별로 나눠 채운 추정값.</li>
       <li><b>KPI 목표</b>(맨 아래)는 <code>kpi.js</code> 의 연간 누적 목표 기준 · 필터와 무관하게 전체 채널. 첫구매 거래액 · 고객수 실적은 <b>신규회원실적대시보드의 총)첫구매 거래액 · 고객수 (당년신규)</b>. 전체관점 당월신규+기가입신규와 비슷하지만 집계 기준이 달라 조금 다르다. 목표 일평균 = 연간 목표 ÷ 연간 일수, 남은 기간 필요 일평균 = (목표 − 누적) ÷ 남은 일수. 트래픽 · 가입자 목표를 넣으면 목표 가입률도 환산된다.</li>
       <li><b>상품 구성</b>(KPI 위) — <code>조직 카테고리별 첫구매 실적</code>의 상품 단위 첫구매 실적. <b>기본 = 사업부 기준</b>: 사업부(BPU) → 카테고리 → 브랜드 → 상품을 <b>전 채널 합산</b>으로 드릴다운한다. 채널 칩으로 거르고(여러 개 선택), <b>카테고리 칩</b>은 모두 펼쳐 기본 모두 선택 — 누르면 그 카테고리만 빼거나 다시 넣고, '전체'는 모두 선택 ↔ 모두 해제. 행마다 위쪽에서 고른 기준(<b>거래액 또는 주문고객수</b>) 하나와 비교 기간 값 · 비교(전년비 등)를 보여 준다. 맨 위 <b>합계</b> 행 = 지금 범위 전체. 위쪽 거래액/주문고객수 버튼은 숫자 열 · 막대 · 정렬 · 구성비 · 채널 구성 띠의 기준(엑셀 다운로드에는 둘 다). <b>주 채널</b> = 가장 많이 판 채널 · 비중 · 판매 채널 수, 카테고리 · 브랜드 · 상품 단계에서 <b>판매 채널 많은 순</b>으로 정렬 가능. <b>상품UV · 상품CR</b>(상품관점 실측, CR = 상품관점 고객수 ÷ 상품UV)은 채널 · 사업부 단계 행에서만 보인다. 카테고리 단계는 <b>상품관점 상품군별 보조표</b>(드릴다운 아래 · 기본 접힘)로 따로 본다 — 상품관점의 상품군(골프 · 남성 · 슈즈 …)은 조직 대카테고리와 다른 분류라 드릴다운 행에 섞지 않는다(조직 카테고리와 상품관점 상품군은 분류가 달라 카테고리 단계 · 카테고리 필터 중에는 없음 · 채널을 여러 개 고르면 채널별 UV 합). <b>상품은 모두 개별로 보관</b>하고 각 단계(카테고리 · 브랜드 · 상품)에서 고른 기준 <b>상위 30개</b>를 보여 준다(나머지는 '그 외' 합계). 드릴다운 숫자는 <b>양수만</b> 담는다 — 원천의 취소 · 반품(음수 행)과 0원 행은 빼고 쌓는다(총결제 기준에 가깝다). 그래서 상단 실적(총결제)과는 상품 매칭 누락만큼 차이가 남는다. 2026-09-15 이전 형식의 백업(브랜드별 연간 상위 20개만 개별 · 나머지 '기타 상품', 상품UV 없음)을 열면 섹션 위에 안내가 뜨며, 최신 백업으로 다시 열어야 모두 보인다. 이 원천은 첫구매 거래액의 일부만 담고 있어 캡션에 <b>상품 원천 커버리지</b>(같은 채널 · BPU의 상품관점 실측 거래액 대비)를 표시한다. 주문고객수는 상품별 합이라 한 주문에 여러 상품이면 중복된다. <b>기간별 표</b>(기본 접힘)는 합계와 지금 단계 상위 항목의 기간별 값 · 비교. 기간은 상단 월별 · 주별 · 일별과 일평균/누계를 따르고(추이 막대를 누르면 그 기간 선택), 상품코드를 누르면 LF몰 상품 페이지가 새 탭으로 열린다. 사업부는 e-영업1 → 4 순서 고정.</li>
@@ -715,6 +727,9 @@ const segLabel = s => (SEGS.find(x => x[0] === s) || SEGS[0])[1];
 const DASH = {T: '', '1': '7 4', '2': '2 3', '3': '10 3 2 3'};  // 회원구분 = 선 모양
 const dashSvg = sg => `<svg width="18" height="8" aria-hidden="true"><line x1="1" y1="4" x2="17" y2="4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-dasharray="${DASH[sg]}"/></svg>`;
 
+// BPU · 카테고리 필터가 걸리면 거래액 · 주문고객수는 상품 데이터에서 뽑는다(그 외 지표는 전체 기준 그대로)
+const baseSum = (base, row, dates, allow) => (prodFiltOn() && (base === 'amt' || base === 'cust'))
+  ? pBaseSum(base, row.ch, dates) : sumBase(base, keyOf(base, row), dates, allow);
 function compute(m, row, dates, wi) {
   const M = MET[m];
   if (!dates || !dates.length) return {v: null, est: false};
@@ -731,12 +746,12 @@ function compute(m, row, dates, wi) {
   // 요청 기간의 절반도 데이터가 없으면(예: 전년 12월 비교창에 1/1 하루만 걸림) 값을 내지 않는다
   const enough = n => n > 0 && n * 2 >= dates.length;
   if (M.type === 'flow') {
-    const r = sumBase(M.base, keyOf(M.base, row), dates, true);
+    const r = baseSum(M.base, row, dates, true);
     return enough(r.n) ? {v: S.mode === 'avg' ? r.v / r.n : r.v, est: r.est} : {v: null, est: false};
   }
   // 분자·분모의 기간 커버리지를 맞추려고 둘 다 보조값이 가능할 때만 주별 raw 사용
   const allow = FALLBACK.has(M.num) && FALLBACK.has(M.den);
-  const a = sumBase(M.num, keyOf(M.num, row), dates, allow), b = sumBase(M.den, keyOf(M.den, row), dates, allow);
+  const a = baseSum(M.num, row, dates, allow), b = baseSum(M.den, row, dates, allow);
   return enough(a.n) && enough(b.n) && b.v ? {v: a.v / b.v, est: a.est || b.est} : {v: null, est: false};
 }
 function delta(m, c, p) {
@@ -814,17 +829,21 @@ const save = () => {
   if (PRD) {
     if (PD.view !== 'bpu') h.set('pv', PD.view);
     if (PD.path.length) h.set('pd', PD.path.join(','));
-    if (PD.chans.length) h.set('pch', PD.chans.join(','));
     if (PD.cats.length) h.set('pcat', PD.cats.join(','));
-  } else for (const k of ['pv', 'pd', 'pch', 'pcat']) if (PD_HASH.get(k)) h.set(k, PD_HASH.get(k));  // 상품 데이터를 불러오기 전에는 받은 값을 유지
+    if (PD.bpus.length) h.set('pbpu', PD.bpus.join(','));
+  } else for (const k of ['pv', 'pd', 'pcat', 'pbpu']) if (PD_HASH.get(k)) h.set(k, PD_HASH.get(k));  // 상품 데이터를 불러오기 전에는 받은 값을 유지
   try { history.replaceState(null, '', '#' + h); } catch (e) { /* iframe(srcdoc) 처럼 주소를 바꿀 수 없는 곳 */ }
 };
 // 지표별 계열: 채널 × (회원구분 적용 지표면 선택 구분, 아니면 전체)
-const seriesKeys = m => { const out = []; for (const ch of selChans()) for (const seg of (SEG_METRICS.has(m) ? selSegs() : ['T'])) out.push({ch, seg}); return out; };
-const multiSeg = m => SEG_METRICS.has(m) && selSegs().length > 1;
-const rowLabel = (m, r) => chLabel(r.ch) + (SEG_METRICS.has(m) && (selSegs().length > 1 || r.seg !== 'T') ? ` · ${segLabel(r.seg)}` : '');
+const segOn = m => SEG_METRICS.has(m) && !prodFiltOn();  // 상품 데이터엔 회원구분이 없다
+const seriesKeys = m => { const out = []; for (const ch of selChans()) for (const seg of (segOn(m) ? selSegs() : ['T'])) out.push({ch, seg}); return out; };
+const multiSeg = m => segOn(m) && selSegs().length > 1;
+const rowLabel = (m, r) => chLabel(r.ch) + (segOn(m) && (selSegs().length > 1 || r.seg !== 'T') ? ` · ${segLabel(r.seg)}` : '');
 const modeName = () => S.grain === 'day' ? '일평균 = 누계' : S.mode === 'avg' ? '일평균' : {month: '월 합계', week: '주 합계'}[S.grain];
-const trNote = m => UNIQUE_TR.has(m) && S.grain === 'month' ? '일자 합산 트래픽 기준' : '';
+const PROD_MET = new Set(['amt', 'cust', 'aov']);  // 상품 데이터로 다시 계산할 수 있는 지표
+const baseNote = m => !prodFiltOn() ? '' : PROD_MET.has(m) ? '상품 기준' : '전체 기준(이 필터 미적용)';
+const baseTag = m => !prodFiltOn() ? '' : `<small class="tag-b${PROD_MET.has(m) ? '' : ' off'}">${PROD_MET.has(m) ? '상품 기준' : '전체 기준'}</small>`;
+const trNote = m => [UNIQUE_TR.has(m) && S.grain === 'month' ? '일자 합산 트래픽 기준' : '', baseNote(m)].filter(Boolean).join(' · ');
 
 /* ---------- 기간 열: 각 열 = 당해 날짜 목록(cur) + 비교 날짜 목록(prev) ----------
    비교 기준 S.cmp — yoy: 364일 전 동기간·동요일(prevY) · pop: 직전 기간 = 전월·전주·전일(prevP). 두 쪽을 다 들고 있고 선택한 쪽을 prev 로 쓴다. */
@@ -947,8 +966,52 @@ function syncControls() {
   }
   $('#chips').innerHTML = CHS.map(ch => `<button class="chip" data-chan="${esc(ch)}" aria-pressed="${S.chans.includes(ch)}" style="--sw:${chColor(ch)}"><i></i>${esc(chLabel(ch))}</button>`).join('');
   $('#segChips').innerHTML = SEGS.map(([k, t]) => `<button class="chip" data-seg="${k}" aria-pressed="${S.segs.includes(k)}">${dashSvg(k)}${t}</button>`).join('');
+  syncProdFilterBar();
+}
+function syncProdFilterBar() {  // BPU · 카테고리 칩 — 상품 데이터가 있을 때만 보인다
+  const on = !!PRD, filt = prodFiltOn();
+  $('#bpuBar').hidden = !on;
+  $('#pdCatBar').hidden = !on;
+  $('#segBar').classList.toggle('off', filt);  // 상품 데이터엔 회원구분이 없다
+  $('#segHint').textContent = filt ? '상품 기준에서는 전체로 고정 (상품 데이터에 회원구분 없음)' : '거래액·고객수·객단가에 적용';
+  if (!on) return;
+  syncProdChans();
+  pClampPath();
+  const bpus = bpuOrder();
+  $('#bpuChips').innerHTML = `<button type="button" class="chip all" data-pbpu="-1" aria-pressed="${!PD.bpus.length}" title="누르면 모든 BPU">전체</button>`
+    + bpus.map(k => `<button type="button" class="chip" data-pbpu="${k}" aria-pressed="${PD.bpus.includes(k)}">${esc(PRD.bpu[k])}</button>`).join('');
+  $('#bpuHint').textContent = filt
+    ? `상품 기준 — ${prodFiltTxt()} · 거래액·고객수·객단가에만 적용 (결제 완료분만 · 고객수 = 상품별 주문고객수 합)`
+    : '고르면 거래액·고객수·객단가가 상품 기준으로 바뀜';
+  const cats = catOrder(), catAll = !PD.cats.length && !PD.catNone, catOn = k => catAll || PD.cats.includes(k);
+  const catList = PD.catOpen ? [...cats, ...PD.cats.filter(k => !cats.includes(k))] : PD.cats.slice();  // 기본은 접어 둔다
+  $('#pdCatChips').innerHTML = `<button type="button" class="chip all${!catAll && !PD.catNone ? ' part' : ''}" data-pcat="-1" aria-pressed="${catAll}" title="${catAll ? '누르면 모두 해제' : '누르면 모두 선택'}">전체</button>`
+    + catList.map(k => `<button type="button" class="chip" data-pcat="${k}" aria-pressed="${catOn(k)}">${esc(PRD.cat[k])}</button>`).join('')
+    + `<button type="button" class="chip more" data-pcatopen="1" aria-expanded="${PD.catOpen}">${PD.catOpen ? '접기' : `카테고리 고르기 (${cats.length}개)`}</button>`;
+  $('#pdCatN').textContent = `${catAll ? cats.length : PD.catNone ? 0 : PD.cats.length}/${cats.length}개 선택`;
 }
 const toggle = (list, v) => list.includes(v) ? (list.length > 1 ? list.filter(x => x !== v) : list) : [...list, v];  // 최소 하나는 남긴다
+function catToggle(k) {  // 카테고리 칩 — 전체 = 모두 선택 ↔ 모두 해제 · 개별 = 빼기/넣기
+  const all = catOrder();
+  if (k < 0) { const wasAll = !PD.cats.length && !PD.catNone; PD.cats = []; PD.catNone = wasAll; return; }
+  const cur = PD.catNone ? [] : PD.cats.length ? PD.cats.slice() : all.slice();
+  const next = cur.includes(k) ? cur.filter(x => x !== k) : [...cur, k];
+  PD.catNone = !next.length;
+  PD.cats = all.every(x => next.includes(x)) ? [] : next.sort((a, b) => a - b);  // 모두 고르면 필터 없음과 같다
+}
+$('header.top').addEventListener('click', e => {  // BPU · 카테고리 필터 — 화면 전체에 적용
+  if (!PRD) return;
+  const bp = e.target.closest('[data-pbpu]'), ct = e.target.closest('[data-pcat]');
+  if (e.target.closest('[data-pcatopen]')) { PD.catOpen = !PD.catOpen; syncProdFilterBar(); save(); return; }
+  if (!bp && !ct) return;
+  if (bp) {
+    const k = +bp.dataset.pbpu;
+    PD.bpus = k < 0 ? [] : PD.bpus.includes(k) ? PD.bpus.filter(x => x !== k) : [...PD.bpus, k].sort((a, b) => a - b);
+    if (PD.bpus.length === bpuOrder().length) PD.bpus = [];  // 모두 고르면 필터 없음과 같다
+  } else catToggle(+ct.dataset.pcat);
+  PD.sel = null;
+  render();
+});
 document.addEventListener('click', e => {
   const t = e.target.closest('[data-set],[data-chan],[data-seg],[data-quick],[data-quickseg]');
   if (!t) return;
@@ -988,12 +1051,13 @@ function renderSummary(cols) {
   const oPrev = pop ? col.prevY : col.prevP, oWk = col.wk ? ((pop ? col.wkY : col.wkP) ?? -1) : null;
   const multi = selChans().length > 1 || selSegs().length > 1;
   const who = chLabel(ch0) + (seg0 !== 'T' ? ` · ${segLabel(seg0)}` : '') + (multi ? ' (선택 중 첫 번째)' : '');
-  $('#sumDesc').textContent = `${col.tip} · ${modeName()} · ${who} · ${cmpLbl()}: ${col.ptip || '비교 기간 없음'}${pop ? '' : '(동요일)'} 대비`;
+  $('#sumDesc').textContent = `${col.tip} · ${modeName()} · ${who} · ${cmpLbl()}: ${col.ptip || '비교 기간 없음'}${pop ? '' : '(동요일)'} 대비`
+    + (prodFiltOn() ? ` · 상품 기준 ${prodFiltTxt()} — 거래액·고객수·객단가만 적용` : '');
   $('#tiles').innerHTML = METRICS.map(m => {
     const r = rowFor(m), v = evalCol(m, r, col), main = fmtDelta(v.d);
     const other = oPrev && oPrev.length ? fmtDelta(delta(m, v.c, compute(m, r, oPrev, oWk).v)) : {t: '–', c: ''};
     const u = MET[m].pct ? '' : unitOf(m);
-    return `<div class="tile"><div class="t-l">${esc(MET[m].name)}</div>
+    return `<div class="tile"><div class="t-l">${esc(MET[m].name)}${baseTag(m)}</div>
       <div class="t-v">${fmt(m, v.c)}${u && ok(v.c) ? `<small>${esc(u)}</small>` : ''}</div>
       <div class="t-r"><span>${cmpLbl()}</span><b class="${main.c}${v.pe && v.d ? ' est' : ''}">${main.t}</b></div>
       <div class="t-r"><span>${otherLbl()}</span><b class="${other.c}">${other.t}</b></div>
@@ -1407,7 +1471,7 @@ function renderKpi() {
 // 상품 단계의 상품 × 채널 표로 보여 준다. '채널 기준'이면 채널 → BPU → … 순서. 기간은 상단 기간 단위와 일평균/누계를 그대로 따른다.
 let PRD = null, PF = null, PC = null, PC2 = null, PSTART = 0, PVIEW = null, prodLoad = 'idle';
 const PD_HASH = new URLSearchParams(location.hash.slice(1));  // 첫 렌더가 주소를 덮어쓰기 전에 드릴 위치를 잡아 둔다
-const PD = {view: 'bpu', path: [], chans: [], cats: [], catNone: false, catOpen: false, sort: 'v', sel: null, metric: 'amt'};  // cats = 카테고리 필터(빈 배열 = 전체)
+const PD = {view: 'bpu', path: [], chans: [], cats: [], bpus: [], catNone: false, catOpen: false, sort: 'v', sel: null, metric: 'amt'};  // cats · bpus = 필터(빈 배열 = 전체)
 let PD_TBL_OPEN = false, PD_GRP_OPEN = false;  // 기간별 표 펼침(기본 접힘)  // path = 보기 순서대로 고른 값 · chans = 채널 필터(빈 배열 = 전체)
 const PCODE = ['채널', 'BPU', '카테고리', '브랜드', '상품'];  // 차원 코드 0~4
 const PDIMS = {bpu: [1, 2, 3, 4], ch: [0, 1, 2, 3, 4]};
@@ -1424,6 +1488,8 @@ function applyProdHash() {  // 주소 해시 pv=보기 · pd=드릴 위치 인�
   if (pch.length && pch.every(k => Number.isInteger(k) && k >= 0 && k < PRD.ch.length)) PD.chans = [...new Set(pch)].sort((a, b) => a - b);
   const pcat = (h.get('pcat') || '').split(',').filter(Boolean).map(Number);
   if (pcat.length && pcat.every(k => Number.isInteger(k) && k >= 0 && k < PRD.cat.length)) PD.cats = [...new Set(pcat)].sort((a, b) => a - b);
+  const pbpu = (h.get('pbpu') || '').split(',').filter(Boolean).map(Number);
+  if (pbpu.length && pbpu.every(k => Number.isInteger(k) && k >= 0 && k < PRD.bpu.length)) PD.bpus = [...new Set(pbpu)].sort((a, b) => a - b);
   if (['amt', 'cust'].includes(h.get('pm'))) PD.metric = h.get('pm');
 }
 function loadProducts() {  // 8MB가 넘는 파일이라 대시보드를 먼저 그리고 뒤에서 불러온다
@@ -1431,7 +1497,7 @@ function loadProducts() {  // 8MB가 넘는 파일이라 대시보드를 먼저 
     PRD = window.DASH_PROD || null;
     prodLoad = PRD ? 'ready' : 'missing';
     if (PRD) applyProdHash();
-    renderProd();
+    if (PRD) render(); else renderProd();  // 상단 BPU · 카테고리 필터가 생기니 화면 전체를 다시 그린다
     if (/selftest/.test(location.hash) && !$('#selftestScript')) {
       const t = document.createElement('script');
       t.id = 'selftestScript'; t.src = 'selftest.js';
@@ -1475,7 +1541,7 @@ function pGrp(mask, chSel, b) {  // 상품관점 상품군별 합 — chSel: 채
   const out = new Map();
   for (let j = 0; j < PC2.n; j++) {
     if (!mask[PC2.d[j]]) continue;
-    if (b < 0 ? PC2.b[j] < 0 : PC2.b[j] !== b) continue;  // 원천에 '채널 전체 × BPU 전체 × 상품군' 행이 없어 BPU 별 행을 더한다
+    if (b < 0 ? (PD.bpus.length ? !PD.bpus.includes(PC2.b[j]) : PC2.b[j] < 0) : PC2.b[j] !== b) continue;  // 원천에 '채널 전체 × BPU 전체 × 상품군' 행이 없어 BPU 별 행을 더한다
     const c = PC2.c[j];
     if (chSel === -1 ? c !== -1 : !chSel.includes(c)) continue;
     let o = out.get(PC2.g[j]);
@@ -1499,12 +1565,68 @@ function pChanMask() {  // 채널 필터 — null = 전체 채널
   for (const k of PD.chans) m[k] = 1;
   return m;
 }
-let PCM = null;  // 카테고리 필터 마스크 — 렌더할 때 정해 pAgg · pSeries 가 함께 쓴다
+let PCM = null, PBM = null;  // 카테고리 · BPU 필터 마스크 — 렌더할 때 정해 pAgg · pSeries 가 함께 쓴다
 function pCatMask() {  // 빈 목록 = 모든 카테고리(필터 없음) · catNone = 모두 해제
   if (!PD.cats.length && !PD.catNone) return null;
   const m = new Uint8Array(PRD.cat.length);
   for (const k of PD.cats) m[k] = 1;
   return m;
+}
+function pBpuMask() {  // 빈 목록 = 모든 BPU
+  if (!PD.bpus.length) return null;
+  const m = new Uint8Array(PRD.bpu.length);
+  for (const k of PD.bpus) m[k] = 1;
+  return m;
+}
+// 상단 BPU · 카테고리 필터가 걸린 상태인가 — 걸리면 거래액 · 고객수 · 객단가를 상품 데이터로 다시 계산한다
+const prodFiltOn = () => !!PRD && (PD.bpus.length > 0 || PD.cats.length > 0 || PD.catNone);
+const prodFiltTxt = () => !prodFiltOn() ? '' : [PD.bpus.length ? `BPU ${PD.bpus.map(k => PRD.bpu[k]).join('·')}` : '',
+  (PD.cats.length || PD.catNone) ? `카테고리 ${catTxt()}` : ''].filter(Boolean).join(' · ');
+let PFILT = null, PFILT_KEY = '';
+function pFilt() {  // 지금 필터로 만든 일자별 거래액 · 주문고객수 (채널별 + 마지막 칸 = 전 채널 합)
+  const key = `${PRD.meta.built}|${PD.bpus.join()}|${PD.cats.join()}|${PD.catNone ? 'none' : ''}`;
+  if (PFILT && PFILT_KEY === key) return PFILT;
+  const nd = PRD.meta.days, nch = PRD.ch.length, a = [], u = [];
+  for (let c = 0; c <= nch; c++) { a.push(new Float64Array(nd)); u.push(new Float64Array(nd)); }
+  const bm = pBpuMask(), cm = pCatMask();
+  if (!PD.catNone) for (let i = 0; i < PF.n; i++) {
+    const p = PF.p[i] * 3;
+    if (bm && !bm[PRD.paths[p]]) continue;
+    if (cm && !cm[PRD.paths[p + 1]]) continue;
+    const d = PF.d[i], c = PF.c[i];
+    a[c][d] += PF.a[i]; u[c][d] += PF.u[i]; a[nch][d] += PF.a[i]; u[nch][d] += PF.u[i];
+  }
+  PFILT_KEY = key;
+  return (PFILT = {a, u, nch});
+}
+function pBaseSum(base, ch, dates) {  // 상품 데이터가 있는 날만 센다(없는 날은 '값 없음')
+  const F = pFilt(), k = ch === '*TOTAL' ? F.nch : PRD.ch.indexOf(ch), arr = k >= 0 ? (base === 'amt' ? F.a : F.u)[k] : null;
+  if (!arr) return {v: 0, n: 0, est: false};
+  let v = 0, n = 0;
+  for (const d of dates) { const i = pDay(d); if (i >= 0 && i < PRD.meta.days) { v += arr[i]; n++; } }
+  return {v, n, est: false};
+}
+function pClampPath() {  // 필터에서 빠진 값으로 들어가 있던 드릴 위치는 한 단계 위로 되돌린다
+  const dims = pDims();
+  for (let i = 0; i < PD.path.length; i++) {
+    const code = dims[i], k = PD.path[i];
+    const out = (code === 0 && PD.chans.length && !PD.chans.includes(k))
+      || (code === 1 && PD.bpus.length && !PD.bpus.includes(k))
+      || (code === 2 && (PD.catNone || (PD.cats.length && !PD.cats.includes(k))));
+    if (out) { PD.path = PD.path.slice(0, i); break; }
+  }
+}
+function syncProdChans() {  // 상단 채널 필터를 상품 구성에도 그대로 — '전체'가 들어 있으면 모든 채널 합
+  if (!PRD) return;
+  PD.chans = S.chans.includes('*TOTAL') ? [] : S.chans.map(c => PRD.ch.indexOf(c)).filter(k => k >= 0).sort((a, b) => a - b);
+}
+let BPU_ORDER = null;
+function bpuOrder() {  // BPU 칩 순서 — e-영업1~4 먼저, 그 뒤는 거래액 큰 순
+  if (BPU_ORDER) return BPU_ORDER;
+  const tot = new Float64Array(PRD.bpu.length), cnt = new Uint32Array(PRD.bpu.length);
+  for (let i = 0; i < PF.n; i++) { const b = PRD.paths[PF.p[i] * 3]; tot[b] += PF.a[i]; cnt[b]++; }
+  return (BPU_ORDER = PRD.bpu.map((_, k) => k).filter(k => cnt[k])
+    .sort((x, y) => bpuRank(PRD.bpu[x]) - bpuRank(PRD.bpu[y]) || tot[y] - tot[x]));
 }
 let CAT_ORDER = null;
 function catOrder() {  // 카테고리 칩 순서 — 전체 기간 거래액 큰 순
@@ -1525,6 +1647,7 @@ function pAgg(code, cond, mask, chm, mix) {  // code = 묶을 차원(null = 하�
     rows: for (let i = PF.off[d], e = PF.off[d + 1]; i < e; i++) {
       const c = PF.c[i];
       if (chm && !chm[c]) continue;
+      if (PBM && !PBM[PRD.paths[PF.p[i] * 3]]) continue;
       if (PCM && !PCM[PRD.paths[PF.p[i] * 3 + 1]]) continue;
       for (let j = 0; j < cl; j++) if (pVal(i, cond[j][0]) !== cond[j][1]) continue rows;
       const k = code == null ? 0 : pVal(i, code);
@@ -1547,6 +1670,7 @@ function pSeries(code, cond, mask, chm, keys) {  // 기간별 표용 — Map('T'
     if (!mask[d]) continue;
     rows: for (let i = PF.off[d], e = PF.off[d + 1]; i < e; i++) {
       if (chm && !chm[PF.c[i]]) continue;
+      if (PBM && !PBM[PRD.paths[PF.p[i] * 3]]) continue;
       if (PCM && !PCM[PRD.paths[PF.p[i] * 3 + 1]]) continue;
       for (let j = 0; j < cl; j++) if (pVal(i, cond[j][0]) !== cond[j][1]) continue rows;
       add(out.get('T'), d, i);
@@ -1559,7 +1683,8 @@ function pSeries(code, cond, mask, chm, keys) {  // 기간별 표용 — Map('T'
 function pCov(mask, chSel, b) {  // 상품관점 실측 합 — chSel: 채널 목록 | -1(전체 채널 행), b: BPU | -1 → {a, u, uv}
   const o = {a: 0, u: 0, uv: 0};
   for (let j = 0; j < PC.n; j++) {
-    if (!mask[PC.d[j]] || PC.b[j] !== b) continue;
+    if (!mask[PC.d[j]]) continue;
+    if (b < 0 && PD.bpus.length ? !PD.bpus.includes(PC.b[j]) : PC.b[j] !== b) continue;
     const c = PC.c[j];
     if (chSel === -1 ? c !== -1 : !chSel.includes(c)) continue;
     o.a += PC.a[j]; o.u += PC.u[j]; o.uv += PC.uv[j];
@@ -1644,19 +1769,9 @@ function renderProd() {
   $('#pdPeriod').value = sel.key;
   document.querySelectorAll('[data-pm]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.pm === PD.metric)));
   document.querySelectorAll('[data-pv]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.pv === PD.view)));
-  $('#pdDesc').textContent = PD.view === 'bpu'
-    ? 'BPU → 카테고리 → 브랜드 → 상품 · 전 채널 합산'
-    : '채널 → BPU → 카테고리 → 브랜드 → 상품';
-  $('#pdChips').innerHTML = `<button type="button" class="chip" data-pch="-1" aria-pressed="${!PD.chans.length}">전체</button>`
-    + PRD.ch.map((ch, k) => `<button type="button" class="chip" data-pch="${k}" aria-pressed="${PD.chans.includes(k)}" style="--sw:${chColor(ch)}"><i></i>${esc(ch)}</button>`).join('');
-  // 카테고리 — 상단 채널 필터처럼 모두 펼쳐 두고 기본은 모두 선택. 누르면 그 카테고리만 빼거나 다시 넣는다
-  const cats = catOrder(), catAll = !PD.cats.length && !PD.catNone, catOn = k => catAll || PD.cats.includes(k);
-  // 기본은 접어 두고(전체 + 고른 카테고리만) 필요할 때 펼친다
-  const catList = PD.catOpen ? [...cats, ...PD.cats.filter(k => !cats.includes(k))] : PD.cats.slice();
-  $('#pdCatChips').innerHTML = `<button type="button" class="chip all${!catAll && !PD.catNone ? ' part' : ''}" data-pcat="-1" aria-pressed="${catAll}" title="${catAll ? '누르면 모두 해제' : '누르면 모두 선택'}">전체</button>`
-    + catList.map(k => `<button type="button" class="chip" data-pcat="${k}" aria-pressed="${catOn(k)}">${esc(PRD.cat[k])}</button>`).join('')
-    + `<button type="button" class="chip more" data-pcatopen="1" aria-expanded="${PD.catOpen}">${PD.catOpen ? '접기' : `카테고리 고르기 (${cats.length}개)`}</button>`;
-  $('#pdCatN').textContent = `${catAll ? cats.length : PD.catNone ? 0 : PD.cats.length}/${cats.length}개 선택`;
+  const chDesc = PD.chans.length ? PD.chans.map(k => PRD.ch[k]).join('·') : '전 채널 합산';
+  $('#pdDesc').textContent = (PD.view === 'bpu' ? 'BPU → 카테고리 → 브랜드 → 상품' : '채널 → BPU → 카테고리 → 브랜드 → 상품')
+    + ` · ${chDesc}` + (prodFiltTxt() ? ` · ${prodFiltTxt()}` : '') + ' · 상단 필터를 따름';
   const legacyTop = PRD.meta.topN || PRD.meta.legacyTopN;  // 예전 형식 백업 안내 — 기타 상품 묶음 · 상품UV 없음
   $('#pdOld').hidden = !legacyTop && PC.hasUv;
   $('#pdOld').innerHTML = `<b>예전 형식의 백업</b>입니다 — ${[legacyTop ? `상품이 브랜드별 연간 상위 ${legacyTop}개만 개별(나머지는 '기타 상품'으로 묶임)` : '', PC.hasUv ? '' : '상품UV · 상품CR 없음'].filter(Boolean).join(' · ')}. <b>최신 백업 파일</b>(모든 상품 개별 · 상품UV 포함)로 다시 열면 모두 보입니다. 새 데이터 추가로 합친 날짜는 개별로 들어갑니다.`;
@@ -1669,6 +1784,7 @@ function renderProd() {
   const curMask = pMask([sel.cur]), prevMask = hasPrev ? pMask([sel.prev]) : null;
   const chm = pChanMask(), cond = pCond();
   PCM = pCatMask();
+  PBM = pBpuMask();
   const cur = pAgg(code, cond, curMask, chm, true), prev = hasPrev ? pAgg(code, cond, prevMask, chm, false) : new Map();
   const nch = PRD.ch.length, totRaw = new Float64Array(nch), items = [];
   for (const [k, o] of cur) {
@@ -1886,27 +2002,6 @@ $('#prodSec').addEventListener('click', e => {
   if (pm) { PD.metric = pm.dataset.pm; renderProd(); return; }
   const pv = e.target.closest('[data-pv]');
   if (pv) { if (PD.view !== pv.dataset.pv) { PD.view = pv.dataset.pv; PD.path = []; } renderProd(); save(); return; }
-  const pch = e.target.closest('[data-pch]');
-  if (pch && PRD) {
-    const k = +pch.dataset.pch;
-    PD.chans = k < 0 ? [] : PD.chans.includes(k) ? PD.chans.filter(x => x !== k) : [...PD.chans, k].sort((a, b) => a - b);
-    if (PD.chans.length === PRD.ch.length) PD.chans = [];  // 모두 고르면 전체와 같다
-    renderProd(); save(); return;
-  }
-  if (e.target.closest('[data-pcatopen]')) { PD.catOpen = !PD.catOpen; renderProd(); return; }  // 카테고리 펼치기 · 접기
-  const pcat = e.target.closest('[data-pcat]');
-  if (pcat && PRD) {
-    const k = +pcat.dataset.pcat;
-    const all = catOrder();
-    if (k < 0) { const wasAll = !PD.cats.length && !PD.catNone; PD.cats = []; PD.catNone = wasAll; }  // 전체 = 모두 선택 ↔ 모두 해제
-    else {
-      const cur = PD.catNone ? [] : PD.cats.length ? PD.cats.slice() : all.slice();
-      const next = cur.includes(k) ? cur.filter(x => x !== k) : [...cur, k];
-      PD.catNone = !next.length;
-      PD.cats = all.every(x => next.includes(x)) ? [] : next.sort((a, b) => a - b);  // 모두 고르면 필터 없음과 같다
-    }
-    renderProd(); save(); return;
-  }
   const psort = e.target.closest('[data-psort]');
   if (psort) { PD.sort = psort.dataset.psort; renderProd(); }
 });
@@ -2001,7 +2096,7 @@ function renderApp() {
   $('#appNote').hidden = !appMissing;
   const lastOf = key => { const a = DAILY.s[key]; if (!a) return null; for (let i = a.length - 1; i >= 0; i--) if (a[i] != null) return DAILY.dates[i]; return null; };
   const appLast = lastOf('app|new'), allLast = DAILY.dates.at(-1);
-  $('#appDesc').textContent = `가입 → 앱 신규 설치 → 앱푸시 수신동의 · 수신동의는 앱 설치자 기준(PUSH) · 모수는 앱 설치 무관(회원현황)도 함께 · ${col ? col.tip : '데이터 없음'} · 흐름 ${modeName()}, 회원·기기 수는 기간 말 · ${cmpDesc()}${appLast && appLast < allLast ? ` · 앱 설치 raw ~${md(appLast)}` : ''} · 채널/회원구분 필터 미적용`;
+  $('#appDesc').textContent = `가입 → 앱 신규 설치 → 앱푸시 수신동의 · 수신동의는 앱 설치자 기준(PUSH) · 모수는 앱 설치 무관(회원현황)도 함께 · ${col ? col.tip : '데이터 없음'} · 흐름 ${modeName()}, 회원·기기 수는 기간 말 · ${cmpDesc()}${appLast && appLast < allLast ? ` · 앱 설치 raw ~${md(appLast)}` : ''} · 채널/회원구분${prodFiltOn() ? '/BPU/카테고리' : ''} 필터 미적용`;
   const TILES = ['sg', 'appNew', 'pNyAdd', 'rNy', 'rConv', ['pTot', 'pNy'], ['pOut', 'pExOut'], ['rPushAll', 'mValid']];
   const APP_DEP = new Set(['appNew', 'rConv']);  // 앱 설치 raw 가 있어야 계산되는 타일
   $('#appTiles').innerHTML = col ? TILES.map(t => {
@@ -2118,7 +2213,8 @@ function renderInsight() {
   if (!fix.length) fix.push('큰 이상 신호가 없어 기존 운영을 유지하면서, 기여가 큰 채널의 예산 배분만 점검하면 된다.');
   if (!hypo.length) hypo.push('뚜렷한 가설이 필요할 만큼의 변화가 없다 — 다음 기간에 같은 기준으로 다시 확인.');
   const g = (t, arr) => `<div class="ins-g"><h4>${t}</h4><ul>${arr.map(x => `<li>${x}</li>`).join('')}</ul></div>`;
-  $('#insSub').textContent = `${col.tip} · ${modeName()} · ${cmpTxt} · 채널 ${selChans().map(chLabel).join('·')}`;
+  $('#insSub').textContent = `${col.tip} · ${modeName()} · ${cmpTxt} · 채널 ${selChans().map(chLabel).join('·')}`
+    + (prodFiltOn() ? ` · 상품 기준 ${prodFiltTxt()} (거래액·고객수·객단가만)` : '');
   $('#insBody').innerHTML = `<div class="ins-g"><h4>요약</h4><ul><li>${head}</li></ul></div>`
     + g('지금 문제로 보이는 것', prob) + g('개선 포인트', fix) + g('세워 볼 가설 · 검증 방법', hypo)
     + `<div class="ins-cap">화면의 기준 기간 · 필터 · 비교 기준으로 계산한 규칙 기반 요약입니다(값은 위 지표와 같음). 원인 추정은 가설이니 채널 · 상품 필터로 나눠 확인하세요.${pop ? ' · 비교 기준이 직전 기간입니다.' : ''}</div>`;
@@ -2303,7 +2399,7 @@ function printParts(parts, doPrint, fitW = PRINT_W) {  // 고른 영역만 보�
   body.classList.add('printing');
   for (const [k, , selector] of DL_PARTS) $(selector).classList.toggle('pr-on', parts.includes(k));
   const cs = getCols(false), fk = focusIdx(cs), t = new Date(), p2 = n => String(n).padStart(2, '0');
-  $('#printHead').innerHTML = `<h1>첫구매 실적 보고</h1><p>${esc(fk >= 0 ? cs[fk].tip : '')} · ${esc(modeName())} · ${esc(cmpLbl())} · 채널 ${esc(selChans().map(chLabel).join('·'))} · 회원구분 ${esc(selSegs().map(segLabel).join('·'))} · 데이터 ~${esc(DAILY.dates.at(-1) || '')} · 출력 ${t.getFullYear()}-${p2(t.getMonth() + 1)}-${p2(t.getDate())} ${p2(t.getHours())}:${p2(t.getMinutes())}</p>`;
+  $('#printHead').innerHTML = `<h1>첫구매 실적 보고</h1><p>${esc(fk >= 0 ? cs[fk].tip : '')} · ${esc(modeName())} · ${esc(cmpLbl())} · 채널 ${esc(selChans().map(chLabel).join('·'))} · 회원구분 ${esc(selSegs().map(segLabel).join('·'))}${prodFiltOn() ? ` · 상품 기준 ${esc(prodFiltTxt())}` : ''} · 데이터 ~${esc(DAILY.dates.at(-1) || '')} · 출력 ${t.getFullYear()}-${p2(t.getMonth() + 1)}-${p2(t.getDate())} ${p2(t.getHours())}:${p2(t.getMinutes())}</p>`;
   $('#kpis').hidden = false;
   if (parts.includes('prod')) { PD_TBL_OPEN = true; PD_GRP_OPEN = true; }
   S.layout = 'stack';  // 3단 비교 = 열이 적어 A4 가로에 들어감
@@ -2383,12 +2479,12 @@ const memoViewAt = (grain, at) => {  // 메모에 붙일 기간 — 고른 기�
   return v;
 };
 const memoView = () => ({year: S.year, grain: S.grain, mode: S.mode, cmp: S.cmp, at: S.at[S.grain] || '', range: S.grain === 'month' ? '' : S.range[S.grain],
-  chans: selChans(), segs: selSegs(), layout: S.layout, pd: {view: PD.view, path: PD.path.slice(), chans: PD.chans.slice(), cats: PD.cats.slice(), catNone: !!PD.catNone, metric: PD.metric}});
+  chans: selChans(), segs: selSegs(), layout: S.layout, bpus: PRD ? PD.bpus.slice() : [], cats: PRD ? PD.cats.slice() : [], catNone: !!PD.catNone, pd: {view: PD.view, path: PD.path.slice(), chans: PD.chans.slice(), cats: PD.cats.slice(), catNone: !!PD.catNone, metric: PD.metric}});
 const memoLabel = v => {
   const c = v.at ? memoColsFor(v.grain).find(x => x.id === v.at) : null;
   const at = v.at ? (c ? `${v.year}년 ${c.opt || c.tip}` : v.at) : `${v.year}년 최근`;
   return [at, {month: '월별', week: '주별', day: '일별'}[v.grain], v.mode === 'sum' ? '누계' : '일평균', v.cmp === 'pop' ? `${CMP_NAME[v.grain]}비` : '전년비',
-    `채널 ${(v.chans || []).map(chLabel).join('·')}`].join(' · ');
+    `채널 ${(v.chans || []).map(chLabel).join('·')}`, memoFiltTxt(v)].filter(Boolean).join(' · ');
 };
 const memoSpan = at => {  // 메모 · 화면이 보고 있는 기간의 실제 날짜 구간 (없으면 null = 기간 고정 안 함)
   let m = /^(\d{4})-(\d{2})$/.exec(at || '');
@@ -2402,8 +2498,14 @@ const memoHit = v => {  // 기간이 겹치면 같은 화면으로 본다 — �
   if (!ms) return !cs && v.grain === S.grain;  // 기간을 고정하지 않은 메모는 기준 기간이 없는 같은 단위 화면에서
   return !cs || (ms[0] <= cs[1] && ms[1] >= cs[0]);  // 화면에 기준 기간이 없으면 그 해 메모를 모두
 };
+const memoFiltTxt = v => {  // 메모를 붙일 때의 BPU · 카테고리 (상품 데이터가 있을 때만 뜻이 있다)
+  if (!PRD) return '';
+  const b = (v.bpus || []).filter(k => k < PRD.bpu.length), c = (v.cats || []).filter(k => k < PRD.cat.length);
+  return [b.length ? `BPU ${b.map(k => PRD.bpu[k]).join('·')}` : '', v.catNone ? '카테고리 없음' : c.length ? `카테고리 ${c.map(k => PRD.cat[k]).join('·')}` : ''].filter(Boolean).join(' · ');
+};
 const memoMatch = v => !!v && v.year === S.year && memoHit(v)
-  && (v.chans || []).join() === selChans().join() && (v.segs || []).join() === selSegs().join();
+  && (v.chans || []).join() === selChans().join() && (v.segs || []).join() === selSegs().join()
+  && (v.bpus || []).join() === (PRD ? PD.bpus.join() : '') && (v.cats || []).join() === (PRD ? PD.cats.join() : '') && !!v.catNone === (PRD ? !!PD.catNone : false);
 function memoGo(v) {  // 메모가 붙은 보기로 — 없는 연도 · 채널은 건너뛴다
   if (!v) return;
   if (YEARS.includes(v.year)) S.year = v.year;
@@ -2413,6 +2515,11 @@ function memoGo(v) {  // 메모가 붙은 보기로 — 없는 연도 · 채널�
   const ch = CHS.filter(c => (v.chans || []).includes(c)), sg = SEG_KEYS.filter(c => (v.segs || []).includes(c));
   if (ch.length) S.chans = ch;
   if (sg.length) S.segs = sg;
+  if (PRD) {  // 메모에 붙은 BPU · 카테고리 필터도 그대로
+    PD.bpus = (v.bpus || []).filter(k => Number.isInteger(k) && k >= 0 && k < PRD.bpu.length);
+    PD.cats = (v.cats || []).filter(k => Number.isInteger(k) && k >= 0 && k < PRD.cat.length);
+    PD.catNone = !!v.catNone && !PD.cats.length;
+  }
   const p = v.pd;
   if (p) {
     if (['bpu', 'ch'].includes(p.view)) PD.view = p.view;
@@ -2574,6 +2681,7 @@ $('#memoSec').addEventListener('keydown', e => {
 
 /* ---------- 렌더 ---------- */
 function render() {
+  if (PRD) prodInit();  // 상단 필터가 상품 데이터를 바로 쓰므로 먼저 준비한다
   syncControls();
   const cols = getCols(false);
   lastCols = cols;
@@ -2606,7 +2714,7 @@ window.__dash = {get state() { return S; }, render, compute, evalCol, getCols, s
                  // 엑셀 다운로드(export.js)가 화면과 같은 값을 쓰도록
                  get lastCols() { return lastCols; }, get lastSum() { return LAST_SUM; }, get dataMeta() { return D.meta; },
                  focusIdx, unitOf, fmtDelta, delta, axFmtDelta, fmtAX, cmpLbl, otherLbl, baseLbl, baseShort, modeName, trNote,
-                 selChans, selSegs, chLabel, segLabel, KPI, printParts, runDownload, renderDl, DL, DL_PARTS, makePdf, renderMemos, memoGo, renderInsight, syncFloatHeads, memoClean,
+                 selChans, selSegs, chLabel, segLabel, prodFiltOn, prodFiltTxt, KPI, printParts, runDownload, renderDl, DL, DL_PARTS, makePdf, renderMemos, memoGo, renderInsight, syncFloatHeads, memoClean,
                  get prodTblOpen() { return PD_TBL_OPEN; }, set prodTblOpen(v) { PD_TBL_OPEN = !!v; },
                  get prodGrpOpen() { return PD_GRP_OPEN; }, set prodGrpOpen(v) { PD_GRP_OPEN = !!v; }};
 loadProducts();

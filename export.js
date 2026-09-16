@@ -128,7 +128,8 @@ const pad = n => String(n).padStart(2, '0');
 const nowText = () => { const t = new Date(); return `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())} ${pad(t.getHours())}:${pad(t.getMinutes())}`; };
 function context(d) {
   const cols = d.lastCols, k = d.focusIdx(cols), col = k >= 0 ? cols[k] : null;
-  return `기준 ${col ? col.tip : '–'} · ${d.modeName()} · ${d.cmpLbl()} · 채널 ${d.selChans().map(d.chLabel).join('·')} · 회원구분 ${d.selSegs().map(d.segLabel).join('·')} · 데이터 ~${d.dataMeta.lastDate} · 출력 ${nowText()}`;
+  const filt = d.prodFiltOn && d.prodFiltOn() ? ` · 상품 기준 ${d.prodFiltTxt()} (거래액·고객수·객단가만)` : '';
+  return `기준 ${col ? col.tip : '–'} · ${d.modeName()} · ${d.cmpLbl()} · 채널 ${d.selChans().map(d.chLabel).join('·')} · 회원구분 ${d.selSegs().map(d.segLabel).join('·')}${filt} · 데이터 ~${d.dataMeta.lastDate} · 출력 ${nowText()}`;
 }
 function head(sh, title, lines) {
   put(sh, 0, 0, {v: title, s: 'title'});
