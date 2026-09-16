@@ -1378,7 +1378,8 @@ function renderKpi() {
     return `<div data-kpi="${m}"><div class="kpi-st">${NAME[m]}${m === 'tr' ? '<span class="kpi-note">일자 합산</span>' : ''}</div>
         <div class="kpi-lab">누적</div><div class="kpi-v">${num(m, r.act)}${UNIT[m] ? `<small>${UNIT[m]}</small>` : ''}</div>
         <div class="kpi-r"><span>일평균</span><b>${num(m, r.avg)}</b></div>
-        <div class="kpi-r"><span>${has ? '달성률' : '연간 목표'}</span><b>${has ? pct(r.ach) : '미입력'}</b></div>
+        <div class="kpi-r"><span>연간 목표</span><b>${has ? num(m, r.target) : '미입력'}</b></div>
+        ${has ? `<div class="kpi-r"><span>달성률</span><b>${pct(r.ach)}</b></div>` : ''}
         <div class="kpi-r"><span>전년비</span><b class="${yoy.c}">${yoy.t}</b></div></div>`;
   };
   const wide = `<div class="card kpi kpi-wide">
@@ -1390,7 +1391,7 @@ function renderKpi() {
           <div class="kpi-r"><span>${jt ? '목표 대비' : '목표 환산'}</span><b class="${jt ? jt.c : ''}">${jt ? jt.t : '–'}</b></div>
           <div class="kpi-r"><span>전년비</span><b class="${jd.c}">${jd.t}</b></div></div>
       </div>
-      <div class="kpi-f"><span>전년 동기 누적 트래픽 ${num('tr', K.rows.tr.prev)} · 가입자 ${num('sg', K.rows.sg.prev)}</span><span>${J.target == null ? 'kpi.js에 트래픽·가입자 목표를 넣으면 달성률·목표 가입률 표시' : `목표 가입률 ${pct(J.target, 2)}`}</span></div>
+      <div class="kpi-f"><span>전년 동기 누적 트래픽 ${num('tr', K.rows.tr.prev)} · 가입자 ${num('sg', K.rows.sg.prev)}</span><span>${J.target == null ? '목표 가입률은 트래픽 목표가 있어야 환산됩니다(kpi.js tr)' : `목표 가입률 ${pct(J.target, 2)}`}</span></div>
     </div>`;
   $('#kpis').innerHTML = card('amt') + card('cust') + wide;
 }
