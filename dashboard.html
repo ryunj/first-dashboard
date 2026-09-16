@@ -314,7 +314,7 @@ details.notes li{margin:3px 0}
 .dl{padding:14px 16px;display:grid;gap:10px}
 .dl-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
 /* 표 머리행 띄우기 — 페이지를 스크롤해도 기간 열이 보이게 (가로 스크롤 때문에 sticky 만으로는 안 됨) */
-.float-head{position:fixed;z-index:26;overflow:hidden;background:var(--surface);border:1px solid var(--border);border-bottom:0;border-radius:10px 10px 0 0;box-shadow:0 6px 14px rgba(0,0,0,.10)}
+.float-head{position:fixed;z-index:26;overflow:hidden;background:var(--surface);border:1px solid var(--border);border-top:0;border-bottom:1px solid var(--axis);box-shadow:0 4px 10px rgba(0,0,0,.08)}
 .float-head table{border-collapse:separate;border-spacing:0;font-size:12.5px;font-variant-numeric:tabular-nums;table-layout:fixed}
 .float-head th{padding:5px 10px;white-space:nowrap;text-align:right;border-bottom:1px solid var(--grid);background:var(--surface);font-weight:600;color:var(--ink-2);font-size:12px}
 .float-head th small{display:block;font-weight:400;color:var(--muted);font-size:10.5px;line-height:1.2}
@@ -381,6 +381,12 @@ details.notes li{margin:3px 0}
 .memo-f button:not(.memo-pin){border:0;background:none;color:var(--muted);cursor:pointer;padding:2px 7px;border-radius:5px;font-size:11.5px}
 .memo-f button:not(.memo-pin):hover{background:var(--wash);color:var(--ink)}
 .memo-f button.del-arm{background:var(--neg);color:#fff}
+.memo-cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.memo-cols.one{grid-template-columns:1fr}
+.memo-col{min-width:0;display:flex;flex-direction:column;gap:4px}
+.memo-cap{font-size:11px;font-weight:650;color:var(--ink-2)}
+.memo-cap small{font-weight:400;color:var(--muted);margin-left:4px}
+@media screen and (max-width:760px){.memo-cols{grid-template-columns:1fr}}
 .memo-when{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:8px 0}
 .memo-when select{font-size:12px;max-width:230px}
 .memo-cs{display:flex;gap:6px;align-items:center;margin-top:8px}
@@ -596,7 +602,7 @@ body.pdfcap .pgrid{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr)!important
       <li><b>새 데이터 추가</b>(일자별 갱신) — 백업(또는 data.js) + 그날 내보낸 raw 폴더(예: <code>2026년/0914</code>)를 올리면 <code>build_data.py</code> 와 같은 규칙으로 합친다: 같은 날짜 · 주차는 새 값으로 바꾸고 빈 칸은 기존 값을 유지, 회원현황이 모두 0인 날(미갱신)은 건너뜀, 상품 표는 그 날짜 행을 통째로 교체. 결과표에서 파일별 읽음 · 건너뜀 · 오류와 새 날짜 · 기존 값과 달라진 칸 수를 확인한 뒤 적용한다. 상품은 모두 개별로 보관한다(예전 백업처럼 상위 N만 개별이던 이력은 '기타 상품' 그대로). 브라우저는 xlsx 를 읽지 않으니 APP설치데이터 · 조직 카테고리별 실적은 CSV로 저장해 올린다.</li>
       <li><b>차트 끝값</b> — 마지막 기간의 당해 값과 함께 비교(전년 동기간) 값을 회색으로 표시한다(차트 선이 하나일 때). <b>지표 순서</b>: 거래액 → 고객수 → 객단가 → 트래픽 → 가입자수 → 가입률 → 당일가입 CR → 첫구매율.</li>
       <li><b>다운로드</b>(맨 아래) — 형식(엑셀 · PDF)과 영역(전체 · 실적 요약 · 흐름 차트 · 실적 표 · 상품 구성 · 앱 설치 · 수신동의 · KPI)을 골라 받는다. <b>엑셀</b>은 영역마다 시트 하나로, 화면과 같은 기간 · 필터 · 비교 기준의 값을 숫자 셀 + 서식(단위 · 비율 · 증감 색)으로 쓴다(차트는 표 데이터와 같아 제외). <b>PDF</b>는 인쇄 창 없이 <b>파일로 바로</b> 받는다 — 고른 영역을 데스크톱 폭으로 그려 찍고(html-to-image) A4 가로에 이어 붙이며(jsPDF) 표 행 · 카드 경계에서 쪽을 나눈다. 두 라이브러리는 받을 때 CDN(cdnjs · jsDelivr)에서 불러오고, 못 불러오면(사내망 차단 등) 인쇄 창을 연다(대상 'PDF로 저장'). 표는 3단 비교 모양, 첫 쪽 위에 기준 기간 · 필터 · 출력 시각. KPI 영역은 기본 접힘(제목 앞 ▶ 를 누르면 펼침).</li>
-      <li><b>메모</b>(인사이트 자동 요약 아래 · 기본 접힘) — <b>+ 메모</b>로 지금 보고 있는 기간 · 단위 · 일평균/누계 · 비교 · 채널 · 회원구분(+ 상품 구성 위치)에 포스트잇을 붙인다. 메모마다 <b>붙일 기간</b>을 고를 수 있다(기본은 지금 보고 있는 기간, '기간 고정 안 함'도 가능 · 채널 · 회원구분은 지금 화면 기준). 📌 를 누르면 그 보기로 이동, 고치기, ✕ 두 번 눌러 지우기, 색 4가지. '이 보기'는 지금 기간 · 채널 · 회원구분과 같은 메모만. 메모는 이 브라우저(localStorage)에 저장되고 <b>백업 다운로드 · 새 데이터 추가 백업에 함께 담긴다</b> — 백업을 열면 그 안의 메모를 합친다(같은 메모는 최근 수정본, 지운 메모가 예전 백업에 있으면 다시 들어옴). 엑셀 · PDF 에는 넣지 않는다.</li>
+      <li><b>메모</b>(인사이트 자동 요약 아래 · 기본 접힘) — <b>+ 메모</b>로 지금 보고 있는 기간 · 단위 · 일평균/누계 · 비교 · 채널 · 회원구분(+ 상품 구성 위치)에 포스트잇을 붙인다. 메모는 <b>리뷰</b>(왼쪽) · <b>계획</b>(오른쪽) 두 칸으로 나눠 쓴다(한 칸만 써도 된다 · 서식 도구는 마지막으로 쓰던 칸에 적용). 메모마다 <b>붙일 기간</b>을 고를 수 있다(기본은 지금 보고 있는 기간, '기간 고정 안 함'도 가능 · 채널 · 회원구분은 지금 화면 기준). 📌 를 누르면 그 보기로 이동, 고치기, ✕ 두 번 눌러 지우기, 색 4가지. '이 보기'는 지금 기간 · 채널 · 회원구분과 같은 메모만. 메모는 이 브라우저(localStorage)에 저장되고 <b>백업 다운로드 · 새 데이터 추가 백업에 함께 담긴다</b> — 백업을 열면 그 안의 메모를 합친다(같은 메모는 최근 수정본, 지운 메모가 예전 백업에 있으면 다시 들어옴). 엑셀 · PDF 에는 넣지 않는다.</li>
       <li><b>드래그 합계</b> — 실적 표에서 숫자를 드래그(또는 클릭 후 Shift+클릭)하면 아래에 합계 · 평균 · 최소 · 최대가 뜬다. 합계는 거래액 · 고객수 · 가입자수 · 트래픽처럼 더할 수 있는 같은 단위일 때만. Ctrl+C로 선택 영역 복사(엑셀에 붙여넣기), Esc로 해제.</li>
     </ul>
   </details>
@@ -2143,7 +2149,10 @@ function syncFloatHeads() {
     const f = floatHeadFor(wrap);
     if (!thead || printing || !wrap.offsetParent) { f.hidden = true; continue; }
     const r = wrap.getBoundingClientRect(), hh = thead.getBoundingClientRect().height;
-    if (!(r.width > 0 && r.top < top - 1 && r.bottom > top + hh + 30)) { f.hidden = true; continue; }
+    // 원본 머리행이 헤더 밑으로 완전히 들어간 뒤에 띄운다(반쯤 보일 때 같이 그리면 한 줄이 두 번 보여 튄다)
+    // 경계에서 깜빡이지 않게 띄운 상태면 조금 더 버틴다
+    const line = top - hh + (f.hidden ? 1 : 7);
+    if (!(r.width > 0 && r.top < line && r.bottom > top + hh + 30)) { f.hidden = true; continue; }
     const stamp = `${RENDER_N}|${thead.rows.length}|${thead.rows[0].cells.length}|${thead.textContent.length}`;
     if (f.dataset.stamp !== stamp) {  // 표가 바뀌었을 때만 복제 — 열 너비는 원본에서 그대로 가져온다
       const clone = thead.cloneNode(true), ws = [...thead.rows[0].cells].map(c => c.getBoundingClientRect().width);
@@ -2350,7 +2359,15 @@ function memoClean(html) {  // 저장 · 표시 전에 허용한 태그와 색�
   }
   return box.innerHTML.slice(0, 20000);
 }
-let MEMO_FILTER = 'all', MEMO_EDIT = null, MEMO_DRAFT = {html: '', color: 'yellow', grain: 'month', at: ''}, MEMO_FOCUS = false, MEMO_DEL = null, MEMO_DEL_T = 0;
+const MEMO_PANES = [['a', '리뷰', '무슨 일이 있었나'], ['b', '계획', '무엇을 할까']];
+let MEMO_FILTER = 'all', MEMO_EDIT = null, MEMO_DRAFT = {html: '', html2: '', color: 'yellow', grain: 'month', at: ''}, MEMO_FOCUS = false, MEMO_DEL = null, MEMO_DEL_T = 0, MEMO_PANE = 'a';
+const memoBox = p => $(`#memoList .memo-in[data-pane="${p}"]`);
+const memoSyncDraft = () => {  // 편집 중인 두 칸의 글을 초안에 담아 둔다(화면을 다시 그려도 남게)
+  const a = memoBox('a'), b = memoBox('b');
+  if (a) MEMO_DRAFT.html = a.innerHTML;
+  if (b) MEMO_DRAFT.html2 = b.innerHTML;
+};
+const memoPlain = el => (el ? (el.innerText || el.textContent || '') : '').replace(/\u00a0/g, ' ').trim();
 const memoColsFor = g => (g === 'month' ? monthCols(S.year) : g === 'week' ? weekCols(S.year) : dayCols(S.year));
 const memoViewAt = (grain, at) => {  // 메모에 붙일 기간 — 고른 기간(없으면 '최근') · 채널 · 회원구분은 지금 화면 기준
   const v = memoView();
@@ -2396,8 +2413,7 @@ function memoGo(v) {  // 메모가 붙은 보기로 — 없는 연도 · 채널�
 function renderMemos() {
   const sec = $('#memoSec');
   if (!sec || !window.FP_MEMOS) return;
-  const in0 = $('#memoList .memo-in');
-  if (in0 && MEMO_EDIT) MEMO_DRAFT.html = in0.innerHTML;  // 편집 중에 화면이 다시 그려져도 쓰던 글은 남긴다
+  if (MEMO_EDIT) memoSyncDraft();  // 편집 중에 화면이 다시 그려져도 쓰던 글은 남긴다
   sec.hidden = false;
   const all = window.FP_MEMOS.all().sort((a, b) => String(b.updated || '').localeCompare(String(a.updated || '')));
   const here = all.filter(m => memoMatch(m.view)), list = MEMO_FILTER === 'view' ? here : all;
@@ -2421,11 +2437,17 @@ function renderMemos() {
     + `<select data-memoat aria-label="기간">${['<option value="">기간 고정 안 함 (최근)</option>', ...memoColsFor(MEMO_DRAFT.grain).filter(c => c.cur.length).reverse()
       .map(c => `<option value="${esc(c.id)}"${MEMO_DRAFT.at === c.id ? ' selected' : ''}>${esc(c.opt || c.tip)}</option>`)].join('')}</select>`
     + `<span class="hint">채널 · 회원구분은 지금 화면 기준</span></div>`
-    + `<div class="memo-in" contenteditable="true" role="textbox" aria-multiline="true" aria-label="메모 내용">${memoClean(MEMO_DRAFT.html)}</div>`
+    + `<div class="memo-cols">${MEMO_PANES.map(([p, nm, hint]) => `<div class="memo-col"><div class="memo-cap">${nm}<small>${hint}</small></div>`
+      + `<div class="memo-in" data-pane="${p}" contenteditable="true" role="textbox" aria-multiline="true" aria-label="${nm}">${memoClean(p === 'a' ? MEMO_DRAFT.html : MEMO_DRAFT.html2)}</div></div>`).join('')}</div>`
     + `<div class="memo-cs"><span class="hint">Ctrl+Enter 저장 · Esc 취소</span><span class="sp"></span>`
     + `<button class="btn" type="button" data-memocancel>취소</button><button class="btn primary" type="button" data-memosave>저장</button></div></div>`;
   const card = m => (MEMO_EDIT === m.id ? editor(m.id) : `<div class="memo-item${memoMatch(m.view) ? ' now' : ''}" data-c="${color(m.color)}" data-mid="${esc(m.id)}">`
-    + `<div class="memo-t">${m.html ? memoClean(m.html) : esc(m.text)}</div>`
+    + (() => {
+      const a = m.html ? memoClean(m.html) : esc(m.text || ''), b = m.html2 ? memoClean(m.html2) : '';
+      if (!b) return `<div class="memo-cols one"><div class="memo-col"><div class="memo-t">${a}</div></div></div>`;
+      return `<div class="memo-cols"><div class="memo-col"><div class="memo-cap">리뷰</div><div class="memo-t">${a}</div></div>`
+        + `<div class="memo-col"><div class="memo-cap">계획</div><div class="memo-t memo-t2">${b}</div></div></div>`;
+    })()
     + '<div class="memo-f">'
     + (m.view ? `<button type="button" class="memo-pin" data-memogo title="${esc(`이 보기로 이동 — ${m.label || ''}`)}">📌 ${esc(m.label || '')}</button>` : '')
     + `<span class="memo-time">${tm(m.updated || m.created)}</span>`
@@ -2435,7 +2457,7 @@ function renderMemos() {
   const empty = MEMO_FILTER === 'view' && all.length ? '지금 보기에 붙은 메모가 없습니다 — 전체를 누르면 모든 메모' : '메모가 없습니다 — + 메모 로 추가';
   $('#memoList').innerHTML = (MEMO_EDIT === 'new' ? editor('new') : '') + (list.length ? list.map(card).join('') : MEMO_EDIT === 'new' ? '' : `<div class="memo-empty">${empty}</div>`);
   if (MEMO_FOCUS) {  // 새 메모 · 고치기를 누르면 바로 쓸 수 있게 커서를 끝으로
-    const box = $('#memoList .memo-in');
+    const box = memoBox(MEMO_PANE) || memoBox('a');
     if (box) {
       box.focus();
       const r = document.createRange();
@@ -2449,17 +2471,19 @@ function renderMemos() {
   }
 }
 function memoSave() {
-  const box = $('#memoList .memo-in');
-  const html = memoClean(box ? box.innerHTML : MEMO_DRAFT.html);
-  const text = (box ? (box.innerText || box.textContent) : String(html).replace(/<[^>]*>/g, ' ')).replace(/\u00a0/g, ' ').trim().slice(0, 2000);  // 접혀 있으면 innerText 가 빈 값
-  if (!text) { (window.__say || (() => {}))('메모 내용을 입력하세요'); return; }
+  const a = memoBox('a'), b = memoBox('b');
+  const html = memoClean(a ? a.innerHTML : MEMO_DRAFT.html), html2 = memoClean(b ? b.innerHTML : MEMO_DRAFT.html2);
+  const strip = s => String(s).replace(/<[^>]*>/g, ' ').replace(/\u00a0/g, ' ').trim();
+  const ta = a ? memoPlain(a) : strip(html), tb = b ? memoPlain(b) : strip(html2);  // 접혀 있으면 innerText 가 빈 값
+  const text = [ta, tb && `[계획] ${tb}`].filter(Boolean).join(' · ').slice(0, 2000);
+  if (!text) { (window.__say || (() => {}))('리뷰 또는 계획에 내용을 입력하세요'); return; }
   const now = new Date().toISOString();
   if (MEMO_EDIT === 'new') {
     const v = memoViewAt(MEMO_DRAFT.grain, MEMO_DRAFT.at);
-    window.FP_MEMOS.add({id: `m${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`, text, html, color: MEMO_DRAFT.color, created: now, updated: now, view: v, label: memoLabel(v)});
+    window.FP_MEMOS.add({id: `m${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`, text, html, html2, color: MEMO_DRAFT.color, created: now, updated: now, view: v, label: memoLabel(v)});
   } else {
     const v = memoViewAt(MEMO_DRAFT.grain, MEMO_DRAFT.at);  // 고친 기간도 반영
-    window.FP_MEMOS.update(MEMO_EDIT, {text, html, color: MEMO_DRAFT.color, updated: now, view: v, label: memoLabel(v)});
+    window.FP_MEMOS.update(MEMO_EDIT, {text, html, html2, color: MEMO_DRAFT.color, updated: now, view: v, label: memoLabel(v)});
   }
   MEMO_EDIT = null;
   renderMemos();
@@ -2467,18 +2491,18 @@ function memoSave() {
 $('#memoSec').addEventListener('click', e => {
   const f = e.target.closest('[data-memof]');
   if (f) { MEMO_FILTER = f.dataset.memof; renderMemos(); return; }
-  if (e.target.closest('#btnMemoAdd')) { MEMO_EDIT = 'new'; MEMO_DRAFT = {html: '', color: 'yellow', grain: S.grain, at: S.at[S.grain] || ''}; MEMO_FOCUS = true; renderMemos(); return; }
+  if (e.target.closest('#btnMemoAdd')) { MEMO_EDIT = 'new'; MEMO_DRAFT = {html: '', html2: '', color: 'yellow', grain: S.grain, at: S.at[S.grain] || ''}; MEMO_PANE = 'a'; MEMO_FOCUS = true; renderMemos(); return; }
   const cmd = e.target.closest('[data-memocmd],[data-memoink],[data-memohl]');  // 서식 — 선택 영역에 적용
   if (cmd) {
-    const box = $('#memoList .memo-in');
+    const box = memoBox(MEMO_PANE) || memoBox('a');  // 마지막으로 쓰던 칸에 적용
     if (box) {
       box.focus();
       try {
         if (cmd.dataset.memocmd) document.execCommand(cmd.dataset.memocmd, false, null);
-        else if (cmd.dataset.memoink !== undefined && cmd.hasAttribute('data-memoink')) document.execCommand('foreColor', false, cmd.dataset.memoink || 'inherit');
+        else if (cmd.hasAttribute('data-memoink')) document.execCommand('foreColor', false, cmd.dataset.memoink || 'inherit');
         else document.execCommand('hiliteColor', false, cmd.dataset.memohl || 'transparent');
       } catch (err) { (window.__say || (() => {}))('이 브라우저에서는 서식을 넣을 수 없습니다'); }
-      MEMO_DRAFT.html = box.innerHTML;
+      memoSyncDraft();
     }
     return;
   }
@@ -2486,7 +2510,7 @@ $('#memoSec').addEventListener('click', e => {
   if (!cardEl) return;
   const id = cardEl.dataset.mid;
   const col = e.target.closest('[data-memocolor]');
-  if (col) { const box = $('#memoList .memo-in'); if (box) MEMO_DRAFT.html = box.innerHTML; MEMO_DRAFT.color = col.dataset.memocolor; renderMemos(); return; }
+  if (col) { memoSyncDraft(); MEMO_DRAFT.color = col.dataset.memocolor; renderMemos(); return; }
   if (e.target.closest('[data-memocancel]')) { MEMO_EDIT = null; renderMemos(); return; }
   if (e.target.closest('[data-memosave]')) { memoSave(); return; }
   const m = window.FP_MEMOS.all().find(x => x.id === id);
@@ -2494,7 +2518,8 @@ $('#memoSec').addEventListener('click', e => {
   if (e.target.closest('[data-memogo]')) { memoGo(m.view); return; }
   if (e.target.closest('[data-memoedit]')) {
     MEMO_EDIT = id;
-    MEMO_DRAFT = {html: m.html || esc(m.text), color: m.color, grain: (m.view && m.view.grain) || S.grain, at: (m.view && m.view.at) || ''};
+    MEMO_DRAFT = {html: m.html || esc(m.text), html2: m.html2 || '', color: m.color, grain: (m.view && m.view.grain) || S.grain, at: (m.view && m.view.at) || ''};
+    MEMO_PANE = 'a';
     MEMO_FOCUS = true;
     renderMemos();
     return;
@@ -2513,11 +2538,11 @@ $('#memoSec').addEventListener('click', e => {
     renderMemos();
   }
 });
+$('#memoSec').addEventListener('focusin', e => { const box = e.target.closest('.memo-in'); if (box) MEMO_PANE = box.dataset.pane || 'a'; });
 $('#memoSec').addEventListener('change', e => {  // 붙일 기간 고르기
   const g = e.target.closest('[data-memograin]'), at = e.target.closest('[data-memoat]');
   if (!g && !at) return;
-  const box = $('#memoList .memo-in');
-  if (box) MEMO_DRAFT.html = box.innerHTML;
+  memoSyncDraft();
   if (g) { MEMO_DRAFT.grain = g.value; MEMO_DRAFT.at = ''; }
   if (at) MEMO_DRAFT.at = at.value;
   renderMemos();
