@@ -377,6 +377,11 @@ function mergeSeries(base, S, sources) {
   stats.newDates = dates.filter(p => !oldDates.has(p));
   stats.filledDates = [...incomingDates].filter(p => oldDates.has(p)).length;
   const last = dates.length ? dates[dates.length - 1] : null;
+  // 진행 중인 주의 일수는 실적 시리즈 기준 (build_data.py 와 같게)
+  const PERF_BASES = new Set(['amt', 'cust', 'tr', 'sg', 'cr', 'fpr', 'nya', 'nyc', 'nyna', 'nync']);
+  let lastPerf = null;
+  for (const [k, ser] of dSer) if (PERF_BASES.has(k.split('|')[0])) for (const [p, v] of ser) if (v != null && (!lastPerf || p > lastPerf)) lastPerf = p;
+  const lastWk = lastPerf || last;
   const dailyS = {};
   for (const key of [...dSer.keys()].sort()) {
     const ser = dSer.get(key), arr = dates.map(p => (ser.has(p) ? ser.get(p) : null));
@@ -393,7 +398,7 @@ function mergeSeries(base, S, sources) {
     const [y, m, n] = k.split('-').map(Number), cal = isoWeekMap(y).get(`${m}-${n}`);
     if (!cal) { stats.warn.push(`${y}년 ${m}월 ${n}주차는 ISO 달력에 없음 — 제외`); continue; }
     let d = 7;
-    if (last && cal.monday <= last && last <= addDays(cal.monday, 6)) d = Math.round((toUTC(last) - toUTC(cal.monday)) / DAY) + 1;  // 진행 중인 주
+    if (lastWk && cal.monday <= lastWk && lastWk <= addDays(cal.monday, 6)) d = Math.round((toUTC(lastWk) - toUTC(cal.monday)) / DAY) + 1;  // 진행 중인 주
     if (wMeta.has(k)) stats.updatedWeeks++; else stats.newWeeks++;
     wMeta.set(k, {y, m, n, w: cal.w, start: cal.monday, d});
   }
@@ -549,7 +554,7 @@ function mergeProducts(prod, byDay, cov, lastDate) {
     maxDay = Math.max(maxDay, d);
   }
   const out = {
-    meta: {...prod.meta, built: nowText(), topN: null, legacyTopN: prod.meta.topN || prod.meta.legacyTopN || null, covFields: 6, start: ymd(startT), days: maxDay + 1, lastDate: lastDate || prod.meta.lastDate,
+    meta: {...prod.meta, built: nowText(), topN: null, legacyTopN: prod.meta.topN || prod.meta.legacyTopN || null, covFields: 6, start: ymd(startT), days: maxDay + 1, lastDate: ymd(startT + maxDay * DAY),
            rows: (prod.meta.rows || 0) + stats.rows, products: (prod.meta.products || 0) + stats.newProducts},
     ch: lists.ch, bpu: lists.bpu, cat: lists.cat, brand: lists.brand, paths, prods, f, cov: covOut,
   };

@@ -313,6 +313,41 @@ details.notes li{margin:3px 0}
 /* 다운로드 */
 .dl{padding:14px 16px;display:grid;gap:10px}
 .dl-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+/* 표 머리행 띄우기 — 페이지를 스크롤해도 기간 열이 보이게 (가로 스크롤 때문에 sticky 만으로는 안 됨) */
+.float-head{position:fixed;z-index:26;overflow:hidden;background:var(--surface);border:1px solid var(--border);border-bottom:0;border-radius:10px 10px 0 0;box-shadow:0 6px 14px rgba(0,0,0,.10)}
+.float-head table{border-collapse:separate;border-spacing:0;font-size:12.5px;font-variant-numeric:tabular-nums;table-layout:fixed}
+.float-head th{padding:5px 10px;white-space:nowrap;text-align:right;border-bottom:1px solid var(--grid);background:var(--surface);font-weight:600;color:var(--ink-2);font-size:12px}
+.float-head th small{display:block;font-weight:400;color:var(--muted);font-size:10.5px;line-height:1.2}
+.float-head th.stick{position:sticky;left:0;z-index:2;text-align:left;background:var(--surface)}
+.float-head th.s2{left:var(--s1w,120px)}
+.float-head th.band{text-align:center;color:var(--ink)}
+.float-head th.p.now{color:var(--ink)}
+.float-head th.p.now::after{content:"";display:block;height:2px;background:var(--c1);border-radius:1px;margin-top:2px}
+/* 인사이트 자동 요약 */
+.insight{margin-top:14px;border:1px solid var(--grid);border-radius:10px;background:var(--surface)}
+.insight>summary{cursor:pointer;padding:10px 14px;font-size:13px;font-weight:650}
+.ins-sub{font-weight:400;font-size:11.5px;color:var(--muted);margin-left:8px}
+.ins-body{padding:2px 14px 14px;border-top:1px solid var(--grid)}
+.ins-g{margin:10px 0 0}
+.ins-g h4{margin:0 0 5px;font-size:12px;font-weight:700;color:var(--ink)}
+.ins-g ul{margin:0;padding-left:17px}
+.ins-g li{margin:3px 0;font-size:12.5px;line-height:1.65;color:var(--ink-2)}
+.ins-g li b{color:var(--ink);font-weight:650}
+.ins-cap{margin-top:10px;padding-top:8px;border-top:1px solid var(--grid);font-size:11.5px;color:var(--muted)}
+/* 메모 편집기 */
+.memo-tb{display:flex;flex-wrap:wrap;gap:3px;align-items:center;padding-bottom:2px;border-bottom:1px solid rgba(120,120,120,.25)}
+.memo-tb button{border:0;background:none;color:inherit;cursor:pointer;border-radius:4px;padding:2px 6px;font-size:12px;line-height:1.4}
+.memo-tb button:hover{background:rgba(120,120,120,.22)}
+.memo-tb button[data-memocmd="bold"]{font-weight:800}
+.memo-tb button[data-memocmd="underline"]{text-decoration:underline}
+.memo-tb button[data-memocmd="strikeThrough"]{text-decoration:line-through}
+.memo-tb .ink{font-weight:700}
+.memo-tb .hl{width:15px;height:15px;border:1px solid rgba(0,0,0,.25);padding:0}
+.memo-tb .sep{width:1px;height:14px;background:rgba(120,120,120,.35);margin:0 3px}
+.memo-in{min-height:78px;max-height:220px;overflow:auto;background:rgba(255,255,255,.45);border-radius:4px;padding:6px 7px;line-height:1.5;outline:0}
+.memo-in:focus{box-shadow:0 0 0 2px color-mix(in srgb,var(--c1) 45%,transparent)}
+.memo-t ul,.memo-in ul{margin:4px 0;padding-left:18px}
+.memo-t mark,.memo-in mark{background:#fff3a3;color:inherit}
 /* 상품 구성 카테고리 — 체크박스 태그 */
 #pdCatChips{gap:5px}
 #pdCatChips .chip{gap:6px;padding:3px 10px 3px 7px;font-size:12px;font-weight:500;color:var(--muted);background:var(--surface);border:1px solid var(--grid);border-radius:7px;transition:background .12s,border-color .12s,color .12s}
@@ -357,7 +392,7 @@ details.notes li{margin:3px 0}
 body.pdfcap::after{content:"PDF 만드는 중…";position:fixed;inset:0;z-index:300;display:grid;place-items:center;background:color-mix(in srgb,var(--page) 90%,transparent);font-size:15px;font-weight:650;color:var(--ink)}
 body.pdfcap main.wrap{width:1160px;max-width:none;padding-inline:0;margin:0}
 body.pdfcap main>section:not(.pr-on){display:none!important}
-body.pdfcap #bkBanner,body.pdfcap .sec-h .tools,body.pdfcap .pd-filter,body.pdfcap .crumbs .pd-spread,body.pdfcap #pdOld,body.pdfcap #selbar,body.pdfcap .toast{display:none!important}
+body.pdfcap .float-head,body.pdfcap #insightSec,body.pdfcap #bkBanner,body.pdfcap .sec-h .tools,body.pdfcap .pd-filter,body.pdfcap .crumbs .pd-spread,body.pdfcap #pdOld,body.pdfcap #selbar,body.pdfcap .toast{display:none!important}
 body.pdfcap .fold::before{display:none}
 body.pdfcap #printHead{display:block;padding:0 2px 8px}
 body.pdfcap #printHead h1{font-size:19px;margin:0 0 3px}
@@ -379,7 +414,7 @@ body.pdfcap .pgrid{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr)!important
   /* 크롬은 A4 가로를 약 740px 폭으로 배치한다 → 본문을 줄여(zoom) 데스크톱 폭(약 1,000px)으로 · 여백 0 = 브라우저 머리글·바닥글(날짜 · 주소) 없음 */
   html,body{background:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   body{zoom:.72;padding:8mm 10mm!important}
-  header.top,#bkBanner,#dlSec,details.notes,#selbar,dialog,.toast,.sec-h .tools,.pd-filter,.crumbs .pd-spread,#pdOld,#memoSec{display:none!important}
+  header.top,.float-head,#insightSec,#bkBanner,#dlSec,details.notes,#selbar,dialog,.toast,.sec-h .tools,.pd-filter,.crumbs .pd-spread,#pdOld,#memoSec{display:none!important}
   .fold::before{display:none}
   #printHead{display:block;margin:0 0 4mm}
   #printHead h1{font-size:18px;margin:0 0 2px}
@@ -450,7 +485,7 @@ body.pdfcap .pgrid{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr)!important
   <div class="card bk-banner" id="bkBanner" role="status" hidden><span id="bkInfo"></span><button class="btn" id="btnBkClear" type="button">원래 데이터로 돌아가기</button></div>
   <section id="memoSec" class="memo-sec" hidden>
     <div class="memo-h"><h2>메모</h2><span class="desc" id="memoDesc"></span>
-      <div class="tools"><div class="seg" role="group" aria-label="메모 보기"><button type="button" data-memof="all">전체</button><button type="button" data-memof="view">이 보기</button></div>
+      <div class="tools"><div class="seg" role="group" aria-label="메모 보기"><button type="button" data-memof="all" title="저장된 메모를 모두 보기">모든 메모</button><button type="button" data-memof="view" title="지금 화면의 기간 · 채널 · 회원구분과 같은 조건으로 붙인 메모만 보기">이 화면 조건</button></div>
         <button class="btn primary" type="button" id="btnMemoAdd" title="지금 보고 있는 기간 · 필터에 메모 붙이기">+ 메모</button></div></div>
     <div class="memos" id="memoList"></div>
   </section>
@@ -463,6 +498,13 @@ body.pdfcap .pgrid{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr)!important
   <section id="chartSec">
     <div class="sec-h"><h2 id="chartTitle">흐름</h2><span class="desc" id="chartDesc"></span><div class="legend" id="legend"></div></div>
     <div class="charts" id="charts"></div>
+  </section>
+
+  <section id="insightSec" hidden>
+    <details class="insight" id="insightBox">
+      <summary>인사이트 자동 요약<span class="ins-sub" id="insSub"></span></summary>
+      <div class="ins-body" id="insBody"></div>
+    </details>
   </section>
 
   <section id="tableSec">
@@ -486,8 +528,8 @@ body.pdfcap .pgrid{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr)!important
       <span class="desc"><span id="pdDesc"></span> · 연도 · 월별/주별/일별 · 일평균/누계는 상단 필터를 따름 · 회원구분 미적용</span>
       <div class="tools">
         <div class="seg" role="group" aria-label="드릴다운 순서">
-          <button type="button" data-pv="bpu">사업부 기준</button>
-          <button type="button" data-pv="ch">채널 기준</button>
+          <button type="button" data-pv="bpu" title="사업부(BPU) → 카테고리 → 브랜드 → 상품 순서로 보기">BPU</button>
+          <button type="button" data-pv="ch" title="채널 → 사업부(BPU) → 카테고리 → 브랜드 → 상품 순서로 보기">채널</button>
         </div>
         <label class="field"><span id="pdPeriodLbl">기간</span> <select id="pdPeriod"></select></label>
         <div class="seg" role="group" aria-label="상품 구성 기준">
@@ -542,7 +584,9 @@ body.pdfcap .pgrid{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr)!important
       <li><b>신규회원 앱 설치 · 앱푸시 수신동의</b> — 모두 <b>앱 설치자 기준</b>. 흐름 차트(가입 → 설치 → 수신동의 · 추가 · 이탈)는 진행 중인 달 · 주가 뚝 떨어져 보이지 않게 누계 메뉴에서도 일평균으로 그린다(타일 · 표는 메뉴를 따름). 가입자수 → <b>앱 신규 설치</b>(APP설치데이터 '신규 설치', 재설치 제외) → <b>앱푸시 수신동의</b>(PUSH '신규' 회원의 신규추가(+)). 기존 대시보드 '앱푸시수신동의' · '앱푸시(앱포함)/신규회원'과 같은 값이다(원천 대조로 확인). <b>앱푸시 수신동의율(신규회원)</b> = 앱푸시 수신동의 ÷ 가입자수 · <b>앱 신규 설치 대비 수신동의율</b> = 앱푸시 수신동의 ÷ 앱 신규 설치. 비율은 분자 · 분모가 모두 있는 날만 합산.</li>
       <li><b>앱푸시 수신동의 회원</b>(PUSH, 앱 설치자 기준): 기존 · 신규(당년 가입) · 합계. 회원 수는 기간 말 값, 추가 · 이탈 · 순증은 기간 합(일평균 메뉴면 ÷ 일수). 이탈 · 삭제는 늘어나면 빨강. 매년 1/1은 전년 신규가 기존으로 재분류되며 추가 · 이탈에 수만 명이 섞여 추가 · 이탈에서 뺀다. 원천 오류일 — 2025-04-18(수신동의 회원 0 · 전원 이탈)은 회원 수와 흐름을 모두 빼고, 2025-04-19 · 2026-04-24(증감 칸에 재고 값)와 2026-04-25(흐름 모두 0)는 흐름만 뺐다. 2026-06-15 이후엔 수신동의 회원이 전날 + 증감과 하루 수십 명씩 어긋난다(원천 그대로 표시).</li>
       <li><b>앱 설치 상세</b>(APP설치데이터, 2026-03~): 전체 설치 = 신규 설치 + 재설치 · 순증 설치 = 전체 설치 − 삭제 · 스토어 방문 · Push 활성 기기(기간 말 값). 원천에 같은 날짜가 두 번 나오면 뒤 행을 쓴다(7/17 · 7/18은 값이 다름). 2025년 raw가 없어 전년비는 비어 있다.</li>
-      <li><b>표시하지 않는 것</b> — 회원현황 raw(누적 · 유효 · 신규회원수)는 <b>앱 설치자 미포함 기준</b>이고 수신동의 항목이 없어 뺐다. 기존 대시보드의 '앱푸시(앱보유무관)/신규회원' · 앱 설치 유무별 수신동의는 원천에 앱 미설치자 수신동의 항목이 없어 아직 표시할 수 없다(PUSH 원천은 앱 설치자 기준만). <b>가입자 대비 앱 신규 설치율</b>(앱 신규 설치 ÷ 가입자수)은 앱 설치에 비회원 설치가 섞여 100%를 넘는 달이 있는 등 데이터 검증이 되지 않아 2026-09-15 대시보드에서 뺐다(앱 신규 설치 수 · 앱 신규 설치 대비 수신동의율은 유지).</li>
+      <li><b>전체 회원 · 앱 설치 무관(회원현황)</b> — 파일명이 <code>회원현황_앱설치무관기준</code>으로 바뀌어 기준이 분명해져 지표에 넣었다: 유효회원수 · 누적회원수(기간 말) · 신규회원수(기간 합), <b>유효회원 대비 수신동의율</b>(수신동의 회원 ÷ 유효회원수, 분자는 앱 설치자 기준 · 분모는 앱 무관이라 '앱을 안 깐 회원까지 포함한 모수'로 읽는다), <b>신규 수신동의율(앱 무관 모수)</b>(앱푸시 수신동의(신규) ÷ 회원현황 신규회원수). 회원현황 신규회원수와 가입자수 raw 는 사실상 같다(256일 중 146일 완전 일치 · 평균 비 1.0003). <b>앱 미설치자의 수신동의 자체는 어느 원천에도 없다</b> — PUSH 는 앱 설치자 기준만 담는다.</li>
+      <li><b>인사이트 자동 요약</b>(흐름 차트 아래 · 기본 접힘) — 화면의 기준 기간 · 필터 · 비교 기준으로 계산한 <b>규칙 기반</b> 요약이다. 거래액 변화를 고객수 효과 · 객단가 효과로 나누고, 트래픽↔첫구매율 · 가입자↔당일가입 CR 같은 퍼널 신호, 채널별 증감 1위 · 꼴찌, 지금 드릴 단계의 상품 증감, 앱푸시 수신동의율 변화를 문구로 만든다. 원인은 가설로만 적고 값은 화면 지표와 같다.</li>
+      <li><b>표시하지 않는 것</b> — 기존 대시보드의 '앱푸시(앱보유무관)/신규회원' · 앱 설치 유무별 수신동의는 원천에 앱 미설치자 수신동의 항목이 없어 아직 표시할 수 없다(PUSH 원천은 앱 설치자 기준만). <b>가입자 대비 앱 신규 설치율</b>(앱 신규 설치 ÷ 가입자수)은 앱 설치에 비회원 설치가 섞여 100%를 넘는 달이 있는 등 데이터 검증이 되지 않아 2026-09-15 대시보드에서 뺐다(앱 신규 설치 수 · 앱 신규 설치 대비 수신동의율은 유지).</li>
       <li><b>백업</b> — 상단 <b>백업 다운로드</b>는 지금 보고 있는 데이터(실적 data.js · KPI kpi.js · 상품 products.js)를 한 파일(.json.gz)로 저장한다. <b>백업 불러오기</b>로 그 파일을 올리면 이 브라우저에 저장해 그 데이터로 다시 연다(새로고침해도 유지). 위 안내줄의 '원래 데이터로 돌아가기'를 누르면 해제. <code>build_data.py</code> 도 빌드할 때마다 <code>backup/</code> 에 같은 형식의 백업을 쓴다. 백업 파일에는 실적 원본이 담기니 사내 보안 기준에 맞게 보관할 것.</li>
       <li><b>새 데이터 추가</b>(일자별 갱신) — 백업(또는 data.js) + 그날 내보낸 raw 폴더(예: <code>2026년/0914</code>)를 올리면 <code>build_data.py</code> 와 같은 규칙으로 합친다: 같은 날짜 · 주차는 새 값으로 바꾸고 빈 칸은 기존 값을 유지, 회원현황이 모두 0인 날(미갱신)은 건너뜀, 상품 표는 그 날짜 행을 통째로 교체. 결과표에서 파일별 읽음 · 건너뜀 · 오류와 새 날짜 · 기존 값과 달라진 칸 수를 확인한 뒤 적용한다. 상품은 모두 개별로 보관한다(예전 백업처럼 상위 N만 개별이던 이력은 '기타 상품' 그대로). 브라우저는 xlsx 를 읽지 않으니 APP설치데이터 · 조직 카테고리별 실적은 CSV로 저장해 올린다.</li>
       <li><b>차트 끝값</b> — 마지막 기간의 당해 값과 함께 비교(전년 동기간) 값을 회색으로 표시한다(차트 선이 하나일 때). <b>지표 순서</b>: 거래액 → 고객수 → 객단가 → 트래픽 → 가입자수 → 가입률 → 당일가입 CR → 첫구매율.</li>
@@ -834,7 +878,14 @@ function dayCols(y) {
       opt: `${d} (${WD[dow(d)]})`, tip: `${d} (${WD[dow(d)]})`, ptipY: `${pd} (${WD[dow(pd)]})`, ptipP: `${qd} (${WD[dow(qd)]})`});
   });
 }
-const latestIdx = cols => { for (let k = cols.length - 1; k >= 0; k--) if (cols[k].cur.length) return k; return -1; };
+// '최근'은 실적(거래액 · 트래픽 · 가입자)이 있는 마지막 기간 — 회원현황만 먼저 들어온 날을 기본으로 고르지 않게
+const PERF_KEYS = ['amt|T|*TOTAL', 'cust|T|*TOTAL', 'tr|*TOTAL', 'sg|*TOTAL'];
+const hasPerf = col => col.cur.some(p => { const i = DAILY.idx.get(p); return i != null && PERF_KEYS.some(k => DAILY.s[k] && DAILY.s[k][i] != null); });
+const latestIdx = cols => {
+  for (let k = cols.length - 1; k >= 0; k--) if (cols[k].cur.length && hasPerf(cols[k])) return k;
+  for (let k = cols.length - 1; k >= 0; k--) if (cols[k].cur.length) return k;
+  return -1;
+};
 function focusIdx(cols) {  // 기준 기간(S.at) — 비었거나 그 기간 데이터가 없으면 가장 최근 기간
   const id = S.at[S.grain];
   if (id) { const i = cols.findIndex(c => c.id === id && c.cur.length); if (i >= 0) return i; }
@@ -1344,9 +1395,9 @@ function renderKpi() {
 // 상품 단계의 상품 × 채널 표로 보여 준다. '채널 기준'이면 채널 → BPU → … 순서. 기간은 상단 기간 단위와 일평균/누계를 그대로 따른다.
 let PRD = null, PF = null, PC = null, PSTART = 0, PVIEW = null, prodLoad = 'idle';
 const PD_HASH = new URLSearchParams(location.hash.slice(1));  // 첫 렌더가 주소를 덮어쓰기 전에 드릴 위치를 잡아 둔다
-const PD = {view: 'bpu', path: [], chans: [], cats: [], catNone: false, sort: 'v', sel: null, metric: 'amt'};  // cats = 카테고리 필터(빈 배열 = 전체)
+const PD = {view: 'bpu', path: [], chans: [], cats: [], catNone: false, catOpen: false, sort: 'v', sel: null, metric: 'amt'};  // cats = 카테고리 필터(빈 배열 = 전체)
 let PD_TBL_OPEN = false;  // 기간별 표 펼침(기본 접힘)  // path = 보기 순서대로 고른 값 · chans = 채널 필터(빈 배열 = 전체)
-const PCODE = ['채널', '사업부(BPU)', '카테고리', '브랜드', '상품'];  // 차원 코드 0~4
+const PCODE = ['채널', 'BPU', '카테고리', '브랜드', '상품'];  // 차원 코드 0~4
 const PDIMS = {bpu: [1, 2, 3, 4], ch: [0, 1, 2, 3, 4]};
 const pDims = () => PDIMS[PD.view];
 const LF_PRODUCT_URL = 'https://www.lfmall.co.kr/app/product/';
@@ -1547,9 +1598,12 @@ function renderProd() {
   sec.hidden = false;
   const Y = S.year, gName = {month: '월별', week: '주별', day: '일별'}[S.grain];
   const cols = getCols(false);
-  const ytdCur = clip(span(`${Y}-01-01`, `${Y}-12-31`));
+  // 상품 원천은 실적보다 하루 이틀 늦게 들어오기도 한다 → 기간을 상품 데이터가 있는 범위로 자른다
+  const pClip = ds => ds.filter(x => { const i = pDay(x); return i >= 0 && i < PRD.meta.days; });
+  const ytdCur = pClip(clip(span(`${Y}-01-01`, `${Y}-12-31`)));
   const ytd = {key: 'ytd', tip: `${Y}년 누계${ytdCur.length ? ` (${md(ytdCur[0])}~${md(ytdCur[ytdCur.length - 1])})` : ''}`, cur: ytdCur, prev: back(ytdCur), ptip: rangeTxt(back(ytdCur))};
-  const opts = cols.filter(c => c.cur.length).map(c => ({...c, key: c.tip})).reverse();
+  const pcols = cols.map(c => ({...c, cur: pClip(c.cur), prev: pClip(c.prev)}));  // 표 · 추이도 상품이 있는 날짜만
+  const opts = pcols.filter(c => c.cur.length).map(c => ({...c, key: c.tip})).reverse();
   const fk = focusIdx(cols), fkey = fk >= 0 ? cols[fk].tip : null;
   const all = [ytd, ...opts], sel = all.find(o => o.key === PD.sel) || all.find(o => o.key === fkey) || opts[0] || ytd;  // 기본 = 상단 기준 기간
   PD.sel = sel.key;
@@ -1560,14 +1614,17 @@ function renderProd() {
   document.querySelectorAll('[data-pm]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.pm === PD.metric)));
   document.querySelectorAll('[data-pv]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.pv === PD.view)));
   $('#pdDesc').textContent = PD.view === 'bpu'
-    ? '사업부(BPU) → 카테고리 → 브랜드 → 상품 · 전 채널 합산 · 오른쪽에서 고른 기준(거래액/주문고객수)과 비교'
-    : '채널 → 사업부(BPU) → 카테고리 → 브랜드 → 상품';
+    ? 'BPU → 카테고리 → 브랜드 → 상품 · 전 채널 합산'
+    : '채널 → BPU → 카테고리 → 브랜드 → 상품';
   $('#pdChips').innerHTML = `<button type="button" class="chip" data-pch="-1" aria-pressed="${!PD.chans.length}">전체</button>`
     + PRD.ch.map((ch, k) => `<button type="button" class="chip" data-pch="${k}" aria-pressed="${PD.chans.includes(k)}" style="--sw:${chColor(ch)}"><i></i>${esc(ch)}</button>`).join('');
   // 카테고리 — 상단 채널 필터처럼 모두 펼쳐 두고 기본은 모두 선택. 누르면 그 카테고리만 빼거나 다시 넣는다
   const cats = catOrder(), catAll = !PD.cats.length && !PD.catNone, catOn = k => catAll || PD.cats.includes(k);
+  // 기본은 접어 두고(전체 + 고른 카테고리만) 필요할 때 펼친다
+  const catList = PD.catOpen ? [...cats, ...PD.cats.filter(k => !cats.includes(k))] : PD.cats.slice();
   $('#pdCatChips').innerHTML = `<button type="button" class="chip all${!catAll && !PD.catNone ? ' part' : ''}" data-pcat="-1" aria-pressed="${catAll}" title="${catAll ? '누르면 모두 해제' : '누르면 모두 선택'}">전체</button>`
-    + [...cats, ...PD.cats.filter(k => !cats.includes(k))].map(k => `<button type="button" class="chip" data-pcat="${k}" aria-pressed="${catOn(k)}">${esc(PRD.cat[k])}</button>`).join('');
+    + catList.map(k => `<button type="button" class="chip" data-pcat="${k}" aria-pressed="${catOn(k)}">${esc(PRD.cat[k])}</button>`).join('')
+    + `<button type="button" class="chip more" data-pcatopen="1" aria-expanded="${PD.catOpen}">${PD.catOpen ? '접기' : `카테고리 고르기 (${cats.length}개)`}</button>`;
   $('#pdCatN').textContent = `${catAll ? cats.length : PD.catNone ? 0 : PD.cats.length}/${cats.length}개 선택`;
   const legacyTop = PRD.meta.topN || PRD.meta.legacyTopN;  // 예전 형식 백업 안내 — 기타 상품 묶음 · 상품UV 없음
   $('#pdOld').hidden = !legacyTop && PC.hasUv;
@@ -1682,9 +1739,9 @@ function renderProd() {
   const sideHtml = sItems.map(x => `<div class="mb${sideCode === 0 && curCh && curCh[1] === x.k ? ' on' : ''}"><span class="pn" title="${esc(pName(sideCode, x.k))}">${esc(pName(sideCode, x.k))}</span><span class="pb-t"><i style="width:${(Math.max(0, x.v) / sMax * 100).toFixed(1)}%;background:${pColor(sideCode, x.k)}"></i></span><span class="pb-v">${pFmt(x.v)}</span><span class="pb-s">${sTot ? (x.v / sTot * 100).toFixed(0) + '%' : ''}</span></div>`).join('');
 
   // 추이: 표·차트와 같은 기간 열 — 당해 막대 + 전년(364일 전 동요일) 가로선, 막대를 누르면 그 기간 선택
-  const gd = pAgg('d', cond, pMask([...cols.map(c => c.cur), ...cols.map(c => c.prev)]), chm, false);
+  const gd = pAgg('d', cond, pMask([...pcols.map(c => c.cur), ...pcols.map(c => c.prev)]), chm, false);
   const daySum = ds => ds.reduce((t, x) => { const o = gd.get(pDay(x)); return t + (o ? o[mk] : 0); }, 0);
-  const tbars = cols.map(c => ({key: c.tip, tip: c.tip, label: c.label + (c.partial ? '*' : ''),
+  const tbars = pcols.map(c => ({key: c.tip, tip: c.tip, label: c.label + (c.partial ? '*' : ''),
     c: pInRange(c.cur) ? dv(daySum(c.cur), c.cur) : null, p: !cmpPop() && pInRange(c.prev) ? dv(daySum(c.prev), c.prev) : null,  // 직전 기간 모드에선 전년 가로선 숨김
     on: sel === ytd || c.tip === sel.key}));
 
@@ -1712,7 +1769,7 @@ function renderProd() {
   const tableData = () => {
     const keep = PCM;
     PCM = catMask;
-    const cs = cols.filter(c => pInRange(c.cur));
+    const cs = pcols.filter(c => pInRange(c.cur));
     const ser = pSeries(code, cond, pMask([...cs.map(c => c.cur), ...cs.map(c => c.prev)]), chm, new Set(tblKeys));
     PCM = keep;
     const sumDays = (m, ds) => { let t = 0; if (m) for (const x of ds) { const o = m.get(pDay(x)); if (o) t += o[mk]; } return t; };
@@ -1741,7 +1798,7 @@ function renderProd() {
       <div><h3>${esc(sideTitle)}</h3>${sideHtml || '<div class="nodata" style="height:60px">데이터 없음</div>'}</div>
       <div><h3>${gName} 추이${avg ? ' (일평균)' : ''}<span><i class="k"></i>${Y}</span>${cmpPop() ? '' : '<span><i class="k prev"></i>전년 동기간</span>'}<span>막대를 누르면 그 기간 선택</span></h3><div class="pd-m" id="pdTrend"></div></div>
     </div>
-    <div class="pcap">${esc(sel.tip)} · ${PD.view === 'bpu' ? '사업부 기준' : '채널 기준'} · ${chm ? `채널 ${esc(PD.chans.map(k => PRD.ch[k]).join('·'))}` : '전 채널'}${PCM ? ` · 카테고리 ${esc(catTxt())}` : ''} · 첫구매 · 표시 ${avg ? '일평균' : '합계'} 거래액 <b>${fmtM(totA)}</b> · 주문고객수 <b>${fU(totU)}</b>${covTxt} · ${cLbl} = ${hasPrev ? `${esc(sel.ptip)}${noPrevLine ? '' : ' (364일 전 동요일)'}` : '비교 데이터 없음'}${uvOn ? ' · 상품UV · CR = 상품관점 실측(채널을 여러 개 고르면 채널별 UV 합)' : ''}${PCM ? ' · 카테고리를 거르면 커버리지 · 상품UV · CR 은 숨김' : ''} · 주 채널 = 가장 많이 판 채널과 비중 · N개 = 판매한 채널 수 · ${capTop} · 주문고객수는 상품별 합이라 한 주문에 여러 상품이면 중복돼 실제 첫구매 고객수보다 클 수 있음</div>`;
+    <div class="pcap">${esc(sel.tip)} · ${PD.view === 'bpu' ? 'BPU 기준' : '채널 기준'} · ${chm ? `채널 ${esc(PD.chans.map(k => PRD.ch[k]).join('·'))}` : '전 채널'}${PCM ? ` · 카테고리 ${esc(catTxt())}` : ''} · 첫구매 · 표시 ${avg ? '일평균' : '합계'} 거래액 <b>${fmtM(totA)}</b> · 주문고객수 <b>${fU(totU)}</b>${covTxt} · ${cLbl} = ${hasPrev ? `${esc(sel.ptip)}${noPrevLine ? '' : ' (364일 전 동요일)'}` : '비교 데이터 없음'}${uvOn ? ' · 상품UV · CR = 상품관점 실측(채널을 여러 개 고르면 채널별 UV 합)' : ''}${PCM ? ' · 카테고리를 거르면 커버리지 · 상품UV · CR 은 숨김' : ''} · 주 채널 = 가장 많이 판 채널과 비중 · N개 = 판매한 채널 수 · ${capTop} · 주문고객수는 상품별 합이라 한 주문에 여러 상품이면 중복돼 실제 첫구매 고객수보다 클 수 있음</div>`;
   trendBars($('#pdTrend'), tbars);
   const expRows = [totalRow, ...top, ...(other ? [other] : [])].map(x => ({
     name: x.total ? '합계' : pName(code, x.k), total: !!x.total, code: code === 4 && !x.total && x.k >= 0 ? PRD.prods[x.k * 2] : '',
@@ -1753,7 +1810,7 @@ function renderProd() {
     names: top.map(x => pName(code, x.k)), sideCode, sideNames: sItems.map(x => pName(sideCode, x.k)), sideTotal: sTot, chCols,
     crumb: PD.path.map((k, i) => pName(dims[i], k)).join(' › '), uvOn, cats: PD.cats.slice(), limit: LIMIT,
     totalRow: {a: totA, u: totU, pa, pu, uv: totalRow.uv, cr: totalRow.cr}, table: tableData, tblKeys,
-    exp: {tip: sel.tip, viewName: PD.view === 'bpu' ? '사업부 기준' : '채널 기준',
+    exp: {tip: sel.tip, viewName: PD.view === 'bpu' ? 'BPU 기준' : '채널 기준',
       filters: `${chm ? `채널 ${PD.chans.map(k => PRD.ch[k]).join('·')}` : '전 채널'}${PCM ? ` · 카테고리 ${catTxt()}` : ''}`,
       crumb: PD.path.map((k, i) => pName(dims[i], k)).join(' › '), level: PCODE[code], avg, hasCode: code === 4, baseName, cLbl, cLbl2: cmpLbl(), uvOn,
       basis: amtSel ? '거래액' : '주문고객수', rows: expRows, rest: rest.length ? {n: rest.length, a: restA, u: restU} : null, table: tableData}};
@@ -1777,6 +1834,7 @@ $('#prodSec').addEventListener('click', e => {
     if (PD.chans.length === PRD.ch.length) PD.chans = [];  // 모두 고르면 전체와 같다
     renderProd(); save(); return;
   }
+  if (e.target.closest('[data-pcatopen]')) { PD.catOpen = !PD.catOpen; renderProd(); return; }  // 카테고리 펼치기 · 접기
   const pcat = e.target.closest('[data-pcat]');
   if (pcat && PRD) {
     const k = +pcat.dataset.pcat;
@@ -1807,7 +1865,7 @@ $('#pdPeriod').addEventListener('change', e => { PD.sel = e.target.value; render
 // 흐름(flow) = 기간 합(일평균 메뉴면 ÷ 데이터 일수) · 재고(stock) = 기간 마지막 날 값 · 비율 = 분자·분모가 모두 있는 날의 합끼리 나눔
 MET.xcnt = {name: '', unit: '', type: 'flow'};
 MET.xpct = {name: '', type: 'ratio', pct: true, dp: 1};
-const G_NEW = '신규회원 · 앱 설치자 기준', G_PUSH = '앱푸시 수신동의 회원 · 앱 설치자 기준', G_APP = '앱 설치 상세 · APP설치데이터';
+const G_NEW = '신규회원 · 앱 설치자 기준(PUSH)', G_PUSH = '앱푸시 수신동의 회원 · 앱 설치자 기준(PUSH)', G_APP = '앱 설치 상세 · APP설치데이터', G_ALL = '전체 회원 · 앱 설치 무관(회원현황)';
 const AX = {
   sg:      {grp: G_NEW, name: '가입자수', type: 'flow', key: 'sg|*TOTAL', unit: '명'},
   appNew:  {grp: G_NEW, name: '앱 신규 설치', type: 'flow', key: 'app|new', unit: '건'},
@@ -1830,6 +1888,14 @@ const AX = {
   appDel:  {grp: G_APP, name: '삭제', type: 'flow', key: 'app|del', unit: '건', inv: true},
   appNet:  {grp: G_APP, name: '순증 설치', type: 'flow', key: 'app|net', unit: '건'},
   appDev:  {grp: G_APP, name: 'Push 활성 기기', type: 'stock', key: 'app|pushdev', unit: '대'},
+  // 앱 설치 무관 모수(회원현황) — 수신동의 자체는 앱 설치자(PUSH) 기준만 있어, 모수만 앱 무관으로 바꿔 비교한다
+  mValid:  {grp: G_ALL, name: '유효회원수', type: 'stock', key: 'mem|valid', unit: '명'},
+  mCum:    {grp: G_ALL, name: '누적회원수', type: 'stock', key: 'mem|cum', unit: '명', sub: true},
+  mNew:    {grp: G_ALL, name: '신규회원수', type: 'flow', key: 'mem|new', unit: '명'},
+  rPushAll: {grp: G_ALL, name: '유효회원 대비 수신동의율', type: 'ratio', stock: true, num: 'push|tot_stock', den: 'mem|valid', pct: true,
+             formula: '앱푸시 수신동의 회원(기간 말 · 앱 설치자 기준) ÷ 유효회원수(기간 말 · 앱 설치 무관)'},
+  rNyAll:  {grp: G_ALL, name: '신규 수신동의율 (앱 무관 모수)', type: 'ratio', num: 'push|ny_add', den: 'mem|new', pct: true,
+            formula: '앱푸시 수신동의(신규회원) ÷ 회원현황 신규회원수(앱 설치 무관)'},
 };
 const AX_ORDER = Object.keys(AX);
 function axVal(id, dates, mode) {  // mode 를 주면 상단 일평균/누계 대신 그 방식
@@ -1846,6 +1912,11 @@ function axVal(id, dates, mode) {  // mode 를 주면 상단 일평균/누계 �
     for (let i = dates.length - 1; i >= 0; i--) { const x = at(M.key, dates[i]); if (x != null) return x; }
     return null;
   }
+  if (M.stock) {  // 재고끼리 나누는 비율 — 기간 말 값 기준
+    const last = k => { for (let i = dates.length - 1; i >= 0; i--) { const x = at(k, dates[i]); if (x != null) return x; } return null; };
+    const a0 = last(M.num), b0 = last(M.den);
+    return ok(a0) && ok(b0) && b0 ? a0 / b0 : null;
+  }
   let a = 0, b = 0, n = 0;  // ratio
   for (const d of dates) { const x = at(M.num, d), y = at(M.den, d); if (x != null && y != null) { a += x; b += y; n++; } }
   return n && b && n * 2 >= dates.length ? a / b : null;
@@ -1860,7 +1931,7 @@ function fmtAX(id, v) {
 }
 function renderApp() {
   const sec = $('#appSec');
-  if (!DAILY.s['push|tot_stock'] && !DAILY.s['app|new']) { sec.hidden = true; return; }
+  if (!DAILY.s['push|tot_stock'] && !DAILY.s['app|new'] && !DAILY.s['mem|valid']) { sec.hidden = true; return; }
   sec.hidden = false;
   const cols = getCols(false), y = S.year, k = focusIdx(cols), col = k >= 0 ? cols[k] : null, pop = cmpPop();
   const appMissing = !DAILY.s['app|new'];
@@ -1868,7 +1939,7 @@ function renderApp() {
   const lastOf = key => { const a = DAILY.s[key]; if (!a) return null; for (let i = a.length - 1; i >= 0; i--) if (a[i] != null) return DAILY.dates[i]; return null; };
   const appLast = lastOf('app|new'), allLast = DAILY.dates.at(-1);
   $('#appDesc').textContent = `가입 → 앱 신규 설치 → 앱푸시 수신동의 · 모두 앱 설치자 기준 · ${col ? col.tip : '데이터 없음'} · 흐름 ${modeName()}, 회원·기기 수는 기간 말 · ${cmpDesc()}${appLast && appLast < allLast ? ` · 앱 설치 raw ~${md(appLast)}` : ''} · 채널/회원구분 필터 미적용`;
-  const TILES = ['sg', 'appNew', 'pNyAdd', 'rNy', 'rConv', ['pTot', 'pNy'], ['pOut', 'pExOut']];
+  const TILES = ['sg', 'appNew', 'pNyAdd', 'rNy', 'rConv', ['pTot', 'pNy'], ['pOut', 'pExOut'], ['rPushAll', 'mValid']];
   const APP_DEP = new Set(['appNew', 'rConv']);  // 앱 설치 raw 가 있어야 계산되는 타일
   $('#appTiles').innerHTML = col ? TILES.map(t => {
     const [id, subId] = Array.isArray(t) ? t : [t, null];
@@ -1917,6 +1988,119 @@ function renderApp() {
   wrap.innerHTML = h + '</tbody></table>';
   wrap.scrollLeft = wrap.scrollWidth;
 }
+
+/* ---------- 인사이트 자동 요약 — 화면의 기준 기간 · 필터 값으로 규칙에 따라 만든다(추정 · 창작 없음) ---------- */
+function renderInsight() {
+  const sec = $('#insightSec');
+  if (!sec) return;
+  const cols = lastCols || [], k = focusIdx(cols);
+  if (!cols.length || k < 0) { sec.hidden = true; return; }
+  sec.hidden = false;
+  const col = cols[k], base = {ch: '*TOTAL', seg: selSegs()[0] || 'T'}, pop = cmpPop();
+  const V = {};
+  for (const m of METRICS) V[m] = evalCol(m, base, col);
+  const pct = x => (x && ok(x.c) && ok(x.p) && x.p ? (x.c / x.p - 1) * 100 : null);
+  const pp = x => (x && ok(x.c) && ok(x.p) ? (x.c - x.p) * 100 : null);
+  const s1 = v => (ok(v) ? (v >= 0 ? '+' : '△') + Math.abs(v).toFixed(1) : '–');
+  const name = m => MET[m].name;
+  const val = (m, x) => fmt(m, x) + (unitOf(m) === '%' ? '' : ` ${unitOf(m)}`);
+  const cmpTxt = cmpLbl();
+  const prob = [], fix = [], hypo = [];
+  const dAmt = pct(V.amt), dCust = pct(V.cust), dAov = pct(V.aov), dTr = pct(V.tr), dSg = pct(V.sg);
+  const dJr = pp(V.jr), dCr = pp(V.cr), dFpr = pp(V.fpr);
+  const head = [`<b>${esc(col.tip)}</b> · ${esc(modeName())} · ${esc(cmpTxt)} 기준`,
+    ok(V.amt.c) ? `첫구매 거래액 <b>${fmtM(V.amt.c)}</b>원 (${s1(dAmt)}%)` : null,
+    ok(V.cust.c) ? `고객수 <b>${NF.format(Math.round(V.cust.c))}</b>명 (${s1(dCust)}%)` : null,
+    ok(V.aov.c) ? `객단가 <b>${NF.format(Math.round(V.aov.c))}</b>원 (${s1(dAov)}%)` : null].filter(Boolean).join(' · ');
+  // 1) 거래액 변화 분해 — 고객수 효과 vs 객단가 효과
+  if (ok(V.amt.c) && ok(V.amt.p) && ok(V.cust.c) && ok(V.cust.p) && ok(V.aov.c) && ok(V.aov.p)) {
+    const custEff = (V.cust.c - V.cust.p) * V.aov.p, aovEff = (V.aov.c - V.aov.p) * V.cust.c;
+    const lead = Math.abs(custEff) >= Math.abs(aovEff) ? '고객수' : '객단가';
+    prob.push(`거래액 변화 ${fmtM(V.amt.c - V.amt.p)}원 중 <b>고객수 효과 ${fmtM(custEff)}원 · 객단가 효과 ${fmtM(aovEff)}원</b> — <b>${lead}</b>가 움직임을 이끌었다.`);
+  }
+  // 2) 퍼널 진단
+  if (ok(dTr) && ok(dFpr)) {
+    if (dTr > 3 && dFpr < 0) { prob.push(`비회원 트래픽은 <b>${s1(dTr)}%</b>인데 첫구매율은 <b>${s1(dFpr)}%p</b> — 유입은 늘었지만 전환이 따라오지 않는다.`); hypo.push('유입 품질(매체 · 키워드)이나 랜딩·첫구매 동선이 전환을 막고 있다 → 유입 채널별 첫구매율을 나눠 보고 하위 채널의 랜딩을 점검.'); }
+    else if (dTr < -3 && dFpr > 0) prob.push(`트래픽은 <b>${s1(dTr)}%</b>로 줄었지만 첫구매율은 <b>${s1(dFpr)}%p</b> — 모수 감소가 실적을 누르고 있다.`);
+  }
+  if (ok(dSg) && ok(dCr) && dSg > 3 && dCr < -0.5) { prob.push(`가입자수는 <b>${s1(dSg)}%</b>인데 당일가입 CR은 <b>${s1(dCr)}%p</b> — 가입 직후 첫구매 전환이 약해졌다.`); hypo.push('가입 직후 첫구매 유도(웰컴 쿠폰 · 첫구매 전용 노출)가 약하다 → 가입 당일 쿠폰 노출 위치 · 사용률을 확인하고 A/B로 검증.'); }
+  if (ok(dJr) && dJr < -0.05) { prob.push(`가입률이 <b>${s1(dJr)}%p</b> — 트래픽 대비 가입 전환이 떨어진다.`); fix.push('가입 동선(간편가입 노출 · 가입 유인)을 우선 점검. 트래픽이 늘어난 채널일수록 가입률이 낮은지 확인.'); }
+  if (ok(dAov) && ok(dCust) && dAov > 5 && dCust < 0) { prob.push(`객단가는 <b>${s1(dAov)}%</b>인데 고객수는 <b>${s1(dCust)}%</b> — 고가 상품 쏠림으로 사람 수가 줄었을 수 있다.`); hypo.push('진입 가격대(엔트리 상품) 노출이 줄었다 → 가격대별 첫구매 고객수 분포를 보고 엔트리 상품 노출을 늘려 검증.'); }
+  // 3) 채널 기여 — 거래액이 가장 많이 늘고 줄어든 채널
+  const chRows = CHS.filter(c => c !== '*TOTAL').map(ch => {
+    const e = evalCol('amt', {ch, seg: base.seg}, col);
+    return {ch, c: e.c, p: e.p, d: ok(e.c) && ok(e.p) ? e.c - e.p : null};
+  }).filter(x => ok(x.d));
+  if (chRows.length >= 2) {
+    chRows.sort((a, b) => b.d - a.d);
+    const up = chRows[0], dn = chRows[chRows.length - 1];
+    if (up.d > 0) prob.push(`채널 중 <b>${esc(chLabel(up.ch))}</b>가 가장 많이 늘었다(${fmtM(up.d)}원).`);
+    if (dn.d < 0) { prob.push(`<b>${esc(chLabel(dn.ch))}</b>는 가장 많이 줄었다(${fmtM(dn.d)}원).`); fix.push(`감소가 큰 <b>${esc(chLabel(dn.ch))}</b>부터 본다 — 같은 기간 트래픽 · 가입률 · 첫구매율을 채널 필터로 나눠 어떤 단계가 빠졌는지 확인.`); }
+  }
+  // 4) 상품 — 지금 드릴 단계의 상위 · 하락 항목(상품 데이터가 있을 때)
+  if (PVIEW && PVIEW.top && PVIEW.top.length && PVIEW.hasPrev) {
+    const rows = PVIEW.top.filter(x => ok(x.v) && ok(x.p)).map(x => ({n: PVIEW.names[PVIEW.top.indexOf(x)], d: x.v - x.p, r: x.p ? x.v / x.p - 1 : null}));
+    const drop = rows.filter(x => x.d < 0).sort((a, b) => a.d - b.d)[0], rise = rows.filter(x => x.d > 0).sort((a, b) => b.d - a.d)[0];
+    if (rise) prob.push(`${PCODE[PVIEW.code]} 중 <b>${esc(rise.n)}</b>가 가장 많이 늘었다(${PVIEW.code === 4 || PD.metric === 'amt' ? fmtM(rise.d) + '원' : NF.format(Math.round(rise.d)) + '명'}).`);
+    if (drop) { prob.push(`<b>${esc(drop.n)}</b>는 가장 많이 줄었다(${PD.metric === 'amt' ? fmtM(drop.d) + '원' : NF.format(Math.round(drop.d)) + '명'}).`); hypo.push(`<b>${esc(drop.n)}</b> 감소가 재고 · 노출 · 가격 중 무엇인지 나눠 본다 → 해당 브랜드의 주 채널 비중이 함께 줄었는지 확인.`); }
+  }
+  // 5) 앱 · 수신동의
+  const rNy = axVal('rNy', col.cur), rNyP = axVal('rNy', col.prev);
+  if (ok(rNy) && ok(rNyP)) {
+    const d = (rNy - rNyP) * 100;
+    if (d < -1) { prob.push(`앱푸시 수신동의율(신규회원)이 <b>${s1(d)}%p</b>로 낮아졌다 — 재방문 유도 수단이 줄어든다.`); fix.push('가입 → 앱 설치 → 수신동의 동선에서 어디가 빠졌는지 앱 섹션 타일로 확인(설치는 늘었는데 동의가 줄었는지).'); }
+    else if (d > 1) prob.push(`앱푸시 수신동의율(신규회원)은 <b>${s1(d)}%p</b>로 좋아졌다.`);
+  }
+  if (!prob.length) prob.push('규칙에 걸린 특이 신호가 없다 — 지표가 대체로 비교 기간과 비슷하다.');
+  if (!fix.length) fix.push('큰 이상 신호가 없어 기존 운영을 유지하면서, 기여가 큰 채널의 예산 배분만 점검하면 된다.');
+  if (!hypo.length) hypo.push('뚜렷한 가설이 필요할 만큼의 변화가 없다 — 다음 기간에 같은 기준으로 다시 확인.');
+  const g = (t, arr) => `<div class="ins-g"><h4>${t}</h4><ul>${arr.map(x => `<li>${x}</li>`).join('')}</ul></div>`;
+  $('#insSub').textContent = `${col.tip} · ${modeName()} · ${cmpTxt} · 채널 ${selChans().map(chLabel).join('·')}`;
+  $('#insBody').innerHTML = `<div class="ins-g"><h4>요약</h4><ul><li>${head}</li></ul></div>`
+    + g('지금 문제로 보이는 것', prob) + g('개선 포인트', fix) + g('세워 볼 가설 · 검증 방법', hypo)
+    + `<div class="ins-cap">화면의 기준 기간 · 필터 · 비교 기준으로 계산한 규칙 기반 요약입니다(값은 위 지표와 같음). 원인 추정은 가설이니 채널 · 상품 필터로 나눠 확인하세요.${pop ? ' · 비교 기준이 직전 기간입니다.' : ''}</div>`;
+}
+
+/* ---------- 표 머리행 띄우기 — 페이지를 내려도 기간 열을 보이게 ---------- */
+let RENDER_N = 0;
+const FLOAT_WRAPS = ['#tblWrap', '#appTbl'];
+const FLOAT_HEADS = new Map();
+const stickTop = () => { const t = document.querySelector('header.top'); return t && getComputedStyle(t).position === 'sticky' ? t.offsetHeight : 0; };
+function floatHeadFor(sel) {
+  let f = FLOAT_HEADS.get(sel);
+  if (!f) { f = document.createElement('div'); f.className = 'float-head'; f.hidden = true; document.body.appendChild(f); FLOAT_HEADS.set(sel, f); }
+  return f;
+}
+function syncFloatHeads() {
+  const top = stickTop();
+  for (const sel of FLOAT_WRAPS) {
+    const wrap = $(sel), f = floatHeadFor(sel);
+    const table = wrap && !wrap.closest('section[hidden]') && wrap.querySelector('table.grid');
+    const thead = table && table.querySelector('thead');
+    if (!thead || document.body.classList.contains('printing') || document.body.classList.contains('pdfcap')) { f.hidden = true; continue; }
+    const r = wrap.getBoundingClientRect(), hh = thead.getBoundingClientRect().height;
+    const show = r.width > 0 && r.top < top - 1 && r.bottom > top + hh + 30;
+    if (!show) { f.hidden = true; continue; }
+    if (f.dataset.stamp !== `${RENDER_N}|${sel}`) {  // 표를 다시 그렸을 때만 복제 — 열 너비는 원본에서 그대로 가져온다
+      const clone = thead.cloneNode(true);
+      const ws = [...thead.rows[0].cells].map(c => c.getBoundingClientRect().width);
+      for (const row of clone.rows) [...row.cells].forEach((c, i) => { if (row === clone.rows[0]) c.style.width = `${ws[i]}px`; c.style.background = 'var(--surface)'; });
+      f.innerHTML = '<table class="grid"></table>';
+      f.querySelector('table').appendChild(clone);
+      f.querySelector('table').style.width = `${table.offsetWidth}px`;
+      f.style.setProperty('--s1w', getComputedStyle(wrap).getPropertyValue('--s1w') || '120px');
+      f.dataset.stamp = `${RENDER_N}|${sel}`;
+    }
+    f.hidden = false;
+    Object.assign(f.style, {left: `${r.left}px`, top: `${top}px`, width: `${Math.max(0, Math.min(r.width, window.innerWidth - r.left))}px`, height: `${hh + 1}px`});
+    f.scrollLeft = wrap.scrollLeft;
+  }
+}
+let floatRq = 0;
+const queueFloat = () => { cancelAnimationFrame(floatRq); floatRq = requestAnimationFrame(syncFloatHeads); };
+window.addEventListener('scroll', queueFloat, {passive: true});
+window.addEventListener('resize', queueFloat);
+for (const sel of FLOAT_WRAPS) { const el = $(sel); if (el) el.addEventListener('scroll', queueFloat, {passive: true}); }
 
 /* ---------- 다운로드 — 엑셀(서식 포함 · export.js) · PDF(인쇄 창에서 'PDF로 저장') ---------- */
 const DL_PARTS = [['sum', '실적 요약', '#sumSec'], ['chart', '흐름 차트', '#chartSec'], ['table', '실적 표', '#tableSec'],
@@ -2080,7 +2264,28 @@ $('#dlSec').addEventListener('click', e => {
 
 /* ---------- 메모 — 포스트잇: 지금 보기(기간 · 필터)에 붙이고 📌 를 누르면 그 보기로 · 이 브라우저에 저장 + 백업 파일에 포함 ---------- */
 const MEMO_COLORS = [['yellow', '노랑', 'y'], ['pink', '분홍', 'p'], ['blue', '파랑', 'b'], ['green', '초록', 'g']];
-let MEMO_FILTER = 'all', MEMO_EDIT = null, MEMO_DRAFT = {text: '', color: 'yellow'}, MEMO_FOCUS = false, MEMO_DEL = null, MEMO_DEL_T = 0;
+const MEMO_TOOLS = [['bold', '굵게 (Ctrl+B)', '가'], ['underline', '밑줄 (Ctrl+U)', '가'], ['strikeThrough', '취소선', '가'], ['insertUnorderedList', '목록', '•'], ['removeFormat', '서식 지우기', '⌫']];
+const MEMO_INK = [['#d03b3b', '빨강'], ['#2a78d6', '파랑'], ['#006300', '초록'], ['', '기본색']];
+const MEMO_HL = [['#fff3a3', '노랑 형광'], ['#cfe8ff', '파랑 형광'], ['', '형광 없음']];
+const MEMO_TAGS = {B: 1, STRONG: 1, I: 1, EM: 1, U: 1, S: 1, STRIKE: 1, MARK: 1, SPAN: 1, DIV: 1, BR: 1, UL: 1, OL: 1, LI: 1, P: 1, FONT: 1};
+function memoClean(html) {  // 저장 · 표시 전에 허용한 태그와 색만 남긴다
+  const box = document.createElement('div');
+  box.innerHTML = String(html || '').slice(0, 20000);
+  for (let pass = 0; pass < 6; pass++) {
+    const bad = [...box.querySelectorAll('*')].filter(el => !MEMO_TAGS[el.tagName]);
+    if (!bad.length) break;
+    for (const el of bad) { if (/^(SCRIPT|STYLE|IFRAME|OBJECT|EMBED)$/.test(el.tagName)) el.remove(); else el.replaceWith(...el.childNodes); }
+  }
+  for (const el of box.querySelectorAll('*')) {
+    const color = el.style ? el.style.color : '', bg = el.style ? el.style.backgroundColor : '', fc = el.tagName === 'FONT' ? el.getAttribute('color') : '';
+    for (const a of [...el.attributes]) el.removeAttribute(a.name);
+    if (color) el.style.color = color;
+    if (bg) el.style.backgroundColor = bg;
+    if (fc) el.style.color = fc;
+  }
+  return box.innerHTML.slice(0, 20000);
+}
+let MEMO_FILTER = 'all', MEMO_EDIT = null, MEMO_DRAFT = {html: '', color: 'yellow'}, MEMO_FOCUS = false, MEMO_DEL = null, MEMO_DEL_T = 0;
 const memoView = () => ({year: S.year, grain: S.grain, mode: S.mode, cmp: S.cmp, at: S.at[S.grain] || '', range: S.grain === 'month' ? '' : S.range[S.grain],
   chans: selChans(), segs: selSegs(), layout: S.layout, pd: {view: PD.view, path: PD.path.slice(), chans: PD.chans.slice(), cats: PD.cats.slice(), catNone: !!PD.catNone, metric: PD.metric}});
 const memoLabel = v => {
@@ -2116,8 +2321,8 @@ function memoGo(v) {  // 메모가 붙은 보기로 — 없는 연도 · 채널�
 function renderMemos() {
   const sec = $('#memoSec');
   if (!sec || !window.FP_MEMOS) return;
-  const ta0 = $('#memoList textarea');
-  if (ta0 && MEMO_EDIT) MEMO_DRAFT.text = ta0.value;  // 편집 중에 화면이 다시 그려져도 쓰던 글은 남긴다
+  const in0 = $('#memoList .memo-in');
+  if (in0 && MEMO_EDIT) MEMO_DRAFT.html = in0.innerHTML;  // 편집 중에 화면이 다시 그려져도 쓰던 글은 남긴다
   sec.hidden = false;
   const all = window.FP_MEMOS.all().sort((a, b) => String(b.updated || '').localeCompare(String(a.updated || '')));
   const here = all.filter(m => memoMatch(m.view)), list = MEMO_FILTER === 'view' ? here : all;
@@ -2127,11 +2332,17 @@ function renderMemos() {
     : '지금 보는 기간 · 필터에 메모를 붙여 두면 📌 로 그 보기로 돌아옵니다 · 이 브라우저에 저장되고 백업 파일에 함께 담김';
   const tm = s => { const x = new Date(s), p2 = n => String(n).padStart(2, '0'); return isNaN(x) ? '' : `${x.getFullYear()}-${p2(x.getMonth() + 1)}-${p2(x.getDate())} ${p2(x.getHours())}:${p2(x.getMinutes())}`; };
   const color = c => (MEMO_COLORS.some(x => x[0] === c) ? c : 'yellow');
-  const editor = id => `<div class="memo edit" data-c="${color(MEMO_DRAFT.color)}" data-mid="${esc(id)}"><textarea aria-label="메모 내용" maxlength="2000" placeholder="메모 입력 · Ctrl+Enter 저장 · Esc 취소">${esc(MEMO_DRAFT.text)}</textarea>`
+  const editor = id => `<div class="memo edit" data-c="${color(MEMO_DRAFT.color)}" data-mid="${esc(id)}">`
+    + `<div class="memo-tb" role="toolbar" aria-label="메모 서식">`
+    + MEMO_TOOLS.map(([cmd, t, l]) => `<button type="button" data-memocmd="${cmd}" title="${esc(t)}" aria-label="${esc(t)}">${l}</button>`).join('')
+    + '<span class="sep"></span>'
+    + MEMO_INK.map(([c, t]) => `<button type="button" class="ink" data-memoink="${c}" title="${esc(t)}" aria-label="${esc(t)}" style="color:${c || 'inherit'}">가</button>`).join('')
+    + MEMO_HL.map(([c, t]) => `<button type="button" class="hl" data-memohl="${c}" title="${esc(t)}" aria-label="${esc(t)}" style="background:${c || 'transparent'}"></button>`).join('')
+    + `</div><div class="memo-in" contenteditable="true" role="textbox" aria-multiline="true" aria-label="메모 내용" data-ph="메모 입력 · Ctrl+Enter 저장 · Esc 취소">${memoClean(MEMO_DRAFT.html)}</div>`
     + `<div class="memo-cs">${MEMO_COLORS.map(([c, nm, t]) => `<button type="button" class="dot" data-memocolor="${c}" aria-pressed="${color(MEMO_DRAFT.color) === c}" title="${nm}" aria-label="${nm}" style="background:var(--memo-${t})"></button>`).join('')}`
     + `<span class="sp"></span><button class="btn" type="button" data-memocancel>취소</button><button class="btn primary" type="button" data-memosave>저장</button></div></div>`;
   const card = m => (MEMO_EDIT === m.id ? editor(m.id) : `<div class="memo${memoMatch(m.view) ? ' now' : ''}" data-c="${color(m.color)}" data-mid="${esc(m.id)}">`
-    + `<div class="memo-t">${esc(m.text)}</div>`
+    + `<div class="memo-t">${m.html ? memoClean(m.html) : esc(m.text)}</div>`
     + (m.view ? `<button type="button" class="memo-pin" data-memogo title="${esc(`이 보기로 이동 — ${m.label || ''}`)}">📌 ${esc(m.label || '')}</button>` : '')
     + `<div class="memo-f"><span>${tm(m.updated || m.created)}</span><button type="button" data-memoedit title="고치기" aria-label="고치기">✎</button>`
     + (MEMO_DEL === m.id ? '<button type="button" class="del-arm" data-memodel>지울까요?</button>' : '<button type="button" data-memodel title="지우기" aria-label="지우기">✕</button>')
@@ -2141,40 +2352,63 @@ function renderMemos() {
   if (MEMO_FOCUS) { const ta = $('#memoList textarea'); if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); } MEMO_FOCUS = false; }
 }
 function memoSave() {
-  const ta = $('#memoList textarea'), text = (ta ? ta.value : MEMO_DRAFT.text).trim().slice(0, 2000);
+  const box = $('#memoList .memo-in');
+  const html = memoClean(box ? box.innerHTML : MEMO_DRAFT.html);
+  const text = (box ? box.innerText : String(html).replace(/<[^>]*>/g, ' ')).replace(/\u00a0/g, ' ').trim().slice(0, 2000);
   if (!text) { (window.__say || (() => {}))('메모 내용을 입력하세요'); return; }
   const now = new Date().toISOString();
   if (MEMO_EDIT === 'new') {
     const v = memoView();
-    window.FP_MEMOS.add({id: `m${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`, text, color: MEMO_DRAFT.color, created: now, updated: now, view: v, label: memoLabel(v)});
-  } else window.FP_MEMOS.update(MEMO_EDIT, {text, color: MEMO_DRAFT.color, updated: now});
+    window.FP_MEMOS.add({id: `m${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`, text, html, color: MEMO_DRAFT.color, created: now, updated: now, view: v, label: memoLabel(v)});
+  } else window.FP_MEMOS.update(MEMO_EDIT, {text, html, color: MEMO_DRAFT.color, updated: now});
   MEMO_EDIT = null;
   renderMemos();
 }
 $('#memoSec').addEventListener('click', e => {
   const f = e.target.closest('[data-memof]');
   if (f) { MEMO_FILTER = f.dataset.memof; renderMemos(); return; }
-  if (e.target.closest('#btnMemoAdd')) { MEMO_EDIT = 'new'; MEMO_DRAFT = {text: '', color: 'yellow'}; MEMO_FOCUS = true; renderMemos(); return; }
+  if (e.target.closest('#btnMemoAdd')) { MEMO_EDIT = 'new'; MEMO_DRAFT = {html: '', color: 'yellow'}; MEMO_FOCUS = true; renderMemos(); return; }
+  const cmd = e.target.closest('[data-memocmd],[data-memoink],[data-memohl]');  // 서식 — 선택 영역에 적용
+  if (cmd) {
+    const box = $('#memoList .memo-in');
+    if (box) {
+      box.focus();
+      try {
+        if (cmd.dataset.memocmd) document.execCommand(cmd.dataset.memocmd, false, null);
+        else if (cmd.dataset.memoink !== undefined && cmd.hasAttribute('data-memoink')) document.execCommand('foreColor', false, cmd.dataset.memoink || 'inherit');
+        else document.execCommand('hiliteColor', false, cmd.dataset.memohl || 'transparent');
+      } catch (err) { (window.__say || (() => {}))('이 브라우저에서는 서식을 넣을 수 없습니다'); }
+      MEMO_DRAFT.html = box.innerHTML;
+    }
+    return;
+  }
   const cardEl = e.target.closest('[data-mid]');
   if (!cardEl) return;
   const id = cardEl.dataset.mid;
   const col = e.target.closest('[data-memocolor]');
-  if (col) { const ta = $('#memoList textarea'); if (ta) MEMO_DRAFT.text = ta.value; MEMO_DRAFT.color = col.dataset.memocolor; renderMemos(); return; }
+  if (col) { const box = $('#memoList .memo-in'); if (box) MEMO_DRAFT.html = box.innerHTML; MEMO_DRAFT.color = col.dataset.memocolor; renderMemos(); return; }
   if (e.target.closest('[data-memocancel]')) { MEMO_EDIT = null; renderMemos(); return; }
   if (e.target.closest('[data-memosave]')) { memoSave(); return; }
   const m = window.FP_MEMOS.all().find(x => x.id === id);
   if (!m) return;
   if (e.target.closest('[data-memogo]')) { memoGo(m.view); return; }
-  if (e.target.closest('[data-memoedit]')) { MEMO_EDIT = id; MEMO_DRAFT = {text: m.text, color: m.color}; MEMO_FOCUS = true; renderMemos(); return; }
-  if (e.target.closest('[data-memodel]')) {  // 두 번 눌러 지우기(sandbox iframe 에선 확인 창이 막힐 수 있음)
+  if (e.target.closest('[data-memoedit]')) { MEMO_EDIT = id; MEMO_DRAFT = {html: m.html || esc(m.text), color: m.color}; MEMO_FOCUS = true; renderMemos(); return; }
+  if (e.target.closest('[data-memodel]')) {
     clearTimeout(MEMO_DEL_T);
-    if (MEMO_DEL === id) { window.FP_MEMOS.remove(id); MEMO_DEL = null; }
-    else { MEMO_DEL = id; MEMO_DEL_T = setTimeout(() => { MEMO_DEL = null; renderMemos(); }, 4000); }
+    if (MEMO_DEL === id) { window.FP_MEMOS.remove(id); MEMO_DEL = null; renderMemos(); return; }  // '지울까요?' 를 다시 누름
+    let ans = null;
+    const t0 = performance.now();
+    try { ans = window.confirm(`이 메모를 지울까요?\n\n${(m.text || '').slice(0, 60)}`); } catch (err) { ans = null; }
+    const blocked = ans === false && performance.now() - t0 < 30;  // sandbox iframe 은 확인 창이 막혀 바로 false 가 온다
+    if (ans === true) { window.FP_MEMOS.remove(id); MEMO_DEL = null; renderMemos(); return; }
+    if (ans === false && !blocked) return;  // 사용자가 취소
+    MEMO_DEL = id;  // 확인 창을 못 쓰는 곳 — 한 번 더 눌러 지우기
+    MEMO_DEL_T = setTimeout(() => { MEMO_DEL = null; renderMemos(); }, 4000);
     renderMemos();
   }
 });
 $('#memoSec').addEventListener('keydown', e => {
-  if (!e.target.matches('#memoList textarea')) return;
+  if (!e.target.matches('#memoList .memo-in')) return;
   if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); memoSave(); }
   else if (e.key === 'Escape') { MEMO_EDIT = null; renderMemos(); }
 });
@@ -2193,6 +2427,9 @@ function render() {
   renderKpi();
   renderDl();
   renderMemos();
+  renderInsight();
+  RENDER_N++;
+  queueFloat();
   save();
 }
 $('#asof').textContent = `데이터 ~${DAILY.dates.at(-1) || LAST} · raw ${D.meta.sources.join(', ')}`;
@@ -2210,7 +2447,7 @@ window.__dash = {get state() { return S; }, render, compute, evalCol, getCols, s
                  // 엑셀 다운로드(export.js)가 화면과 같은 값을 쓰도록
                  get lastCols() { return lastCols; }, get lastSum() { return LAST_SUM; }, get dataMeta() { return D.meta; },
                  focusIdx, unitOf, fmtDelta, delta, axFmtDelta, fmtAX, cmpLbl, otherLbl, baseLbl, baseShort, modeName, trNote,
-                 selChans, selSegs, chLabel, segLabel, KPI, printParts, runDownload, renderDl, DL, DL_PARTS, makePdf, renderMemos, memoGo,
+                 selChans, selSegs, chLabel, segLabel, KPI, printParts, runDownload, renderDl, DL, DL_PARTS, makePdf, renderMemos, memoGo, renderInsight, syncFloatHeads, memoClean,
                  get prodTblOpen() { return PD_TBL_OPEN; }, set prodTblOpen(v) { PD_TBL_OPEN = !!v; }};
 loadProducts();
 };
@@ -2357,7 +2594,7 @@ async function clear(reload = true) {
 }
 const read = () => idb('readonly', st => st.get(KEY));
 /* ---------- 새 데이터 추가 (merge.js — build_data.py 규칙을 옮긴 합치기) ---------- */
-async function loadMerge() { if (!window.FP_MERGE) await loadScript('merge.js'); return window.FP_MERGE; }
+async function loadMerge() { if (!window.FP_MERGE) await loadScript(`merge.js?t=${Date.now()}`); return window.FP_MERGE; }  // 캐시된 예전 규칙을 쓰지 않게
 async function mergeFiles(files) {
   const M = await loadMerge(), prod = window.DASH_DATA ? await ensureProducts() : null;
   return M.merge({data: window.DASH_DATA || null, kpi: window.DASH_KPI || null, prod}, files);

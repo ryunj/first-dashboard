@@ -624,7 +624,7 @@ def build_products(dirs, last_date, verbose=True):
     days = max([k[0] for k in facts] + [k[0] for k in covm]) + 1
     return {
         'meta': {'built': dt.datetime.now().strftime('%Y-%m-%d %H:%M'), 'topN': PRODUCT_TOP_N, 'start': start.isoformat(),
-                 'days': days, 'lastDate': last.isoformat(), 'rows': len(rows), 'products': len(names), 'covFields': 6,
+                 'days': days, 'lastDate': (start + dt.timedelta(days=days - 1)).isoformat(), 'rows': len(rows), 'products': len(names), 'covFields': 6,
                  'encoding': 'f=[날짜차분, 채널, 경로, 상품(-1=기타), 거래액, 주문고객수] · cov=[날짜차분, 채널(-1=전체), BPU(-1=전체), 거래액, 고객수, 상품UV]'},
         'ch': chs, 'bpu': bpus, 'cat': cats, 'brand': brands, 'paths': paths, 'prods': prods, 'f': flat, 'cov': cov,
     }
@@ -706,7 +706,9 @@ def build(dirs, verbose=True):
 
     daily, weekly = series['daily'], series['weekly']
     dates = sorted({p for ser in daily.values() for p, v in ser.items() if v is not None})
-    last = dt.date.fromisoformat(dates[-1]) if dates else None
+    # 진행 중인 주의 '일수'는 실적 시리즈(거래액 · 트래픽 · 가입자 …) 기준 — 회원현황만 먼저 들어온 날 때문에 주 일평균이 잘못 나뉘지 않게
+    perf = sorted({p for k, ser in daily.items() if k.split('|')[0] in CHANNEL_BASES for p, v in ser.items() if v is not None})
+    last = dt.date.fromisoformat((perf or dates)[-1]) if (perf or dates) else None
 
     weeks, wkeys = [], []
     for y, m, n in sorted({p for ser in weekly.values() for p, v in ser.items() if v is not None}):
