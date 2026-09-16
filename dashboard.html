@@ -335,16 +335,18 @@ details.notes li{margin:3px 0}
 .ins-g li b{color:var(--ink);font-weight:650}
 .ins-cap{margin-top:10px;padding-top:8px;border-top:1px solid var(--grid);font-size:11.5px;color:var(--muted)}
 /* 메모 편집기 */
-.memo-tb{display:flex;flex-wrap:wrap;gap:3px;align-items:center;padding-bottom:2px;border-bottom:1px solid rgba(120,120,120,.25)}
+.memo-tb{display:flex;flex-wrap:wrap;gap:3px;align-items:center;margin-bottom:6px}
 .memo-tb button{border:0;background:none;color:inherit;cursor:pointer;border-radius:4px;padding:2px 6px;font-size:12px;line-height:1.4}
-.memo-tb button:hover{background:rgba(120,120,120,.22)}
+.memo-tb button:hover{background:var(--wash);color:var(--ink)}
 .memo-tb button[data-memocmd="bold"]{font-weight:800}
 .memo-tb button[data-memocmd="underline"]{text-decoration:underline}
 .memo-tb button[data-memocmd="strikeThrough"]{text-decoration:line-through}
 .memo-tb .ink{font-weight:700}
-.memo-tb .hl{width:15px;height:15px;border:1px solid rgba(0,0,0,.25);padding:0}
-.memo-tb .sep{width:1px;height:14px;background:rgba(120,120,120,.35);margin:0 3px}
-.memo-in{min-height:78px;max-height:220px;overflow:auto;background:rgba(255,255,255,.45);border-radius:4px;padding:6px 7px;line-height:1.5;outline:0}
+.memo-tb .hl{width:15px;height:15px;border:1px solid var(--border);padding:0}
+.memo-tb .sep{width:1px;height:14px;background:var(--grid);margin:0 4px}
+.memo-in{min-height:96px;max-height:280px;overflow:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:8px 10px;line-height:1.6;outline:0}
+.memo-tb .dot{width:14px;height:14px;border-radius:50%;border:1px solid var(--border);padding:0}
+.memo-tb .dot[aria-pressed="true"]{box-shadow:0 0 0 2px var(--surface),0 0 0 3px var(--ink-2)}
 .memo-in:focus{box-shadow:0 0 0 2px color-mix(in srgb,var(--c1) 45%,transparent)}
 .memo-t ul,.memo-in ul{margin:4px 0;padding-left:18px}
 .memo-t mark,.memo-in mark{background:#fff3a3;color:inherit}
@@ -361,27 +363,25 @@ details.notes li{margin:3px 0}
 #pdCatBar{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 10px;align-items:start}
 #pdCatBar .flabel{padding-top:4px}
 .pd-cat-meta{grid-column:2;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
-/* 메모 — 포스트잇 */
-.memo-h{display:flex;align-items:center;flex-wrap:wrap;justify-content:flex-end;gap:8px;margin:10px 0 10px}
-.memos{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start}
+/* 메모 — 인사이트 박스 안의 문서형 목록(포스트잇 아님) */
+.memo-h{display:flex;align-items:center;flex-wrap:wrap;justify-content:flex-end;gap:8px;margin:10px 0}
+.memos{display:flex;flex-direction:column;gap:8px}
 .memo-empty{font-size:12px;color:var(--muted);padding:2px 0}
-.memo{--mc:var(--memo-y);position:relative;width:236px;min-height:100px;padding:11px 12px 7px;border-radius:3px 3px 12px 3px;background:var(--mc);color:var(--memo-ink);box-shadow:0 1px 2px rgba(0,0,0,.08),0 6px 14px rgba(0,0,0,.07);display:flex;flex-direction:column;gap:7px;font-size:12.5px}
-.memo[data-c="pink"]{--mc:var(--memo-p)}
-.memo[data-c="blue"]{--mc:var(--memo-b)}
-.memo[data-c="green"]{--mc:var(--memo-g)}
-.memo.now{box-shadow:0 0 0 2px color-mix(in srgb,var(--c1) 60%,transparent),0 6px 14px rgba(0,0,0,.08)}
-.memo-t{white-space:pre-wrap;word-break:break-word;line-height:1.55;flex:1}
-.memo-pin{align-self:flex-start;max-width:100%;border:0;background:rgba(120,120,120,.16);color:inherit;border-radius:999px;padding:2px 9px;font-size:11px;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.memo-pin:hover{background:rgba(120,120,120,.28)}
-.memo-f{display:flex;align-items:center;gap:2px;font-size:10.5px}
-.memo-f span{margin-right:auto;opacity:.65}
-.memo-f button{border:0;background:none;color:inherit;cursor:pointer;padding:2px 6px;border-radius:4px;font-size:12px;opacity:.7}
-.memo-f button:hover{background:rgba(120,120,120,.2);opacity:1}
-.memo-f button.del-arm{background:var(--neg);color:#fff;opacity:1;font-size:11px}
-.memo textarea{width:100%;min-height:78px;resize:vertical;border:0;outline:0;background:rgba(255,255,255,.45);border-radius:4px;padding:6px 7px;font:inherit;color:inherit;line-height:1.5}
-.memo-cs{display:flex;gap:6px;align-items:center}
-.memo-cs button.dot{width:16px;height:16px;border-radius:50%;border:1px solid rgba(0,0,0,.18);cursor:pointer;padding:0}
-.memo-cs button.dot[aria-pressed="true"]{box-shadow:0 0 0 2px var(--mc),0 0 0 3.5px var(--memo-ink)}
+.memo-item{--mc:var(--c4);border:1px solid var(--grid);border-left:3px solid var(--mc);border-radius:8px;background:var(--surface);padding:10px 12px;font-size:12.5px;color:var(--ink)}
+.memo-item[data-c="pink"]{--mc:var(--c5)}
+.memo-item[data-c="blue"]{--mc:var(--c1)}
+.memo-item[data-c="green"]{--mc:var(--c3)}
+.memo-item.now{background:var(--wash);border-color:color-mix(in srgb,var(--c1) 30%,var(--grid))}
+.memo-item.edit{background:var(--surface-2)}
+.memo-t{white-space:pre-wrap;word-break:break-word;line-height:1.65}
+.memo-f{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:8px;font-size:11px;color:var(--muted)}
+.memo-pin{max-width:min(100%,460px);border:1px solid var(--border);background:var(--surface-2);color:var(--ink-2);border-radius:999px;padding:2px 9px;font-size:11px;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.memo-pin:hover{color:var(--ink);border-color:var(--axis)}
+.memo-time{margin-left:auto;font-variant-numeric:tabular-nums}
+.memo-f button:not(.memo-pin){border:0;background:none;color:var(--muted);cursor:pointer;padding:2px 7px;border-radius:5px;font-size:11.5px}
+.memo-f button:not(.memo-pin):hover{background:var(--wash);color:var(--ink)}
+.memo-f button.del-arm{background:var(--neg);color:#fff}
+.memo-cs{display:flex;gap:6px;align-items:center;margin-top:8px}
 .memo-cs .sp{margin-left:auto}
 .memo-cs .btn{padding:3px 9px}
 /* PDF 파일 만들기 — 데스크톱 폭으로 고정해 그린 뒤 영역별로 찍는다(화면 캡처) */
@@ -2318,7 +2318,7 @@ $('#dlSec').addEventListener('click', e => {
 });
 
 /* ---------- 메모 — 포스트잇: 지금 보기(기간 · 필터)에 붙이고 📌 를 누르면 그 보기로 · 이 브라우저에 저장 + 백업 파일에 포함 ---------- */
-const MEMO_COLORS = [['yellow', '노랑', 'y'], ['pink', '분홍', 'p'], ['blue', '파랑', 'b'], ['green', '초록', 'g']];
+const MEMO_COLORS = [['yellow', '노랑', 'c4'], ['pink', '분홍', 'c5'], ['blue', '파랑', 'c1'], ['green', '초록', 'c3']];  // 왼쪽 세로 줄 색
 const MEMO_TOOLS = [['bold', '굵게 (Ctrl+B)', '가'], ['underline', '밑줄 (Ctrl+U)', '가'], ['strikeThrough', '취소선', '가'], ['insertUnorderedList', '목록', '•'], ['removeFormat', '서식 지우기', '⌫']];
 const MEMO_INK = [['#d03b3b', '빨강'], ['#2a78d6', '파랑'], ['#006300', '초록'], ['', '기본색']];
 const MEMO_HL = [['#fff3a3', '노랑 형광'], ['#cfe8ff', '파랑 형광'], ['', '형광 없음']];
@@ -2387,24 +2387,40 @@ function renderMemos() {
     : '지금 보는 기간 · 필터에 메모를 붙여 두면 📌 로 그 보기로 돌아옵니다 · 이 브라우저에 저장되고 백업 파일에 함께 담김';
   const tm = s => { const x = new Date(s), p2 = n => String(n).padStart(2, '0'); return isNaN(x) ? '' : `${x.getFullYear()}-${p2(x.getMonth() + 1)}-${p2(x.getDate())} ${p2(x.getHours())}:${p2(x.getMinutes())}`; };
   const color = c => (MEMO_COLORS.some(x => x[0] === c) ? c : 'yellow');
-  const editor = id => `<div class="memo edit" data-c="${color(MEMO_DRAFT.color)}" data-mid="${esc(id)}">`
+  const editor = id => `<div class="memo-item edit" data-c="${color(MEMO_DRAFT.color)}" data-mid="${esc(id)}">`
     + `<div class="memo-tb" role="toolbar" aria-label="메모 서식">`
     + MEMO_TOOLS.map(([cmd, t, l]) => `<button type="button" data-memocmd="${cmd}" title="${esc(t)}" aria-label="${esc(t)}">${l}</button>`).join('')
     + '<span class="sep"></span>'
     + MEMO_INK.map(([c, t]) => `<button type="button" class="ink" data-memoink="${c}" title="${esc(t)}" aria-label="${esc(t)}" style="color:${c || 'inherit'}">가</button>`).join('')
     + MEMO_HL.map(([c, t]) => `<button type="button" class="hl" data-memohl="${c}" title="${esc(t)}" aria-label="${esc(t)}" style="background:${c || 'transparent'}"></button>`).join('')
-    + `</div><div class="memo-in" contenteditable="true" role="textbox" aria-multiline="true" aria-label="메모 내용" data-ph="메모 입력 · Ctrl+Enter 저장 · Esc 취소">${memoClean(MEMO_DRAFT.html)}</div>`
-    + `<div class="memo-cs">${MEMO_COLORS.map(([c, nm, t]) => `<button type="button" class="dot" data-memocolor="${c}" aria-pressed="${color(MEMO_DRAFT.color) === c}" title="${nm}" aria-label="${nm}" style="background:var(--memo-${t})"></button>`).join('')}`
-    + `<span class="sp"></span><button class="btn" type="button" data-memocancel>취소</button><button class="btn primary" type="button" data-memosave>저장</button></div></div>`;
-  const card = m => (MEMO_EDIT === m.id ? editor(m.id) : `<div class="memo${memoMatch(m.view) ? ' now' : ''}" data-c="${color(m.color)}" data-mid="${esc(m.id)}">`
+    + '<span class="sep"></span>'
+    + MEMO_COLORS.map(([c, nm, v]) => `<button type="button" class="dot" data-memocolor="${c}" aria-pressed="${color(MEMO_DRAFT.color) === c}" title="${nm} 표시" aria-label="${nm} 표시" style="background:var(--${v})"></button>`).join('')
+    + `</div><div class="memo-in" contenteditable="true" role="textbox" aria-multiline="true" aria-label="메모 내용">${memoClean(MEMO_DRAFT.html)}</div>`
+    + `<div class="memo-cs"><span class="hint">Ctrl+Enter 저장 · Esc 취소</span><span class="sp"></span>`
+    + `<button class="btn" type="button" data-memocancel>취소</button><button class="btn primary" type="button" data-memosave>저장</button></div></div>`;
+  const card = m => (MEMO_EDIT === m.id ? editor(m.id) : `<div class="memo-item${memoMatch(m.view) ? ' now' : ''}" data-c="${color(m.color)}" data-mid="${esc(m.id)}">`
     + `<div class="memo-t">${m.html ? memoClean(m.html) : esc(m.text)}</div>`
+    + '<div class="memo-f">'
     + (m.view ? `<button type="button" class="memo-pin" data-memogo title="${esc(`이 보기로 이동 — ${m.label || ''}`)}">📌 ${esc(m.label || '')}</button>` : '')
-    + `<div class="memo-f"><span>${tm(m.updated || m.created)}</span><button type="button" data-memoedit title="고치기" aria-label="고치기">✎</button>`
-    + (MEMO_DEL === m.id ? '<button type="button" class="del-arm" data-memodel>지울까요?</button>' : '<button type="button" data-memodel title="지우기" aria-label="지우기">✕</button>')
+    + `<span class="memo-time">${tm(m.updated || m.created)}</span>`
+    + '<button type="button" data-memoedit title="고치기">고치기</button>'
+    + (MEMO_DEL === m.id ? '<button type="button" class="del-arm" data-memodel>지울까요?</button>' : '<button type="button" data-memodel title="지우기">지우기</button>')
     + '</div></div>');
   const empty = MEMO_FILTER === 'view' && all.length ? '지금 보기에 붙은 메모가 없습니다 — 전체를 누르면 모든 메모' : '메모가 없습니다 — + 메모 로 추가';
   $('#memoList').innerHTML = (MEMO_EDIT === 'new' ? editor('new') : '') + (list.length ? list.map(card).join('') : MEMO_EDIT === 'new' ? '' : `<div class="memo-empty">${empty}</div>`);
-  if (MEMO_FOCUS) { const ta = $('#memoList textarea'); if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); } MEMO_FOCUS = false; }
+  if (MEMO_FOCUS) {  // 새 메모 · 고치기를 누르면 바로 쓸 수 있게 커서를 끝으로
+    const box = $('#memoList .memo-in');
+    if (box) {
+      box.focus();
+      const r = document.createRange();
+      r.selectNodeContents(box);
+      r.collapse(false);
+      const s = window.getSelection();
+      s.removeAllRanges();
+      s.addRange(r);
+    }
+    MEMO_FOCUS = false;
+  }
 }
 function memoSave() {
   const box = $('#memoList .memo-in');
