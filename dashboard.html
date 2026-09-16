@@ -1827,7 +1827,7 @@ function renderProd() {
       + `<td>${fU(x.u)}</td><td>${ok(x.uv) ? NF.format(Math.round(x.uv)) : '–'}</td><td class="pv2">${hasPrev && ok(x.puv) ? NF.format(Math.round(x.puv)) : '–'}</td>`
       + `<td>${pct1(x.cr)}</td><td class="${yc.c}">${yc.t}</td></tr>`;
   };
-  const grpHtml = !(PC2 && PC2.has) ? '' : `<details class="pd-tbl" id="pdGrp"${PD_GRP_OPEN ? ' open' : ''}><summary>상품관점 상품군별 · 상품UV · 상품CR <span class="hint">조직 카테고리(위 드릴다운)와 다른 분류 · ${esc(grpScopeTxt)}${PCM ? ' · 카테고리 필터 미적용' : ''}</span></summary>`
+  const grpHtml = !(PC2 && PC2.has) ? '' : `<details class="pd-tbl" id="pdGrp"${PD_GRP_OPEN ? ' open' : ''}><summary>상품관점 상품군별 · 상품UV · 상품CR <span class="hint">조직 카테고리(위 드릴다운)와 다른 분류 · ${esc(grpScopeTxt)}${PCM ? ' · 카테고리 필터 미적용' : ''}${G && hasPrev && !G.list.some(x => ok(x.puv)) ? ' · <b class="mwarn">전년 상품군 데이터가 이 백업에 없습니다</b> — 최신 백업(전체 빌드)으로 열면 전년 · 전년비가 채워집니다' : ''}</span></summary>`
     + (G ? `<div class="tbl-wrap"><table class="grid"><thead><tr><th class="stick s1">상품군</th><th>거래액${avg ? '(일평균)' : ''}</th><th>${esc(baseName)}</th><th>${esc(cLbl)}</th><th>주문고객수</th><th>상품UV</th><th>${esc(baseName)}</th><th>상품CR</th><th>${esc(cLbl)}</th></tr></thead><tbody>`
       + grpRow(G.tot, 'top') + G.list.map(x => grpRow(x, 'ch')).join('') + '</tbody></table></div>' : '')
     + '</details>';
