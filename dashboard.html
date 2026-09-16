@@ -153,6 +153,7 @@ table.grid{border-collapse:separate;border-spacing:0;font-size:12.5px;font-varia
 .grid tr.r-prev th.s2,.grid tr.r-yoy th.s2{color:var(--muted);font-weight:400}
 .grid tbody tr:not(.grp):hover td,.grid tbody tr:not(.grp):hover th.stick{background-image:linear-gradient(var(--row-alt),var(--row-alt))}
 .sw{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:0}
+svg.sw.ln{width:14px;height:8px;border-radius:0;vertical-align:-1px}
 /* 드래그 합계 */
 .grid td[data-v]{cursor:cell;user-select:none}
 .grid td.sel{background:color-mix(in srgb,var(--c1) 18%,var(--surface))!important;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c1) 50%,transparent)}
@@ -600,7 +601,7 @@ body.pdfcap .pgrid{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr)!important
       <li><b>기준 기간</b>(상단 '기준') — 월별은 월, 주별은 주차, 일별은 날짜를 고른다. 요약 타일 · 표 강조 열 · 차트 음영 · 상품 구성 기본 기간 · 앱 섹션이 모두 그 기간 기준이고, 주별 · 일별 표와 차트는 그 기간에서 끝나는 범위(8주 · 13주 …)를 보여 준다. '최근 · …'(기본)은 데이터가 있는 가장 최근 기간.</li>
       <li><b>비교</b> — 기본 <b>전년 동기간</b>(전년비). <b>전월 · 전주 · 전일</b>로 바꾸면 표 · 차트 툴팁 · 요약 · 상품 구성 · 앱 섹션의 비교가 모두 직전 기간 대비(전월비 · 전주비 · 전일비)로 바뀐다. 전월은 진행 중인 달이면 같은 일수끼리(예: 9/1~13 ↔ 8/1~13), 끝난 달은 전월 전체. 전주 = 7일 전 같은 요일들, 전일 = 하루 전. 직전 기간 모드에선 차트의 전년선을 숨긴다(값은 툴팁). 요약 타일은 두 비교를 함께 보여 준다. KPI는 항상 전년 동기 누적.</li>
       <li><b>채널 · 회원구분</b>은 여러 개를 고를 수 있다. 차트 선 하나(채널 1개 × 구분 1개)면 당해 vs 전년, 여러 개면 비교선 — 색 = 채널, 선 모양 = 회원구분. 요약 타일은 선택 중 첫 번째 기준.</li>
-      <li><b>BPU · 카테고리</b>(상단 필터, 상품 데이터가 있을 때만) — 고르면 <b>거래액 · 고객수 · 객단가</b>가 <b>상품 기준</b>으로 다시 계산된다(그 지표에 '상품 기준' 꼬리표). 상품 원천에는 회원구분이 없어 회원구분은 전체로 고정되고, <b>트래픽 · 가입자수 · 가입률 · 당일가입 CR · 첫구매율</b>과 앱 설치 · 수신동의는 그대로 <b>전체 기준</b>이다('전체 기준' 꼬리표). 상품 기준 거래액은 <b>결제 완료(양수)</b> 건만 더한 값이라 전체 첫구매 거래액보다 작고(취소 · 환불 · 상품 미매칭 제외), 고객수는 상품별 <b>주문고객수의 합</b>이라 한 사람이 여러 상품을 사면 여러 번 센다. 상단 채널 · BPU · 카테고리는 <b>상품 구성</b> 영역에도 그대로 적용된다(드릴다운 · 기간별 표 · 상품군 표). 카테고리를 거르면 커버리지 · 상품UV · CR은 숨긴다.</li>
+      <li><b>BPU · 카테고리</b>(상단 필터, 상품 데이터가 있을 때만) — 고르면 <b>거래액 · 고객수 · 객단가</b>가 <b>상품 기준</b>으로 다시 계산된다(그 지표에 '상품 기준' 꼬리표). 상품 원천에는 회원구분이 없어 회원구분은 전체로 고정되고, <b>트래픽 · 가입자수 · 가입률 · 당일가입 CR · 첫구매율</b>과 앱 설치 · 수신동의는 그대로 <b>전체 기준</b>이다('전체 기준' 꼬리표). 상품 기준 거래액은 <b>결제 완료(양수)</b> 건만 더한 값이라 전체 첫구매 거래액보다 작고(취소 · 환불 · 상품 미매칭 제외), 고객수는 상품별 <b>주문고객수의 합</b>이라 한 사람이 여러 상품을 사면 여러 번 센다. BPU 를 <b>2개 이상</b> 고르면 합치지 않고 <b>BPU 별로 줄을 나눠</b> 보여 준다(차트는 색 = 채널, 선 모양 = BPU). 상단 채널 · BPU · 카테고리는 <b>상품 구성</b> 영역에도 그대로 적용된다(드릴다운 · 기간별 표 · 상품군 표). 카테고리를 거르면 커버리지 · 상품UV · CR은 숨긴다.</li>
       <li><b>*(기울임)</b> = 전년 일자 raw가 없어 전년 주별 raw를 날짜별로 나눠 채운 추정값.</li>
       <li><b>KPI 목표</b>(맨 아래)는 <code>kpi.js</code> 의 연간 누적 목표 기준 · 필터와 무관하게 전체 채널. 첫구매 거래액 · 고객수 실적은 <b>신규회원실적대시보드의 총)첫구매 거래액 · 고객수 (당년신규)</b>. 전체관점 당월신규+기가입신규와 비슷하지만 집계 기준이 달라 조금 다르다. 목표 일평균 = 연간 목표 ÷ 연간 일수, 남은 기간 필요 일평균 = (목표 − 누적) ÷ 남은 일수. 트래픽 · 가입자 목표를 넣으면 목표 가입률도 환산된다.</li>
       <li><b>상품 구성</b>(KPI 위) — <code>조직 카테고리별 첫구매 실적</code>의 상품 단위 첫구매 실적. <b>기본 = 사업부 기준</b>: 사업부(BPU) → 카테고리 → 브랜드 → 상품을 <b>전 채널 합산</b>으로 드릴다운한다. 채널 칩으로 거르고(여러 개 선택), <b>카테고리 칩</b>은 모두 펼쳐 기본 모두 선택 — 누르면 그 카테고리만 빼거나 다시 넣고, '전체'는 모두 선택 ↔ 모두 해제. 행마다 위쪽에서 고른 기준(<b>거래액 또는 주문고객수</b>) 하나와 비교 기간 값 · 비교(전년비 등)를 보여 준다. 맨 위 <b>합계</b> 행 = 지금 범위 전체. 위쪽 거래액/주문고객수 버튼은 숫자 열 · 막대 · 정렬 · 구성비 · 채널 구성 띠의 기준(엑셀 다운로드에는 둘 다). <b>주 채널</b> = 가장 많이 판 채널 · 비중 · 판매 채널 수, 카테고리 · 브랜드 · 상품 단계에서 <b>판매 채널 많은 순</b>으로 정렬 가능. <b>상품UV · 상품CR</b>(상품관점 실측, CR = 상품관점 고객수 ÷ 상품UV)은 채널 · 사업부 단계 행에서만 보인다. 카테고리 단계는 <b>상품관점 상품군별 보조표</b>(드릴다운 아래 · 기본 접힘)로 따로 본다 — 상품관점의 상품군(골프 · 남성 · 슈즈 …)은 조직 대카테고리와 다른 분류라 드릴다운 행에 섞지 않는다(조직 카테고리와 상품관점 상품군은 분류가 달라 카테고리 단계 · 카테고리 필터 중에는 없음 · 채널을 여러 개 고르면 채널별 UV 합). <b>상품은 모두 개별로 보관</b>하고 각 단계(카테고리 · 브랜드 · 상품)에서 고른 기준 <b>상위 30개</b>를 보여 준다(나머지는 '그 외' 합계). 드릴다운 숫자는 <b>양수만</b> 담는다 — 원천의 취소 · 반품(음수 행)과 0원 행은 빼고 쌓는다(총결제 기준에 가깝다). 그래서 상단 실적(총결제)과는 상품 매칭 누락만큼 차이가 남는다. 2026-09-15 이전 형식의 백업(브랜드별 연간 상위 20개만 개별 · 나머지 '기타 상품', 상품UV 없음)을 열면 섹션 위에 안내가 뜨며, 최신 백업으로 다시 열어야 모두 보인다. 이 원천은 첫구매 거래액의 일부만 담고 있어 캡션에 <b>상품 원천 커버리지</b>(같은 채널 · BPU의 상품관점 실측 거래액 대비)를 표시한다. 주문고객수는 상품별 합이라 한 주문에 여러 상품이면 중복된다. <b>기간별 표</b>(기본 접힘)는 합계와 지금 단계 상위 항목의 기간별 값 · 비교. 기간은 상단 월별 · 주별 · 일별과 일평균/누계를 따르고(추이 막대를 누르면 그 기간 선택), 상품코드를 누르면 LF몰 상품 페이지가 새 탭으로 열린다. 사업부는 e-영업1 → 4 순서 고정.</li>
@@ -729,7 +730,7 @@ const dashSvg = sg => `<svg width="18" height="8" aria-hidden="true"><line x1="1
 
 // BPU · 카테고리 필터가 걸리면 거래액 · 주문고객수는 상품 데이터에서 뽑는다(그 외 지표는 전체 기준 그대로)
 const baseSum = (base, row, dates, allow) => (prodFiltOn() && (base === 'amt' || base === 'cust'))
-  ? pBaseSum(base, row.ch, dates) : sumBase(base, keyOf(base, row), dates, allow);
+  ? pBaseSum(base, row.ch, dates, row.bpu) : sumBase(base, keyOf(base, row), dates, allow);
 function compute(m, row, dates, wi) {
   const M = MET[m];
   if (!dates || !dates.length) return {v: null, est: false};
@@ -836,9 +837,21 @@ const save = () => {
 };
 // 지표별 계열: 채널 × (회원구분 적용 지표면 선택 구분, 아니면 전체)
 const segOn = m => SEG_METRICS.has(m) && !prodFiltOn();  // 상품 데이터엔 회원구분이 없다
-const seriesKeys = m => { const out = []; for (const ch of selChans()) for (const seg of (segOn(m) ? selSegs() : ['T'])) out.push({ch, seg}); return out; };
+const bpuSplit = m => prodFiltOn() && PROD_MET.has(m) && selBpus().length > 1;  // BPU 를 여러 개 고르면 합치지 않고 나눠 본다
+const BPU_DASH = ['', '7 4', '2 3', '10 3 2 3', '1 3', '6 2 1 2'];  // 채널 = 색, BPU = 선 모양
+const seriesKeys = m => {
+  const out = [];
+  for (const ch of selChans()) {
+    if (bpuSplit(m)) for (const b of selBpus()) out.push({ch, seg: 'T', bpu: b});
+    else for (const seg of (segOn(m) ? selSegs() : ['T'])) out.push({ch, seg});
+  }
+  return out;
+};
 const multiSeg = m => segOn(m) && selSegs().length > 1;
-const rowLabel = (m, r) => chLabel(r.ch) + (segOn(m) && (selSegs().length > 1 || r.seg !== 'T') ? ` · ${segLabel(r.seg)}` : '');
+const rowLabel = (m, r) => chLabel(r.ch)
+  + (r.bpu != null && PRD ? ` · ${PRD.bpu[r.bpu]}` : '')
+  + (segOn(m) && (selSegs().length > 1 || r.seg !== 'T') ? ` · ${segLabel(r.seg)}` : '');
+const rowDash = (m, r) => multiSeg(m) ? DASH[r.seg] : (r.bpu != null ? BPU_DASH[selBpus().indexOf(r.bpu) % BPU_DASH.length] : '');
 const modeName = () => S.grain === 'day' ? '일평균 = 누계' : S.mode === 'avg' ? '일평균' : {month: '월 합계', week: '주 합계'}[S.grain];
 const PROD_MET = new Set(['amt', 'cust', 'aov']);  // 상품 데이터로 다시 계산할 수 있는 지표
 const baseNote = m => !prodFiltOn() ? '' : PROD_MET.has(m) ? '상품 기준' : '전체 기준(이 필터 미적용)';
@@ -1039,8 +1052,8 @@ $('#btnKpi').addEventListener('click', () => {  // KPI 는 기본 접힘
 /* ---------- 요약 ---------- */
 let LAST_SUM = null;  // 엑셀 다운로드용 — 마지막으로 그린 요약
 function renderSummary(cols) {
-  const k = focusIdx(cols), ch0 = selChans()[0], seg0 = selSegs()[0];
-  const rowFor = m => ({ch: ch0, seg: SEG_METRICS.has(m) ? seg0 : 'T'});
+  const k = focusIdx(cols), ch0 = selChans()[0], seg0 = selSegs()[0], bpu0 = selBpus()[0];
+  const rowFor = m => (bpuSplit(m) ? {ch: ch0, seg: 'T', bpu: bpu0} : {ch: ch0, seg: SEG_METRICS.has(m) ? seg0 : 'T'});
   if (k < 0) {
     $('#tiles').innerHTML = METRICS.map(m => `<div class="tile"><div class="t-l">${esc(MET[m].name)}</div><div class="t-v">–</div></div>`).join('');
     $('#sumDesc').textContent = '선택한 연도의 데이터가 없습니다';
@@ -1049,8 +1062,8 @@ function renderSummary(cols) {
   const col = cols[k], pop = cmpPop();
   // 둘째 줄 = 선택하지 않은 쪽 비교 (전년비 ↔ 전월·전주·전일비)
   const oPrev = pop ? col.prevY : col.prevP, oWk = col.wk ? ((pop ? col.wkY : col.wkP) ?? -1) : null;
-  const multi = selChans().length > 1 || selSegs().length > 1;
-  const who = chLabel(ch0) + (seg0 !== 'T' ? ` · ${segLabel(seg0)}` : '') + (multi ? ' (선택 중 첫 번째)' : '');
+  const multi = selChans().length > 1 || selSegs().length > 1 || selBpus().length > 1;
+  const who = chLabel(ch0) + (selBpus().length > 1 ? ` · ${PRD.bpu[bpu0]}` : '') + (seg0 !== 'T' ? ` · ${segLabel(seg0)}` : '') + (multi ? ' (선택 중 첫 번째)' : '');
   $('#sumDesc').textContent = `${col.tip} · ${modeName()} · ${who} · ${cmpLbl()}: ${col.ptip || '비교 기간 없음'}${pop ? '' : '(동요일)'} 대비`
     + (prodFiltOn() ? ` · 상품 기준 ${prodFiltTxt()} — 거래액·고객수·객단가만 적용` : '');
   $('#tiles').innerHTML = METRICS.map(m => {
@@ -1238,7 +1251,7 @@ function renderCharts(cols) {
     lineChart(host.querySelector(`[data-k="${k}"]`), {
       m, grain: S.grain, single, noPrev: pop, cmpLbl: cmpLbl(), focus,
       labels: cols.map(c => c.label), tips: cols.map(c => c.tip), ptips: cols.map(c => c.ptip),
-      series: MODEL[m].map(r => ({name: r.label, color: chColor(r.ch), dash: multiSeg(m) ? DASH[r.seg] : '',
+      series: MODEL[m].map(r => ({name: r.label, color: chColor(r.ch), dash: rowDash(m, r),
                                    cur: r.vals.map(v => v.c), prev: r.vals.map(v => v.p), pest: r.vals.map(v => v.pe)})),
       aria: `${MET[m].name} ${single ? `${MODEL[m][0].label} ${y}년${pop ? '' : `과 ${y - 1}년 동기간`}` : `${MODEL[m].map(r => r.label).join(', ')} 비교`} 추이`,
     });
@@ -1265,9 +1278,10 @@ function renderTable(cols) {
     const sub = [unitOf(m), trNote(m)].filter(Boolean).join(' · ');
     h += `<tr class="grp"><th class="stick s1" colspan="${sticky}">${esc(MET[m].name)}<small>${esc(sub)}</small></th><td colspan="${rest}"></td></tr>`;
     for (const r of MODEL[m]) {
-      const vals = r.vals, cls = r.ch === '*TOTAL' && r.seg === 'T' ? 'top' : 'ch';
+      const vals = r.vals, cls = r.ch === '*TOTAL' && r.seg === 'T' && r.bpu == null ? 'top' : 'ch';
       if (vals.some(v => v.pe && ok(v.p))) anyEst = true;
-      const lab = `<i class="sw" style="background:${chColor(r.ch)}"></i>${esc(r.label)}`;
+      const dsh = rowDash(m, r);  // 차트와 같은 선 모양을 표 앞 표식에도
+      const lab = (dsh ? `<svg class="sw ln" width="14" height="8" aria-hidden="true"><line x1="1" y1="4" x2="13" y2="4" stroke="${chColor(r.ch)}" stroke-width="2" stroke-linecap="round" stroke-dasharray="${dsh}"/></svg>` : `<i class="sw" style="background:${chColor(r.ch)}"></i>`) + esc(r.label);
       if (block) {
         h += `<tr class="${cls}"><th class="stick s1">${lab}</th>`
           + vals.map((v, k) => cell(fmt(m, v.c), k, '', v.ce, rawOf(m, v.c))).join('')
@@ -1583,29 +1597,35 @@ const prodFiltOn = () => !!PRD && (PD.bpus.length > 0 || PD.cats.length > 0 || P
 const prodFiltTxt = () => !prodFiltOn() ? '' : [PD.bpus.length ? `BPU ${PD.bpus.map(k => PRD.bpu[k]).join('·')}` : '',
   (PD.cats.length || PD.catNone) ? `카테고리 ${catTxt()}` : ''].filter(Boolean).join(' · ');
 let PFILT = null, PFILT_KEY = '';
-function pFilt() {  // 지금 필터로 만든 일자별 거래액 · 주문고객수 (채널별 + 마지막 칸 = 전 채널 합)
+function pFilt() {  // 지금 필터로 만든 일자별 거래액 · 주문고객수 (채널별 + 마지막 칸 = 전 채널 합 · BPU 별로도 따로)
   const key = `${PRD.meta.built}|${PD.bpus.join()}|${PD.cats.join()}|${PD.catNone ? 'none' : ''}`;
   if (PFILT && PFILT_KEY === key) return PFILT;
-  const nd = PRD.meta.days, nch = PRD.ch.length, a = [], u = [];
-  for (let c = 0; c <= nch; c++) { a.push(new Float64Array(nd)); u.push(new Float64Array(nd)); }
+  const nd = PRD.meta.days, nch = PRD.ch.length;
+  const mk = () => { const a = [], u = []; for (let c = 0; c <= nch; c++) { a.push(new Float64Array(nd)); u.push(new Float64Array(nd)); } return {a, u}; };
+  const all = mk(), by = new Map();
+  if (PD.bpus.length > 1) for (const b of PD.bpus) by.set(b, mk());  // 여러 개 골랐을 때만 BPU 별로 쌓는다
   const bm = pBpuMask(), cm = pCatMask();
   if (!PD.catNone) for (let i = 0; i < PF.n; i++) {
-    const p = PF.p[i] * 3;
-    if (bm && !bm[PRD.paths[p]]) continue;
+    const p = PF.p[i] * 3, b = PRD.paths[p];
+    if (bm && !bm[b]) continue;
     if (cm && !cm[PRD.paths[p + 1]]) continue;
-    const d = PF.d[i], c = PF.c[i];
-    a[c][d] += PF.a[i]; u[c][d] += PF.u[i]; a[nch][d] += PF.a[i]; u[nch][d] += PF.u[i];
+    const d = PF.d[i], c = PF.c[i], av = PF.a[i], uv = PF.u[i];
+    all.a[c][d] += av; all.u[c][d] += uv; all.a[nch][d] += av; all.u[nch][d] += uv;
+    const o = by.get(b);
+    if (o) { o.a[c][d] += av; o.u[c][d] += uv; o.a[nch][d] += av; o.u[nch][d] += uv; }
   }
   PFILT_KEY = key;
-  return (PFILT = {a, u, nch});
+  return (PFILT = {all, by, nch});
 }
-function pBaseSum(base, ch, dates) {  // 상품 데이터가 있는 날만 센다(없는 날은 '값 없음')
-  const F = pFilt(), k = ch === '*TOTAL' ? F.nch : PRD.ch.indexOf(ch), arr = k >= 0 ? (base === 'amt' ? F.a : F.u)[k] : null;
+function pBaseSum(base, ch, dates, bpu) {  // 상품 데이터가 있는 날만 센다(없는 날은 '값 없음') · bpu 를 주면 그 BPU 만
+  const F = pFilt(), set = (bpu != null && F.by.has(bpu)) ? F.by.get(bpu) : F.all;
+  const k = ch === '*TOTAL' ? F.nch : PRD.ch.indexOf(ch), arr = k >= 0 ? (base === 'amt' ? set.a : set.u)[k] : null;
   if (!arr) return {v: 0, n: 0, est: false};
   let v = 0, n = 0;
   for (const d of dates) { const i = pDay(d); if (i >= 0 && i < PRD.meta.days) { v += arr[i]; n++; } }
   return {v, n, est: false};
 }
+const selBpus = () => (PRD && PD.bpus.length ? bpuOrder().filter(k => PD.bpus.includes(k)) : []);  // 칩 순서대로
 function pClampPath() {  // 필터에서 빠진 값으로 들어가 있던 드릴 위치는 한 단계 위로 되돌린다
   const dims = pDims();
   for (let i = 0; i < PD.path.length; i++) {
