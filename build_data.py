@@ -497,7 +497,8 @@ def read_product_table(path):
 
 
 def read_product_csv(path):
-    """상품관점 일자별 실적 CSV → {(날짜, 채널, BPU): [거래액, 고객수, 상품UV]} — 회원구분·상품군은 *TOTAL 행만 (상품CR = 고객수 ÷ 상품UV)"""
+    """상품관점 일자별 실적 CSV → {(날짜, 채널, BPU, 상품군): [거래액, 고객수, 상품UV]} — 회원구분은 *TOTAL 행만.
+    상품군 '*TOTAL' 이 채널×BPU 합계(커버리지용), 나머지는 상품군별 값(상품CR = 고객수 ÷ 상품UV)"""
     kind, periods, records = parse_crosstab(read_rows(path))
     out = {}
     if kind != 'daily':
@@ -512,11 +513,11 @@ def read_product_csv(path):
         return out
     for labels, vals in records:
         met = {'일평균거래액': 0, '일평균고객수': 1, '상품UV': 2}.get(labels[0])
-        if met is None or len(labels) < 5 or labels[1] != '*TOTAL' or labels[4] != '*TOTAL':
+        if met is None or len(labels) < 5 or labels[1] != '*TOTAL' or labels[4] in ('', '-'):
             continue
         for p, v in zip(periods, vals):
             if p is not None and v is not None:
-                out.setdefault((p, labels[2], labels[3]), [0.0, 0.0, 0.0])[met] = v
+                out.setdefault((p, labels[2], labels[3], labels[4]), [0.0, 0.0, 0.0])[met] = v
     return out
 
 
@@ -554,7 +555,11 @@ def build_products(dirs, last_date, verbose=True):
                     print(f'  [오류] {dir_label(d)}/{f.name}: {e}')
     if not by_date:
         return None
-    rows = [r for day in sorted(by_date) for r in by_date[day]]
+    rows_all = [r for day in sorted(by_date) for r in by_date[day]]
+    rows = [r for r in rows_all if r[7] > 0]  # 취소 · 반품(음수) · 0원 행 제외 — 드릴다운은 양수만(총결제 기준에 가깝게)
+    dropped = len(rows_all) - len(rows)
+    if verbose and dropped:
+        print(f'  취소 · 반품 등 0 이하 행 {dropped:,}개 제외 (양수만 집계)')
     last = dt.date.fromisoformat(last_date or max(by_date))
     start = dt.date.fromisoformat(min(by_date))
     day_of = {}
@@ -595,8 +600,10 @@ def build_products(dirs, last_date, verbose=True):
         o = facts[(day_idx(r[0]), ci[r[2]], p, q)]
         o[0] += r[7]
         o[1] += r[8]
-    covm = defaultdict(lambda: [0.0, 0.0, 0.0])
-    for (day, ch, bpu), (a, u, uv) in cov_daily.items():
+    covm = defaultdict(lambda: [0.0, 0.0, 0.0])   # 채널 × BPU 합계 — 커버리지용
+    covg = defaultdict(lambda: [0.0, 0.0, 0.0])   # 채널 × BPU × 상품군 — 상품UV · 상품CR 보조표용
+    grps, gi = [], {}
+    for (day, ch, bpu, grp), (a, u, uv) in cov_daily.items():
         if ch != '*TOTAL' and ch not in ci:
             ci[ch] = len(chs)
             chs.append(ch)
@@ -605,7 +612,14 @@ def build_products(dirs, last_date, verbose=True):
             bpus.append(bpu)
         if day < start.isoformat():
             continue
-        o = covm[(day_idx(day), -1 if ch == '*TOTAL' else ci[ch], -1 if bpu == '*TOTAL' else bi[bpu])]
+        c, b_ = -1 if ch == '*TOTAL' else ci[ch], -1 if bpu == '*TOTAL' else bi[bpu]
+        if grp == '*TOTAL':
+            o = covm[(day_idx(day), c, b_)]
+        else:
+            if grp not in gi:
+                gi[grp] = len(grps)
+                grps.append(grp)
+            o = covg[(day_idx(day), c, b_, gi[grp])]
         o[0] += a
         o[1] += u
         o[2] += uv
@@ -621,12 +635,16 @@ def build_products(dirs, last_date, verbose=True):
     for (d, c, b), (a, u, uv) in sorted(covm.items()):
         cov.extend([d - prev_d, c, b, round(a), round(u), round(uv)])
         prev_d = d
-    days = max([k[0] for k in facts] + [k[0] for k in covm]) + 1
+    cov2, prev_d = [], 0
+    for (d, c, b_, g), (a, u, uv) in sorted(covg.items()):
+        cov2.extend([d - prev_d, c, b_, g, round(a), round(u), round(uv)])
+        prev_d = d
+    days = max([k[0] for k in facts] + [k[0] for k in covm] + [k[0] for k in covg]) + 1
     return {
         'meta': {'built': dt.datetime.now().strftime('%Y-%m-%d %H:%M'), 'topN': PRODUCT_TOP_N, 'start': start.isoformat(),
-                 'days': days, 'lastDate': (start + dt.timedelta(days=days - 1)).isoformat(), 'rows': len(rows), 'products': len(names), 'covFields': 6,
-                 'encoding': 'f=[날짜차분, 채널, 경로, 상품(-1=기타), 거래액, 주문고객수] · cov=[날짜차분, 채널(-1=전체), BPU(-1=전체), 거래액, 고객수, 상품UV]'},
-        'ch': chs, 'bpu': bpus, 'cat': cats, 'brand': brands, 'paths': paths, 'prods': prods, 'f': flat, 'cov': cov,
+                 'days': days, 'lastDate': (start + dt.timedelta(days=days - 1)).isoformat(), 'rows': len(rows), 'dropped': dropped, 'products': len(names), 'covFields': 6, 'covFields2': 7, 'positiveOnly': True,
+                 'encoding': 'f=[날짜차분, 채널, 경로, 상품(-1=기타), 거래액, 주문고객수] · cov=[날짜차분, 채널(-1=전체), BPU(-1=전체), 거래액, 고객수, 상품UV] · cov2=[날짜차분, 채널, BPU, 상품군, 거래액, 고객수, 상품UV]'},
+        'ch': chs, 'bpu': bpus, 'cat': cats, 'brand': brands, 'grp': grps, 'paths': paths, 'prods': prods, 'f': flat, 'cov': cov, 'cov2': cov2,
     }
 
 
@@ -709,6 +727,11 @@ def build(dirs, verbose=True):
     # 진행 중인 주의 '일수'는 실적 시리즈(거래액 · 트래픽 · 가입자 …) 기준 — 회원현황만 먼저 들어온 날 때문에 주 일평균이 잘못 나뉘지 않게
     perf = sorted({p for k, ser in daily.items() if k.split('|')[0] in CHANNEL_BASES for p, v in ser.items() if v is not None})
     last = dt.date.fromisoformat((perf or dates)[-1]) if (perf or dates) else None
+    if perf and dates and dates[-1] > perf[-1]:  # 실적(거래액 · 트래픽 …)이 아직 없는 뒤쪽 날짜는 미갱신으로 보고 넣지 않는다
+        skipped_tail = [p for p in dates if p > perf[-1]]
+        dates = [p for p in dates if p <= perf[-1]]
+        if verbose:
+            print(f'  [건너뜀] 실적이 아직 없는 날짜 {", ".join(skipped_tail)} — 그날 실적 raw 가 들어오면 함께 반영됨')
 
     weeks, wkeys = [], []
     for y, m, n in sorted({p for ser in weekly.values() for p, v in ser.items() if v is not None}):

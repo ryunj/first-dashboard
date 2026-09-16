@@ -362,11 +362,7 @@ details.notes li{margin:3px 0}
 #pdCatBar .flabel{padding-top:4px}
 .pd-cat-meta{grid-column:2;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
 /* 메모 — 포스트잇 */
-.memo-sec{margin-top:16px}
-.memo-h{display:flex;align-items:center;flex-wrap:wrap;gap:4px 12px;margin:0 0 8px}
-.memo-h h2{font-size:14px;font-weight:700;margin:0}
-.memo-h .desc{font-size:12px;color:var(--muted)}
-.memo-h .tools{margin-left:auto;display:flex;gap:8px;align-items:center}
+.memo-h{display:flex;align-items:center;flex-wrap:wrap;justify-content:flex-end;gap:8px;margin:10px 0 10px}
 .memos{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start}
 .memo-empty{font-size:12px;color:var(--muted);padding:2px 0}
 .memo{--mc:var(--memo-y);position:relative;width:236px;min-height:100px;padding:11px 12px 7px;border-radius:3px 3px 12px 3px;background:var(--mc);color:var(--memo-ink);box-shadow:0 1px 2px rgba(0,0,0,.08),0 6px 14px rgba(0,0,0,.07);display:flex;flex-direction:column;gap:7px;font-size:12.5px}
@@ -483,12 +479,6 @@ body.pdfcap .pgrid{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr)!important
 
 <main class="wrap" id="main">
   <div class="card bk-banner" id="bkBanner" role="status" hidden><span id="bkInfo"></span><button class="btn" id="btnBkClear" type="button">원래 데이터로 돌아가기</button></div>
-  <section id="memoSec" class="memo-sec" hidden>
-    <div class="memo-h"><h2>메모</h2><span class="desc" id="memoDesc"></span>
-      <div class="tools"><div class="seg" role="group" aria-label="메모 보기"><button type="button" data-memof="all" title="저장된 메모를 모두 보기">모든 메모</button><button type="button" data-memof="view" title="지금 화면의 기간 · 채널 · 회원구분과 같은 조건으로 붙인 메모만 보기">이 화면 조건</button></div>
-        <button class="btn primary" type="button" id="btnMemoAdd" title="지금 보고 있는 기간 · 필터에 메모 붙이기">+ 메모</button></div></div>
-    <div class="memos" id="memoList"></div>
-  </section>
   <div id="printHead"></div>
   <section id="sumSec">
     <div class="sec-h"><h2>실적 요약</h2><span class="desc" id="sumDesc"></span></div>
@@ -504,6 +494,19 @@ body.pdfcap .pgrid{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr)!important
     <details class="insight" id="insightBox">
       <summary>인사이트 자동 요약<span class="ins-sub" id="insSub"></span></summary>
       <div class="ins-body" id="insBody"></div>
+    </details>
+  </section>
+
+  <section id="memoSec" hidden>
+    <details class="insight" id="memoBox">
+      <summary>메모<span class="ins-sub" id="memoDesc"></span></summary>
+      <div class="ins-body">
+        <div class="memo-h">
+          <div class="seg" role="group" aria-label="메모 보기"><button type="button" data-memof="all" title="저장된 메모를 모두 보기">모든 메모</button><button type="button" data-memof="view" title="지금 화면의 기간 · 채널 · 회원구분과 같은 조건으로 붙인 메모만 보기">이 화면 조건</button></div>
+          <button class="btn primary" type="button" id="btnMemoAdd" title="지금 보고 있는 기간 · 필터에 메모 붙이기">+ 메모</button>
+        </div>
+        <div class="memos" id="memoList"></div>
+      </div>
     </details>
   </section>
 
@@ -580,18 +583,18 @@ body.pdfcap .pgrid{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr)!important
       <li><b>채널 · 회원구분</b>은 여러 개를 고를 수 있다. 차트 선 하나(채널 1개 × 구분 1개)면 당해 vs 전년, 여러 개면 비교선 — 색 = 채널, 선 모양 = 회원구분. 요약 타일은 선택 중 첫 번째 기준.</li>
       <li><b>*(기울임)</b> = 전년 일자 raw가 없어 전년 주별 raw를 날짜별로 나눠 채운 추정값.</li>
       <li><b>KPI 목표</b>(맨 아래)는 <code>kpi.js</code> 의 연간 누적 목표 기준 · 필터와 무관하게 전체 채널. 첫구매 거래액 · 고객수 실적은 <b>신규회원실적대시보드의 총)첫구매 거래액 · 고객수 (당년신규)</b>. 전체관점 당월신규+기가입신규와 비슷하지만 집계 기준이 달라 조금 다르다. 목표 일평균 = 연간 목표 ÷ 연간 일수, 남은 기간 필요 일평균 = (목표 − 누적) ÷ 남은 일수. 트래픽 · 가입자 목표를 넣으면 목표 가입률도 환산된다.</li>
-      <li><b>상품 구성</b>(KPI 위) — <code>조직 카테고리별 첫구매 실적</code>의 상품 단위 첫구매 실적. <b>기본 = 사업부 기준</b>: 사업부(BPU) → 카테고리 → 브랜드 → 상품을 <b>전 채널 합산</b>으로 드릴다운한다. 채널 칩으로 거르고(여러 개 선택), <b>카테고리 칩</b>은 모두 펼쳐 기본 모두 선택 — 누르면 그 카테고리만 빼거나 다시 넣고, '전체'는 모두 선택 ↔ 모두 해제. 행마다 위쪽에서 고른 기준(<b>거래액 또는 주문고객수</b>) 하나와 비교 기간 값 · 비교(전년비 등)를 보여 준다. 맨 위 <b>합계</b> 행 = 지금 범위 전체. 위쪽 거래액/주문고객수 버튼은 숫자 열 · 막대 · 정렬 · 구성비 · 채널 구성 띠의 기준(엑셀 다운로드에는 둘 다). <b>주 채널</b> = 가장 많이 판 채널 · 비중 · 판매 채널 수, 카테고리 · 브랜드 · 상품 단계에서 <b>판매 채널 많은 순</b>으로 정렬 가능. <b>상품UV · 상품CR</b>(상품관점 실측, CR = 상품관점 고객수 ÷ 상품UV)은 채널 · 사업부 단계에서만 보인다(조직 카테고리와 상품관점 상품군은 분류가 달라 카테고리 단계 · 카테고리 필터 중에는 없음 · 채널을 여러 개 고르면 채널별 UV 합). <b>상품은 모두 개별로 보관</b>하고 상품 단계에서 고른 기준 상위 30개를 보여 준다(나머지는 '그 외' 합계). 2026-09-15 이전 형식의 백업(브랜드별 연간 상위 20개만 개별 · 나머지 '기타 상품', 상품UV 없음)을 열면 섹션 위에 안내가 뜨며, 최신 백업으로 다시 열어야 모두 보인다. 이 원천은 첫구매 거래액의 일부만 담고 있어 캡션에 <b>상품 원천 커버리지</b>(같은 채널 · BPU의 상품관점 실측 거래액 대비)를 표시한다. 주문고객수는 상품별 합이라 한 주문에 여러 상품이면 중복된다. <b>기간별 표</b>(기본 접힘)는 합계와 지금 단계 상위 항목의 기간별 값 · 비교. 기간은 상단 월별 · 주별 · 일별과 일평균/누계를 따르고(추이 막대를 누르면 그 기간 선택), 상품코드를 누르면 LF몰 상품 페이지가 새 탭으로 열린다. 사업부는 e-영업1 → 4 순서 고정.</li>
+      <li><b>상품 구성</b>(KPI 위) — <code>조직 카테고리별 첫구매 실적</code>의 상품 단위 첫구매 실적. <b>기본 = 사업부 기준</b>: 사업부(BPU) → 카테고리 → 브랜드 → 상품을 <b>전 채널 합산</b>으로 드릴다운한다. 채널 칩으로 거르고(여러 개 선택), <b>카테고리 칩</b>은 모두 펼쳐 기본 모두 선택 — 누르면 그 카테고리만 빼거나 다시 넣고, '전체'는 모두 선택 ↔ 모두 해제. 행마다 위쪽에서 고른 기준(<b>거래액 또는 주문고객수</b>) 하나와 비교 기간 값 · 비교(전년비 등)를 보여 준다. 맨 위 <b>합계</b> 행 = 지금 범위 전체. 위쪽 거래액/주문고객수 버튼은 숫자 열 · 막대 · 정렬 · 구성비 · 채널 구성 띠의 기준(엑셀 다운로드에는 둘 다). <b>주 채널</b> = 가장 많이 판 채널 · 비중 · 판매 채널 수, 카테고리 · 브랜드 · 상품 단계에서 <b>판매 채널 많은 순</b>으로 정렬 가능. <b>상품UV · 상품CR</b>(상품관점 실측, CR = 상품관점 고객수 ÷ 상품UV)은 채널 · 사업부 단계 행에서만 보인다. 카테고리 단계는 <b>상품관점 상품군별 보조표</b>(드릴다운 아래 · 기본 접힘)로 따로 본다 — 상품관점의 상품군(골프 · 남성 · 슈즈 …)은 조직 대카테고리와 다른 분류라 드릴다운 행에 섞지 않는다(조직 카테고리와 상품관점 상품군은 분류가 달라 카테고리 단계 · 카테고리 필터 중에는 없음 · 채널을 여러 개 고르면 채널별 UV 합). <b>상품은 모두 개별로 보관</b>하고 각 단계(카테고리 · 브랜드 · 상품)에서 고른 기준 <b>상위 30개</b>를 보여 준다(나머지는 '그 외' 합계). 드릴다운 숫자는 <b>양수만</b> 담는다 — 원천의 취소 · 반품(음수 행)과 0원 행은 빼고 쌓는다(총결제 기준에 가깝다). 그래서 상단 실적(총결제)과는 상품 매칭 누락만큼 차이가 남는다. 2026-09-15 이전 형식의 백업(브랜드별 연간 상위 20개만 개별 · 나머지 '기타 상품', 상품UV 없음)을 열면 섹션 위에 안내가 뜨며, 최신 백업으로 다시 열어야 모두 보인다. 이 원천은 첫구매 거래액의 일부만 담고 있어 캡션에 <b>상품 원천 커버리지</b>(같은 채널 · BPU의 상품관점 실측 거래액 대비)를 표시한다. 주문고객수는 상품별 합이라 한 주문에 여러 상품이면 중복된다. <b>기간별 표</b>(기본 접힘)는 합계와 지금 단계 상위 항목의 기간별 값 · 비교. 기간은 상단 월별 · 주별 · 일별과 일평균/누계를 따르고(추이 막대를 누르면 그 기간 선택), 상품코드를 누르면 LF몰 상품 페이지가 새 탭으로 열린다. 사업부는 e-영업1 → 4 순서 고정.</li>
       <li><b>신규회원 앱 설치 · 앱푸시 수신동의</b> — 모두 <b>앱 설치자 기준</b>. 흐름 차트(가입 → 설치 → 수신동의 · 추가 · 이탈)는 진행 중인 달 · 주가 뚝 떨어져 보이지 않게 누계 메뉴에서도 일평균으로 그린다(타일 · 표는 메뉴를 따름). 가입자수 → <b>앱 신규 설치</b>(APP설치데이터 '신규 설치', 재설치 제외) → <b>앱푸시 수신동의</b>(PUSH '신규' 회원의 신규추가(+)). 기존 대시보드 '앱푸시수신동의' · '앱푸시(앱포함)/신규회원'과 같은 값이다(원천 대조로 확인). <b>앱푸시 수신동의율(신규회원)</b> = 앱푸시 수신동의 ÷ 가입자수 · <b>앱 신규 설치 대비 수신동의율</b> = 앱푸시 수신동의 ÷ 앱 신규 설치. 비율은 분자 · 분모가 모두 있는 날만 합산.</li>
       <li><b>앱푸시 수신동의 회원</b>(PUSH, 앱 설치자 기준): 기존 · 신규(당년 가입) · 합계. 회원 수는 기간 말 값, 추가 · 이탈 · 순증은 기간 합(일평균 메뉴면 ÷ 일수). 이탈 · 삭제는 늘어나면 빨강. 매년 1/1은 전년 신규가 기존으로 재분류되며 추가 · 이탈에 수만 명이 섞여 추가 · 이탈에서 뺀다. 원천 오류일 — 2025-04-18(수신동의 회원 0 · 전원 이탈)은 회원 수와 흐름을 모두 빼고, 2025-04-19 · 2026-04-24(증감 칸에 재고 값)와 2026-04-25(흐름 모두 0)는 흐름만 뺐다. 2026-06-15 이후엔 수신동의 회원이 전날 + 증감과 하루 수십 명씩 어긋난다(원천 그대로 표시).</li>
       <li><b>앱 설치 상세</b>(APP설치데이터, 2026-03~): 전체 설치 = 신규 설치 + 재설치 · 순증 설치 = 전체 설치 − 삭제 · 스토어 방문 · Push 활성 기기(기간 말 값). 원천에 같은 날짜가 두 번 나오면 뒤 행을 쓴다(7/17 · 7/18은 값이 다름). 2025년 raw가 없어 전년비는 비어 있다.</li>
-      <li><b>전체 회원 · 앱 설치 무관(회원현황)</b> — 파일명이 <code>회원현황_앱설치무관기준</code>으로 바뀌어 기준이 분명해져 지표에 넣었다: 유효회원수 · 누적회원수(기간 말) · 신규회원수(기간 합), <b>유효회원 대비 수신동의율</b>(수신동의 회원 ÷ 유효회원수, 분자는 앱 설치자 기준 · 분모는 앱 무관이라 '앱을 안 깐 회원까지 포함한 모수'로 읽는다), <b>신규 수신동의율(앱 무관 모수)</b>(앱푸시 수신동의(신규) ÷ 회원현황 신규회원수). 회원현황 신규회원수와 가입자수 raw 는 사실상 같다(256일 중 146일 완전 일치 · 평균 비 1.0003). <b>앱 미설치자의 수신동의 자체는 어느 원천에도 없다</b> — PUSH 는 앱 설치자 기준만 담는다.</li>
+      <li><b>앱 설치 무관 기준(회원현황)</b> — 수신동의 수치는 <b>앱 설치자(PUSH)</b>에만 있고, 회원현황은 <b>앱 설치 여부와 무관한 회원 모수</b>다. 두 기준을 나란히 두고 본다: 파일명이 <code>회원현황_앱설치무관기준</code>으로 바뀌어 기준이 분명해져 지표에 넣었다: 유효회원수 · 누적회원수(기간 말) · 신규회원수(기간 합), <b>유효회원 대비 수신동의율</b>(수신동의 회원 ÷ 유효회원수, 분자는 앱 설치자 기준 · 분모는 앱 무관이라 '앱을 안 깐 회원까지 포함한 모수'로 읽는다), <b>신규 수신동의율(앱 무관 모수)</b>(앱푸시 수신동의(신규) ÷ 회원현황 신규회원수). 회원현황 신규회원수와 가입자수 raw 는 사실상 같다(256일 중 146일 완전 일치 · 평균 비 1.0003). <b>앱 미설치자의 수신동의 자체는 어느 원천에도 없다</b> — PUSH 는 앱 설치자 기준만 담는다.</li>
       <li><b>인사이트 자동 요약</b>(흐름 차트 아래 · 기본 접힘) — 화면의 기준 기간 · 필터 · 비교 기준으로 계산한 <b>규칙 기반</b> 요약이다. 거래액 변화를 고객수 효과 · 객단가 효과로 나누고, 트래픽↔첫구매율 · 가입자↔당일가입 CR 같은 퍼널 신호, 채널별 증감 1위 · 꼴찌, 지금 드릴 단계의 상품 증감, 앱푸시 수신동의율 변화를 문구로 만든다. 원인은 가설로만 적고 값은 화면 지표와 같다.</li>
       <li><b>표시하지 않는 것</b> — 기존 대시보드의 '앱푸시(앱보유무관)/신규회원' · 앱 설치 유무별 수신동의는 원천에 앱 미설치자 수신동의 항목이 없어 아직 표시할 수 없다(PUSH 원천은 앱 설치자 기준만). <b>가입자 대비 앱 신규 설치율</b>(앱 신규 설치 ÷ 가입자수)은 앱 설치에 비회원 설치가 섞여 100%를 넘는 달이 있는 등 데이터 검증이 되지 않아 2026-09-15 대시보드에서 뺐다(앱 신규 설치 수 · 앱 신규 설치 대비 수신동의율은 유지).</li>
       <li><b>백업</b> — 상단 <b>백업 다운로드</b>는 지금 보고 있는 데이터(실적 data.js · KPI kpi.js · 상품 products.js)를 한 파일(.json.gz)로 저장한다. <b>백업 불러오기</b>로 그 파일을 올리면 이 브라우저에 저장해 그 데이터로 다시 연다(새로고침해도 유지). 위 안내줄의 '원래 데이터로 돌아가기'를 누르면 해제. <code>build_data.py</code> 도 빌드할 때마다 <code>backup/</code> 에 같은 형식의 백업을 쓴다. 백업 파일에는 실적 원본이 담기니 사내 보안 기준에 맞게 보관할 것.</li>
       <li><b>새 데이터 추가</b>(일자별 갱신) — 백업(또는 data.js) + 그날 내보낸 raw 폴더(예: <code>2026년/0914</code>)를 올리면 <code>build_data.py</code> 와 같은 규칙으로 합친다: 같은 날짜 · 주차는 새 값으로 바꾸고 빈 칸은 기존 값을 유지, 회원현황이 모두 0인 날(미갱신)은 건너뜀, 상품 표는 그 날짜 행을 통째로 교체. 결과표에서 파일별 읽음 · 건너뜀 · 오류와 새 날짜 · 기존 값과 달라진 칸 수를 확인한 뒤 적용한다. 상품은 모두 개별로 보관한다(예전 백업처럼 상위 N만 개별이던 이력은 '기타 상품' 그대로). 브라우저는 xlsx 를 읽지 않으니 APP설치데이터 · 조직 카테고리별 실적은 CSV로 저장해 올린다.</li>
       <li><b>차트 끝값</b> — 마지막 기간의 당해 값과 함께 비교(전년 동기간) 값을 회색으로 표시한다(차트 선이 하나일 때). <b>지표 순서</b>: 거래액 → 고객수 → 객단가 → 트래픽 → 가입자수 → 가입률 → 당일가입 CR → 첫구매율.</li>
       <li><b>다운로드</b>(맨 아래) — 형식(엑셀 · PDF)과 영역(전체 · 실적 요약 · 흐름 차트 · 실적 표 · 상품 구성 · 앱 설치 · 수신동의 · KPI)을 골라 받는다. <b>엑셀</b>은 영역마다 시트 하나로, 화면과 같은 기간 · 필터 · 비교 기준의 값을 숫자 셀 + 서식(단위 · 비율 · 증감 색)으로 쓴다(차트는 표 데이터와 같아 제외). <b>PDF</b>는 인쇄 창 없이 <b>파일로 바로</b> 받는다 — 고른 영역을 데스크톱 폭으로 그려 찍고(html-to-image) A4 가로에 이어 붙이며(jsPDF) 표 행 · 카드 경계에서 쪽을 나눈다. 두 라이브러리는 받을 때 CDN(cdnjs · jsDelivr)에서 불러오고, 못 불러오면(사내망 차단 등) 인쇄 창을 연다(대상 'PDF로 저장'). 표는 3단 비교 모양, 첫 쪽 위에 기준 기간 · 필터 · 출력 시각. KPI 영역은 기본 접힘(제목 앞 ▶ 를 누르면 펼침).</li>
-      <li><b>메모</b>(화면 맨 위) — <b>+ 메모</b>로 지금 보고 있는 기간 · 단위 · 일평균/누계 · 비교 · 채널 · 회원구분(+ 상품 구성 위치)에 포스트잇을 붙인다. 📌 를 누르면 그 보기로 이동, ✎ 고치기, ✕ 두 번 눌러 지우기, 색 4가지. '이 보기'는 지금 기간 · 채널 · 회원구분과 같은 메모만. 메모는 이 브라우저(localStorage)에 저장되고 <b>백업 다운로드 · 새 데이터 추가 백업에 함께 담긴다</b> — 백업을 열면 그 안의 메모를 합친다(같은 메모는 최근 수정본, 지운 메모가 예전 백업에 있으면 다시 들어옴). 엑셀 · PDF 에는 넣지 않는다.</li>
+      <li><b>메모</b>(인사이트 자동 요약 아래 · 기본 접힘) — <b>+ 메모</b>로 지금 보고 있는 기간 · 단위 · 일평균/누계 · 비교 · 채널 · 회원구분(+ 상품 구성 위치)에 포스트잇을 붙인다. 📌 를 누르면 그 보기로 이동, ✎ 고치기, ✕ 두 번 눌러 지우기, 색 4가지. '이 보기'는 지금 기간 · 채널 · 회원구분과 같은 메모만. 메모는 이 브라우저(localStorage)에 저장되고 <b>백업 다운로드 · 새 데이터 추가 백업에 함께 담긴다</b> — 백업을 열면 그 안의 메모를 합친다(같은 메모는 최근 수정본, 지운 메모가 예전 백업에 있으면 다시 들어옴). 엑셀 · PDF 에는 넣지 않는다.</li>
       <li><b>드래그 합계</b> — 실적 표에서 숫자를 드래그(또는 클릭 후 Shift+클릭)하면 아래에 합계 · 평균 · 최소 · 최대가 뜬다. 합계는 거래액 · 고객수 · 가입자수 · 트래픽처럼 더할 수 있는 같은 단위일 때만. Ctrl+C로 선택 영역 복사(엑셀에 붙여넣기), Esc로 해제.</li>
     </ul>
   </details>
@@ -1393,10 +1396,10 @@ function renderKpi() {
 /* ---------- 상품 구성 드릴다운 (data/products.js · 조직 카테고리별 첫구매 실적, 일 단위) ---------- */
 // 기본 = 사업부 기준: BPU → 카테고리 → 브랜드 → 상품을 전 채널 합산으로 본다. 채널은 필터 칩 · 행마다 채널 구성 띠 · 판매 채널 수(분산) ·
 // 상품 단계의 상품 × 채널 표로 보여 준다. '채널 기준'이면 채널 → BPU → … 순서. 기간은 상단 기간 단위와 일평균/누계를 그대로 따른다.
-let PRD = null, PF = null, PC = null, PSTART = 0, PVIEW = null, prodLoad = 'idle';
+let PRD = null, PF = null, PC = null, PC2 = null, PSTART = 0, PVIEW = null, prodLoad = 'idle';
 const PD_HASH = new URLSearchParams(location.hash.slice(1));  // 첫 렌더가 주소를 덮어쓰기 전에 드릴 위치를 잡아 둔다
 const PD = {view: 'bpu', path: [], chans: [], cats: [], catNone: false, catOpen: false, sort: 'v', sel: null, metric: 'amt'};  // cats = 카테고리 필터(빈 배열 = 전체)
-let PD_TBL_OPEN = false;  // 기간별 표 펼침(기본 접힘)  // path = 보기 순서대로 고른 값 · chans = 채널 필터(빈 배열 = 전체)
+let PD_TBL_OPEN = false, PD_GRP_OPEN = false;  // 기간별 표 펼침(기본 접힘)  // path = 보기 순서대로 고른 값 · chans = 채널 필터(빈 배열 = 전체)
 const PCODE = ['채널', 'BPU', '카테고리', '브랜드', '상품'];  // 차원 코드 0~4
 const PDIMS = {bpu: [1, 2, 3, 4], ch: [0, 1, 2, 3, 4]};
 const pDims = () => PDIMS[PD.view];
@@ -1452,6 +1455,25 @@ function prodInit() {
   for (let i = 0, j = 0, day = 0; i < m; i++, j += cf) {
     day += cv[j]; PC.d[i] = day; PC.c[i] = cv[j + 1]; PC.b[i] = cv[j + 2]; PC.a[i] = cv[j + 3]; PC.u[i] = cv[j + 4]; PC.uv[i] = cf >= 6 ? cv[j + 5] : 0;
   }
+  // 상품관점 상품군별(채널 × BPU × 상품군) — 상품UV · 상품CR 보조표용. 예전 백업엔 없다
+  const cv2 = PRD.cov2 || [], cf2 = PRD.meta.covFields2 || 0, m2 = cf2 ? Math.floor(cv2.length / cf2) : 0;
+  PC2 = {n: m2, has: m2 > 0, d: new Uint16Array(m2), c: new Int16Array(m2), b: new Int16Array(m2), g: new Int16Array(m2), a: new Float64Array(m2), u: new Float64Array(m2), uv: new Float64Array(m2)};
+  for (let i = 0, j = 0, day = 0; i < m2; i++, j += cf2) {
+    day += cv2[j]; PC2.d[i] = day; PC2.c[i] = cv2[j + 1]; PC2.b[i] = cv2[j + 2]; PC2.g[i] = cv2[j + 3]; PC2.a[i] = cv2[j + 4]; PC2.u[i] = cv2[j + 5]; PC2.uv[i] = cv2[j + 6];
+  }
+}
+function pGrp(mask, chSel, b) {  // 상품관점 상품군별 합 — chSel: 채널 목록 | -1(전체 채널 행), b: BPU | -1(= BPU 전체 합)
+  const out = new Map();
+  for (let j = 0; j < PC2.n; j++) {
+    if (!mask[PC2.d[j]]) continue;
+    if (b < 0 ? PC2.b[j] < 0 : PC2.b[j] !== b) continue;  // 원천에 '채널 전체 × BPU 전체 × 상품군' 행이 없어 BPU 별 행을 더한다
+    const c = PC2.c[j];
+    if (chSel === -1 ? c !== -1 : !chSel.includes(c)) continue;
+    let o = out.get(PC2.g[j]);
+    if (!o) out.set(PC2.g[j], o = {a: 0, u: 0, uv: 0});
+    o.a += PC2.a[j]; o.u += PC2.u[j]; o.uv += PC2.uv[j];
+  }
+  return out;
 }
 const pDay = s => Math.round((toUTC(s) - PSTART) / DAY);
 const pInRange = ds => ds.length > 0 && pDay(ds[0]) >= 0 && pDay(ds[ds.length - 1]) < PRD.meta.days;
@@ -1657,7 +1679,7 @@ function renderProd() {
   const other = code === 4 ? items.find(x => x.k === -1) : null;  // 예전 백업(상위 N만 개별)의 '기타 상품'
   const ranked = pSort(code, items.filter(x => x !== other));
   if (sortOn && PD.sort === 'n') ranked.sort((a, b) => b.sp.n - a.sp.n || b.v - a.v);
-  const LIMIT = code === 4 ? 30 : 10;
+  const LIMIT = 30;  // 각 단계 상위 30개(나머지는 '그 외' 합계)
   const top = code === 1 ? ranked : ranked.slice(0, LIMIT), rest = code === 1 ? [] : ranked.slice(LIMIT);
   const restSum = rest.reduce((t, x) => t + x.v, 0), restA = rest.reduce((t, x) => t + x.a, 0), restU = rest.reduce((t, x) => t + x.u, 0);
   const max = Math.max(1e-9, ...top.map(x => x.v), other ? other.v : 0);
@@ -1782,6 +1804,33 @@ function renderProd() {
     }));
     return {cols: cs.map(c => ({label: c.label, tip: c.tip})), rows, basis: amtSel ? '거래액' : '주문고객수', metric: PD.metric};
   };
+  // 상품관점 상품군별 보조표 — 조직 카테고리(드릴다운)와 분류 체계가 달라 따로 본다
+  const grpChSel = curCh ? [curCh[1]] : chm ? PD.chans : -1, grpB = bpuC ? bpuC[1] : -1;
+  const grpScopeTxt = `${curCh ? PRD.ch[curCh[1]] : chm ? PD.chans.map(k => PRD.ch[k]).join('·') : '전 채널'}${bpuC ? ` · ${PRD.bpu[bpuC[1]]}` : ''}`;
+  const grpData = () => {
+    const c1 = pGrp(curMask, grpChSel, grpB), p1 = hasPrev ? pGrp(prevMask, grpChSel, grpB) : new Map();
+    const list = [...c1].map(([g, o]) => {
+      const q = p1.get(g);
+      return {name: PRD.grp && PRD.grp[g] ? PRD.grp[g] : `상품군 ${g}`, a: dv(o.a, sel.cur), u: dv(o.u, sel.cur), uv: dv(o.uv, sel.cur), cr: o.uv ? o.u / o.uv : null,
+        pa: q ? dv(q.a, sel.prev) : null, puv: q ? dv(q.uv, sel.prev) : null, pcr: q && q.uv ? q.u / q.uv : null};
+    }).filter(x => x.a || x.u || x.uv).sort((x, y) => y.a - x.a);
+    const s = list.reduce((t, x) => ({a: t.a + x.a, u: t.u + x.u, uv: t.uv + (x.uv || 0), pu: t.pu + (x.pcr && x.puv ? x.pcr * x.puv : 0), puv: t.puv + (x.puv || 0), pa: t.pa + (x.pa || 0)}),
+      {a: 0, u: 0, uv: 0, pu: 0, puv: 0, pa: 0});
+    return {list, tot: {name: '합계', a: s.a, u: s.u, uv: s.uv, cr: s.uv ? s.u / s.uv : null, pa: hasPrev ? s.pa : null, puv: hasPrev ? s.puv : null, pcr: s.puv ? s.pu / s.puv : null}};
+  };
+  const G = PC2 && PC2.has && PD_GRP_OPEN ? grpData() : null;
+  const crD = (c, p) => (hasPrev && ok(c) && ok(p) ? fmtDelta({v: (c - p) * 100, unit: '%p', dp: 1}) : {t: '–', c: ''});
+  const grpRow = (x, cls) => {
+    const ya = yo(x.a, x.pa), yc = crD(x.cr, x.pcr);
+    return `<tr class="${cls}"><th class="stick s1"><span class="pn" title="${esc(x.name)}">${esc(x.name)}</span></th>`
+      + `<td>${fmtM(x.a)}</td><td class="pv2">${fPA(x.pa)}</td><td class="${ya.c}">${ya.t}</td>`
+      + `<td>${fU(x.u)}</td><td>${ok(x.uv) ? NF.format(Math.round(x.uv)) : '–'}</td><td class="pv2">${hasPrev && ok(x.puv) ? NF.format(Math.round(x.puv)) : '–'}</td>`
+      + `<td>${pct1(x.cr)}</td><td class="${yc.c}">${yc.t}</td></tr>`;
+  };
+  const grpHtml = !(PC2 && PC2.has) ? '' : `<details class="pd-tbl" id="pdGrp"${PD_GRP_OPEN ? ' open' : ''}><summary>상품관점 상품군별 · 상품UV · 상품CR <span class="hint">조직 카테고리(위 드릴다운)와 다른 분류 · ${esc(grpScopeTxt)}${PCM ? ' · 카테고리 필터 미적용' : ''}</span></summary>`
+    + (G ? `<div class="tbl-wrap"><table class="grid"><thead><tr><th class="stick s1">상품군</th><th>거래액${avg ? '(일평균)' : ''}</th><th>${esc(baseName)}</th><th>${esc(cLbl)}</th><th>주문고객수</th><th>상품UV</th><th>${esc(baseName)}</th><th>상품CR</th><th>${esc(cLbl)}</th></tr></thead><tbody>`
+      + grpRow(G.tot, 'top') + G.list.map(x => grpRow(x, 'ch')).join('') + '</tbody></table></div>' : '')
+    + '</details>';
   const T = PD_TBL_OPEN ? tableData() : null;
   const tblHtml = `<details class="pd-tbl" id="pdTbl"${PD_TBL_OPEN ? ' open' : ''}><summary>기간별 표 · ${amtSel ? '거래액' : '주문고객수'}${avg ? '(일평균)' : ''} · ${esc(cmpLbl())} 포함 · 합계 + ${PCODE[code]} 상위 ${tblKeys.length}</summary>`
     + (T ? `<div class="tbl-wrap"><table class="grid"><thead><tr><th class="stick s1">항목</th>${T.cols.map(c => `<th class="p" title="${esc(c.tip)}">${esc(c.label)}</th>`).join('')}</tr></thead><tbody>`
@@ -1790,10 +1839,11 @@ function renderProd() {
     + '</details>';
 
   const mainTxt = sp => (sp.n ? `${PRD.ch[sp.top]} ${(sp.share * 100).toFixed(0)}% · ${sp.n}개` : '–');
-  const capTop = legacyTop ? `예전 백업이 담은 날짜는 상품이 브랜드별 연간 상위 ${legacyTop}개만 개별(나머지 '기타 상품')` : `상품은 모두 개별 보관 · 상품 단계는 ${amtSel ? '거래액' : '주문고객수'} 상위 ${code === 4 ? LIMIT : 30}개 표시`;
+  const capTop = legacyTop ? `예전 백업이 담은 날짜는 상품이 브랜드별 연간 상위 ${legacyTop}개만 개별(나머지 '기타 상품')` : `상품은 모두 개별 보관 · 각 단계 ${amtSel ? '거래액' : '주문고객수'} 상위 ${LIMIT}개 표시${PRD.meta.positiveOnly ? ' · 취소 · 반품(음수)은 빼고 양수만 합산' : ''}`;
   $('#pdBody').innerHTML = `<div class="crumbs">${crumbs}<span class="lvl">${lvlTxt}</span>${spreadSeg}</div>
     <div class="pbars" id="pdBars">${body}</div>
     ${tblHtml}
+    ${grpHtml}
     <div class="pgrid">
       <div><h3>${esc(sideTitle)}</h3>${sideHtml || '<div class="nodata" style="height:60px">데이터 없음</div>'}</div>
       <div><h3>${gName} 추이${avg ? ' (일평균)' : ''}<span><i class="k"></i>${Y}</span>${cmpPop() ? '' : '<span><i class="k prev"></i>전년 동기간</span>'}<span>막대를 누르면 그 기간 선택</span></h3><div class="pd-m" id="pdTrend"></div></div>
@@ -1809,7 +1859,7 @@ function renderProd() {
     restCount: rest.length, restSum, other, coverage, key: sel.key, cur: sel.cur, prev: sel.prev, hasPrev, optCount: all.length, trendN: tbars.length,
     names: top.map(x => pName(code, x.k)), sideCode, sideNames: sItems.map(x => pName(sideCode, x.k)), sideTotal: sTot, chCols,
     crumb: PD.path.map((k, i) => pName(dims[i], k)).join(' › '), uvOn, cats: PD.cats.slice(), limit: LIMIT,
-    totalRow: {a: totA, u: totU, pa, pu, uv: totalRow.uv, cr: totalRow.cr}, table: tableData, tblKeys,
+    totalRow: {a: totA, u: totU, pa, pu, uv: totalRow.uv, cr: totalRow.cr}, table: tableData, tblKeys, grpData, grpOn: !!(PC2 && PC2.has), grp: G,
     exp: {tip: sel.tip, viewName: PD.view === 'bpu' ? 'BPU 기준' : '채널 기준',
       filters: `${chm ? `채널 ${PD.chans.map(k => PRD.ch[k]).join('·')}` : '전 채널'}${PCM ? ` · 카테고리 ${catTxt()}` : ''}`,
       crumb: PD.path.map((k, i) => pName(dims[i], k)).join(' › '), level: PCODE[code], avg, hasCode: code === 4, baseName, cLbl, cLbl2: cmpLbl(), uvOn,
@@ -1851,7 +1901,11 @@ $('#prodSec').addEventListener('click', e => {
   const psort = e.target.closest('[data-psort]');
   if (psort) { PD.sort = psort.dataset.psort; renderProd(); }
 });
-$('#prodSec').addEventListener('toggle', e => {  // 기간별 표 — 펼칠 때 계산해서 채운다 (toggle 은 버블링이 없어 캡처로 받음)
+$('#prodSec').addEventListener('toggle', e => {  // 기간별 표 · 상품군 표 — 펼칠 때 계산해서 채운다 (toggle 은 버블링이 없어 캡처로 받음)
+  if (e.target.id === 'pdGrp') {
+    if (PD_GRP_OPEN !== e.target.open) { PD_GRP_OPEN = e.target.open; if (PD_GRP_OPEN) renderProd(); }
+    return;
+  }
   if (e.target.id !== 'pdTbl' || PD_TBL_OPEN === e.target.open) return;
   PD_TBL_OPEN = e.target.open;
   if (PD_TBL_OPEN) renderProd();
@@ -1865,7 +1919,7 @@ $('#pdPeriod').addEventListener('change', e => { PD.sel = e.target.value; render
 // 흐름(flow) = 기간 합(일평균 메뉴면 ÷ 데이터 일수) · 재고(stock) = 기간 마지막 날 값 · 비율 = 분자·분모가 모두 있는 날의 합끼리 나눔
 MET.xcnt = {name: '', unit: '', type: 'flow'};
 MET.xpct = {name: '', type: 'ratio', pct: true, dp: 1};
-const G_NEW = '신규회원 · 앱 설치자 기준(PUSH)', G_PUSH = '앱푸시 수신동의 회원 · 앱 설치자 기준(PUSH)', G_APP = '앱 설치 상세 · APP설치데이터', G_ALL = '전체 회원 · 앱 설치 무관(회원현황)';
+const G_NEW = '신규회원 · 앱 설치자 기준(PUSH)', G_PUSH = '앱푸시 수신동의 회원 · 앱 설치자 기준(PUSH)', G_APP = '앱 설치 상세 · APP설치데이터', G_ALL = '앱 설치 무관 기준(회원현황) — 모수';
 const AX = {
   sg:      {grp: G_NEW, name: '가입자수', type: 'flow', key: 'sg|*TOTAL', unit: '명'},
   appNew:  {grp: G_NEW, name: '앱 신규 설치', type: 'flow', key: 'app|new', unit: '건'},
@@ -1894,7 +1948,7 @@ const AX = {
   mNew:    {grp: G_ALL, name: '신규회원수', type: 'flow', key: 'mem|new', unit: '명'},
   rPushAll: {grp: G_ALL, name: '유효회원 대비 수신동의율', type: 'ratio', stock: true, num: 'push|tot_stock', den: 'mem|valid', pct: true,
              formula: '앱푸시 수신동의 회원(기간 말 · 앱 설치자 기준) ÷ 유효회원수(기간 말 · 앱 설치 무관)'},
-  rNyAll:  {grp: G_ALL, name: '신규 수신동의율 (앱 무관 모수)', type: 'ratio', num: 'push|ny_add', den: 'mem|new', pct: true,
+  rNyAll:  {grp: G_ALL, name: '신규 수신동의율 (앱 설치 무관 모수)', type: 'ratio', num: 'push|ny_add', den: 'mem|new', pct: true,
             formula: '앱푸시 수신동의(신규회원) ÷ 회원현황 신규회원수(앱 설치 무관)'},
 };
 const AX_ORDER = Object.keys(AX);
@@ -1938,7 +1992,7 @@ function renderApp() {
   $('#appNote').hidden = !appMissing;
   const lastOf = key => { const a = DAILY.s[key]; if (!a) return null; for (let i = a.length - 1; i >= 0; i--) if (a[i] != null) return DAILY.dates[i]; return null; };
   const appLast = lastOf('app|new'), allLast = DAILY.dates.at(-1);
-  $('#appDesc').textContent = `가입 → 앱 신규 설치 → 앱푸시 수신동의 · 모두 앱 설치자 기준 · ${col ? col.tip : '데이터 없음'} · 흐름 ${modeName()}, 회원·기기 수는 기간 말 · ${cmpDesc()}${appLast && appLast < allLast ? ` · 앱 설치 raw ~${md(appLast)}` : ''} · 채널/회원구분 필터 미적용`;
+  $('#appDesc').textContent = `가입 → 앱 신규 설치 → 앱푸시 수신동의 · 수신동의는 앱 설치자 기준(PUSH) · 모수는 앱 설치 무관(회원현황)도 함께 · ${col ? col.tip : '데이터 없음'} · 흐름 ${modeName()}, 회원·기기 수는 기간 말 · ${cmpDesc()}${appLast && appLast < allLast ? ` · 앱 설치 raw ~${md(appLast)}` : ''} · 채널/회원구분 필터 미적용`;
   const TILES = ['sg', 'appNew', 'pNyAdd', 'rNy', 'rConv', ['pTot', 'pNy'], ['pOut', 'pExOut'], ['rPushAll', 'mValid']];
   const APP_DEP = new Set(['appNew', 'rConv']);  // 앱 설치 raw 가 있어야 계산되는 타일
   $('#appTiles').innerHTML = col ? TILES.map(t => {
@@ -2223,13 +2277,13 @@ async function makePdf(parts) {  // 고른 영역을 데스크톱 폭으로 그�
   }
 }
 function printParts(parts, doPrint, fitW = PRINT_W) {  // 고른 영역만 보고용 인쇄 모양으로 — 인쇄 뒤(또는 돌려받은 함수로) 원래대로
-  const body = document.body, before = {layout: S.layout, kpi: $('#kpis').hidden, tbl: PD_TBL_OPEN};
+  const body = document.body, before = {layout: S.layout, kpi: $('#kpis').hidden, tbl: PD_TBL_OPEN, grp: PD_GRP_OPEN};
   body.classList.add('printing');
   for (const [k, , selector] of DL_PARTS) $(selector).classList.toggle('pr-on', parts.includes(k));
   const cs = getCols(false), fk = focusIdx(cs), t = new Date(), p2 = n => String(n).padStart(2, '0');
   $('#printHead').innerHTML = `<h1>첫구매 실적 보고</h1><p>${esc(fk >= 0 ? cs[fk].tip : '')} · ${esc(modeName())} · ${esc(cmpLbl())} · 채널 ${esc(selChans().map(chLabel).join('·'))} · 회원구분 ${esc(selSegs().map(segLabel).join('·'))} · 데이터 ~${esc(DAILY.dates.at(-1) || '')} · 출력 ${t.getFullYear()}-${p2(t.getMonth() + 1)}-${p2(t.getDate())} ${p2(t.getHours())}:${p2(t.getMinutes())}</p>`;
   $('#kpis').hidden = false;
-  if (parts.includes('prod')) PD_TBL_OPEN = true;
+  if (parts.includes('prod')) { PD_TBL_OPEN = true; PD_GRP_OPEN = true; }
   S.layout = 'stack';  // 3단 비교 = 열이 적어 A4 가로에 들어감
   render();
   document.querySelectorAll('.pr-on table.grid').forEach(tb => { const w = tb.scrollWidth; tb.style.zoom = w > fitW ? (fitW / w).toFixed(3) : ''; });  // 넓은 표는 인쇄 폭에 맞춰 줄임
@@ -2242,6 +2296,7 @@ function printParts(parts, doPrint, fitW = PRINT_W) {  // 고른 영역만 보�
     $('#btnKpi').setAttribute('aria-expanded', String(!before.kpi));
     S.layout = before.layout;
     PD_TBL_OPEN = before.tbl;
+    PD_GRP_OPEN = before.grp;
     render();
   };
   if (doPrint) { window.addEventListener('afterprint', restore, {once: true}); setTimeout(() => window.print(), 80); }
@@ -2354,7 +2409,7 @@ function renderMemos() {
 function memoSave() {
   const box = $('#memoList .memo-in');
   const html = memoClean(box ? box.innerHTML : MEMO_DRAFT.html);
-  const text = (box ? box.innerText : String(html).replace(/<[^>]*>/g, ' ')).replace(/\u00a0/g, ' ').trim().slice(0, 2000);
+  const text = (box ? (box.innerText || box.textContent) : String(html).replace(/<[^>]*>/g, ' ')).replace(/\u00a0/g, ' ').trim().slice(0, 2000);  // 접혀 있으면 innerText 가 빈 값
   if (!text) { (window.__say || (() => {}))('메모 내용을 입력하세요'); return; }
   const now = new Date().toISOString();
   if (MEMO_EDIT === 'new') {
@@ -2448,7 +2503,8 @@ window.__dash = {get state() { return S; }, render, compute, evalCol, getCols, s
                  get lastCols() { return lastCols; }, get lastSum() { return LAST_SUM; }, get dataMeta() { return D.meta; },
                  focusIdx, unitOf, fmtDelta, delta, axFmtDelta, fmtAX, cmpLbl, otherLbl, baseLbl, baseShort, modeName, trNote,
                  selChans, selSegs, chLabel, segLabel, KPI, printParts, runDownload, renderDl, DL, DL_PARTS, makePdf, renderMemos, memoGo, renderInsight, syncFloatHeads, memoClean,
-                 get prodTblOpen() { return PD_TBL_OPEN; }, set prodTblOpen(v) { PD_TBL_OPEN = !!v; }};
+                 get prodTblOpen() { return PD_TBL_OPEN; }, set prodTblOpen(v) { PD_TBL_OPEN = !!v; },
+                 get prodGrpOpen() { return PD_GRP_OPEN; }, set prodGrpOpen(v) { PD_GRP_OPEN = !!v; }};
 loadProducts();
 };
 </script>
