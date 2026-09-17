@@ -2072,23 +2072,27 @@ function renderProd() {
     const list = [...c1].map(([g, o]) => {
       const q = p1.get(g);
       return {name: PRD.grp && PRD.grp[g] ? PRD.grp[g] : `상품군 ${g}`, a: dv(o.a, sel.cur), u: dv(o.u, sel.cur), uv: dv(o.uv, sel.cur), cr: o.uv ? o.u / o.uv : null,
-        pa: q ? dv(q.a, sel.prev) : null, puv: q ? dv(q.uv, sel.prev) : null, pcr: q && q.uv ? q.u / q.uv : null};
+        pa: q ? dv(q.a, sel.prev) : null, pu: q ? dv(q.u, sel.prev) : null, puv: q ? dv(q.uv, sel.prev) : null, pcr: q && q.uv ? q.u / q.uv : null};
     }).filter(x => x.a || x.u || x.uv).sort((x, y) => y.a - x.a);
-    const s = list.reduce((t, x) => ({a: t.a + x.a, u: t.u + x.u, uv: t.uv + (x.uv || 0), pu: t.pu + (x.pcr && x.puv ? x.pcr * x.puv : 0), puv: t.puv + (x.puv || 0), pa: t.pa + (x.pa || 0)}),
+    const s = list.reduce((t, x) => ({a: t.a + x.a, u: t.u + x.u, uv: t.uv + (x.uv || 0), pu: t.pu + (x.pu || 0), puv: t.puv + (x.puv || 0), pa: t.pa + (x.pa || 0)}),
       {a: 0, u: 0, uv: 0, pu: 0, puv: 0, pa: 0});
-    return {list, tot: {name: '합계', a: s.a, u: s.u, uv: s.uv, cr: s.uv ? s.u / s.uv : null, pa: hasPrev ? s.pa : null, puv: hasPrev ? s.puv : null, pcr: s.puv ? s.pu / s.puv : null}};
+    return {list, tot: {name: '합계', a: s.a, u: s.u, uv: s.uv, cr: s.uv ? s.u / s.uv : null, pa: hasPrev ? s.pa : null, pu: hasPrev ? s.pu : null,
+      puv: hasPrev ? s.puv : null, pcr: hasPrev && s.puv ? s.pu / s.puv : null}};
   };
   const G = PC2 && PC2.has && PD_GRP_OPEN ? grpData() : null;
   const crD = (c, p) => (hasPrev && ok(c) && ok(p) ? fmtDelta({v: (c - p) * 100, unit: '%p', dp: 1}) : {t: '–', c: ''});
   const grpRow = (x, cls) => {
-    const ya = yo(x.a, x.pa), yc = crD(x.cr, x.pcr);
+    const ya = yo(x.a, x.pa), yv = yo(x.uv, x.puv), yc = crD(x.cr, x.pcr), n0 = v => (ok(v) ? NF.format(Math.round(v)) : '–');
     return `<tr class="${cls}"><th class="stick s1"><span class="pn" title="${esc(x.name)}">${esc(x.name)}</span></th>`
       + `<td>${fmtM(x.a)}</td><td class="pv2">${fPA(x.pa)}</td><td class="${ya.c}">${ya.t}</td>`
-      + `<td>${fU(x.u)}</td><td>${ok(x.uv) ? NF.format(Math.round(x.uv)) : '–'}</td><td class="pv2">${hasPrev && ok(x.puv) ? NF.format(Math.round(x.puv)) : '–'}</td>`
-      + `<td>${pct1(x.cr)}</td><td class="${yc.c}">${yc.t}</td></tr>`;
+      + `<td class="bk">${n0(x.uv)}</td><td class="pv2">${hasPrev ? n0(x.puv) : '–'}</td><td class="${yv.c}">${yv.t}</td>`
+      + `<td class="bk" title="${esc(`${baseName} ${hasPrev ? n0(x.pu) : '–'}`)}">${fU(x.u)}</td>`
+      + `<td>${pct1(x.cr)}</td><td class="pv2">${hasPrev && ok(x.pcr) ? pct1(x.pcr) : '–'}</td><td class="${yc.c}">${yc.t}</td></tr>`;
   };
-  const grpHtml = !(PC2 && PC2.has) ? '' : `<details class="pd-tbl" id="pdGrp"${PD_GRP_OPEN ? ' open' : ''}><summary>상품관점 상품군별 · 상품UV · 상품CR <span class="hint">조직 카테고리(위 드릴다운)와 다른 분류 · ${esc(grpScopeTxt)}${PCM ? ' · 카테고리 필터 미적용' : ''}${G && hasPrev && !G.list.some(x => ok(x.puv)) ? ' · <b class="mwarn">전년 상품군 데이터가 이 백업에 없습니다</b> — 최신 백업(전체 빌드)으로 열면 전년 · 전년비가 채워집니다' : ''}</span></summary>`
-    + (G ? `<div class="tbl-wrap"><table class="grid"><thead><tr><th class="stick s1">상품군</th><th>거래액${avg ? '(일평균)' : ''}</th><th>${esc(baseName)}</th><th>${esc(cLbl)}</th><th>주문고객수</th><th>상품UV</th><th>${esc(baseName)}</th><th>상품CR</th><th>${esc(cLbl)}</th></tr></thead><tbody>`
+  const grpHtml = !(PC2 && PC2.has) ? '' : `<details class="pd-tbl" id="pdGrp"${PD_GRP_OPEN ? ' open' : ''}><summary>상품관점 상품군별 · 상품UV · 상품CR <span class="hint">상품CR = 고객수 ÷ 상품UV · 거래액 순 · 조직 카테고리(위 드릴다운)와 다른 분류 · ${esc(grpScopeTxt)}${PCM ? ' · 카테고리 필터 미적용' : ''}${G && hasPrev && !G.list.some(x => ok(x.puv)) ? ' · <b class="mwarn">전년 상품군 데이터가 이 백업에 없습니다</b> — 최신 백업(전체 빌드)으로 열면 전년 · 전년비가 채워집니다' : ''}</span></summary>`
+    + (G ? `<div class="tbl-wrap"><table class="grid"><thead><tr><th class="stick s1">상품군</th><th>거래액${avg ? '(일평균)' : ''}</th><th>${esc(baseName)}</th><th>${esc(cLbl)}</th>`
+      + `<th class="bk">상품UV${avg ? '(일평균)' : ''}</th><th>${esc(baseName)}</th><th>${esc(cLbl)}</th>`
+      + `<th class="bk" title="상품CR 의 분자 — 상품관점 고객수">고객수</th><th title="고객수 ÷ 상품UV">상품CR</th><th>${esc(baseName)}</th><th>${esc(cLbl)}</th></tr></thead><tbody>`
       + grpRow(G.tot, 'top') + G.list.map(x => grpRow(x, 'ch')).join('') + '</tbody></table></div>' : '')
     + '</details>';
   const T = PD_TBL_OPEN ? tableData() : null;
