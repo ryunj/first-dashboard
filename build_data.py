@@ -71,6 +71,7 @@ RATE_TO_COUNT = [('cr', 'sg', 'crn'), ('fpr', 'tr', 'fpn')]
 PRODUCT_XLSX_KEY = '조직 카테고리별'
 PRODUCT_CSV_KEY = '상품관점'
 PRODUCT_TOP_N = None  # None = 모든 상품 개별 보관(기타 없음) · 숫자면 브랜드 경로(BPU·카테고리·브랜드)별 연간 상위 N 만 개별, 나머지는 '기타 상품'
+THIN_RATIO = 0.3  # 조직 카테고리 원천(양수 결제)이 상품관점 합계의 이 비율보다 작으면 '덜 채워짐' 경고 (평소 90% 이상 · 2025-09~10 은 45% 안팎으로 꾸준히 낮아 제외)
 PRODUCT_COLS = {'date': '결제_일자', 'bpu': 'BPU', 'ch': 'AF대분류', 'cat': '대카테고리', 'brand': '브랜드',
                 'code': '상품코드', 'name': '상품명', 'amt': '거래액', 'cust': '주문고객수'}
 
@@ -560,6 +561,14 @@ def build_products(dirs, last_date, verbose=True):
     dropped = len(rows_all) - len(rows)
     if verbose and dropped:
         print(f'  취소 · 반품 등 0 이하 행 {dropped:,}개 제외 (양수만 집계)')
+    # 조직 카테고리 원천이 덜 채워진 날짜 — 양수 결제 합이 상품관점 합계의 절반도 안 되거나 전체 합이 마이너스
+    for day in sorted(by_date):
+        net = sum(r[7] for r in by_date[day])
+        pos = sum(r[7] for r in by_date[day] if r[7] > 0)
+        ref = (cov_daily.get((day, '*TOTAL', '*TOTAL', '*TOTAL')) or [0])[0]
+        if verbose and (net < 0 or (ref > 0 and pos / ref < THIN_RATIO)):
+            print(f'  [경고] {day} 조직 카테고리 원천이 덜 채워진 것으로 보임 — {len(by_date[day]):,}행 · 합계 {net / 1e6:.1f}백만'
+                  + (f' · 상품관점의 {pos / ref:.0%}' if ref > 0 else '') + ' → 리포트가 다 채워진 뒤 다시 내려받으세요')
     last = dt.date.fromisoformat(last_date or max(by_date))
     start = dt.date.fromisoformat(min(by_date))
     day_of = {}

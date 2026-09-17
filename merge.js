@@ -17,6 +17,7 @@ const OVERALL_METRIC = {'일평균거래액': 'amt', '일평균고객수': 'cust
 const SIMPLE_FILES = [['당일가입 첫구매율', 'cr'], ['첫구매율', 'fpr'], ['비회원 트래픽', 'tr'], ['비회원트래픽', 'tr'], ['가입자수', 'sg']];
 const RATE_TO_COUNT = [['cr', 'sg', 'crn'], ['fpr', 'tr', 'fpn']];
 const PRODUCT_TABLE_KEY = '조직 카테고리별', PRODUCT_CSV_KEY = '상품관점';
+const THIN_RATIO = 0.3;  // 상품 원천이 실적의 이 비율보다 작으면 '덜 채워짐' (평소 90% 이상 · 2025-09~10 은 45% 안팎으로 꾸준히 낮음)
 const PRODUCT_COLS = [['date', '결제_일자'], ['bpu', 'BPU'], ['ch', 'AF대분류'], ['cat', '대카테고리'], ['brand', '브랜드'],
                       ['code', '상품코드'], ['name', '상품명'], ['amt', '거래액'], ['cust', '주문고객수']];
 const NEWMEMBER_KEY = '신규회원실적대시보드';
@@ -749,6 +750,19 @@ async function merge(base, files) {
     }
   }
   const {data, stats} = mergeSeries(baseData, S, [...sources].map(s => `업로드:${s}`));
+  // 조직 카테고리 원천이 덜 채워진 날짜 — 상품관점(없으면 실적) 거래액의 절반도 안 되거나 합계가 마이너스면 알린다
+  const refAmt = d => {
+    const c = cov.get(`${d}|*TOTAL|*TOTAL|*TOTAL`);
+    if (c && c[0] > 0) return c[0];
+    const i = data.daily.p.indexOf(d), a = data.daily.s['amt|T|*TOTAL'];
+    return i >= 0 && a && a[i] > 0 ? a[i] : null;
+  };
+  for (const [d, rs] of [...byDay.entries()].sort()) {
+    const net = rs.reduce((t, r) => t + r[7], 0), pos = rs.reduce((t, r) => t + (r[7] > 0 ? r[7] : 0), 0), ref = refAmt(d);
+    if (net < 0 || (ref && pos / ref < THIN_RATIO)) {
+      stats.warn.push(`${d} 조직 카테고리 원천이 덜 채워진 것으로 보임 — ${rs.length.toLocaleString()}행 · 합계 ${(net / 1e6).toFixed(1)}백만${ref ? ` · 실적의 ${Math.round(pos / ref * 100)}%` : ''} (평소 900행 · 90% 이상). 리포트가 다 채워진 뒤 다시 내려받아 올려 주세요`);
+    }
+  }
   let prodOut = base.prod || null, pstats = null;
   if (byDay.size || cov.size) {
     const r = mergeProducts(base.prod || null, byDay, cov, data.meta.lastDate);

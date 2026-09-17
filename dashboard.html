@@ -257,6 +257,10 @@ a.pc:hover{text-decoration:underline}
 .pd-filter{padding-block:0 8px}
 .tag-b{margin-left:6px;padding:1px 6px;border-radius:5px;font-size:10.5px;font-weight:600;background:color-mix(in srgb,var(--c1) 12%,var(--surface));color:var(--c1);vertical-align:1px}
 .tag-b.off{background:var(--wash);color:var(--muted)}
+.pb.pb-sel{background:color-mix(in srgb,var(--c1) 7%,transparent);box-shadow:inset 3px 0 0 var(--c1)}
+.pb.pb-sel .pn{font-weight:700;color:var(--ink)}
+.pb.pb-sel .pb-n{flex-direction:row;align-items:center;gap:2px}
+.pb.pb-sel .pb-n .tag-b{flex:none}
 .bar2.off .chips{opacity:.45;pointer-events:none}
 .pmix{display:flex;height:10px;border-radius:3px;overflow:hidden;background:color-mix(in srgb,var(--ink) 6%,transparent)}
 .pmix i{display:block;height:100%}
@@ -400,7 +404,7 @@ details.notes li{margin:3px 0}
 body.pdfcap::after{content:"PDF 만드는 중…";position:fixed;inset:0;z-index:300;display:grid;place-items:center;background:color-mix(in srgb,var(--page) 90%,transparent);font-size:15px;font-weight:650;color:var(--ink)}
 body.pdfcap main.wrap{width:1160px;max-width:none;padding-inline:0;margin:0}
 body.pdfcap main>section:not(.pr-on){display:none!important}
-body.pdfcap .float-head,body.pdfcap #insightSec,body.pdfcap #bkBanner,body.pdfcap .sec-h .tools,body.pdfcap .pd-filter,body.pdfcap .crumbs .pd-spread,body.pdfcap #pdOld,body.pdfcap #selbar,body.pdfcap .toast{display:none!important}
+body.pdfcap .float-head,body.pdfcap #insightSec,body.pdfcap #bkBanner,body.pdfcap .sec-h .tools,body.pdfcap .pd-filter,body.pdfcap .crumbs .pd-spread,body.pdfcap #pdOld,body.pdfcap #pdThin,body.pdfcap #selbar,body.pdfcap .toast{display:none!important}
 body.pdfcap .fold::before{display:none}
 body.pdfcap #printHead{display:block;padding:0 2px 8px}
 body.pdfcap #printHead h1{font-size:19px;margin:0 0 3px}
@@ -564,6 +568,7 @@ body.pdfcap .pgrid{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr)!important
       </div>
     </div>
     <div class="card app-note" id="pdOld" hidden></div>
+    <div class="card app-note" id="pdThin" role="status" hidden></div>
     <div class="card pd" id="pdBody"></div>
   </section>
 
@@ -601,7 +606,7 @@ body.pdfcap .pgrid{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr)!important
       <li><b>기준 기간</b>(상단 '기준') — 월별은 월, 주별은 주차, 일별은 날짜를 고른다. 요약 타일 · 표 강조 열 · 차트 음영 · 상품 구성 기본 기간 · 앱 섹션이 모두 그 기간 기준이고, 주별 · 일별 표와 차트는 그 기간에서 끝나는 범위(8주 · 13주 …)를 보여 준다. '최근 · …'(기본)은 데이터가 있는 가장 최근 기간.</li>
       <li><b>비교</b> — 기본 <b>전년 동기간</b>(전년비). <b>전월 · 전주 · 전일</b>로 바꾸면 표 · 차트 툴팁 · 요약 · 상품 구성 · 앱 섹션의 비교가 모두 직전 기간 대비(전월비 · 전주비 · 전일비)로 바뀐다. 전월은 진행 중인 달이면 같은 일수끼리(예: 9/1~13 ↔ 8/1~13), 끝난 달은 전월 전체. 전주 = 7일 전 같은 요일들, 전일 = 하루 전. 직전 기간 모드에선 차트의 전년선을 숨긴다(값은 툴팁). 요약 타일은 두 비교를 함께 보여 준다. KPI는 항상 전년 동기 누적.</li>
       <li><b>채널 · 회원구분</b>은 여러 개를 고를 수 있다. 차트 선 하나(채널 1개 × 구분 1개)면 당해 vs 전년, 여러 개면 비교선 — 색 = 채널, 선 모양 = 회원구분. 요약 타일은 선택 중 첫 번째 기준.</li>
-      <li><b>BPU · 카테고리</b>(상단 필터, 상품 데이터가 있을 때만) — 고르면 <b>거래액 · 고객수 · 객단가</b>가 <b>상품 기준</b>으로 다시 계산된다(그 지표에 '상품 기준' 꼬리표). 상품 원천에는 회원구분이 없어 회원구분은 전체로 고정되고, <b>트래픽 · 가입자수 · 가입률 · 당일가입 CR · 첫구매율</b>과 앱 설치 · 수신동의는 그대로 <b>전체 기준</b>이다('전체 기준' 꼬리표). 상품 기준 거래액은 <b>결제 완료(양수)</b> 건만 더한 값이라 전체 첫구매 거래액보다 작고(취소 · 환불 · 상품 미매칭 제외), 고객수는 상품별 <b>주문고객수의 합</b>이라 한 사람이 여러 상품을 사면 여러 번 센다. BPU 칩은 채널 칩과 같다 — <b>전체</b>(모든 BPU 합)와 개별 BPU를 따로 켜고 끄며, 켠 것마다 <b>줄을 나눠</b> 보여 준다(4개를 모두 눌러도 합치지 않는다 · 차트는 색 = 채널, 선 모양 = BPU). <b>전체만</b> = 합계 한 줄, <b>BPU 모두</b> = BPU마다 한 줄. 전체를 켠 채 BPU를 고르면 '전체' 줄은 모든 BPU의 상품 기준 합이다. 상단 채널 · BPU · 카테고리는 <b>상품 구성</b> 영역에도 그대로 적용된다(드릴다운 · 기간별 표 · 상품군 표). 카테고리를 거르면 커버리지 · 상품UV · CR은 숨긴다.</li>
+      <li><b>BPU · 카테고리</b>(상단 필터, 상품 데이터가 있을 때만) — 고르면 <b>거래액 · 고객수 · 객단가</b>가 <b>상품 기준</b>으로 다시 계산된다(그 지표에 '상품 기준' 꼬리표). 상품 원천에는 회원구분이 없어 회원구분은 전체로 고정되고, <b>트래픽 · 가입자수 · 가입률 · 당일가입 CR · 첫구매율</b>과 앱 설치 · 수신동의는 그대로 <b>전체 기준</b>이다('전체 기준' 꼬리표). 상품 기준 거래액은 <b>결제 완료(양수)</b> 건만 더한 값이라 전체 첫구매 거래액보다 작고(취소 · 환불 · 상품 미매칭 제외), 고객수는 상품별 <b>주문고객수의 합</b>이라 한 사람이 여러 상품을 사면 여러 번 센다. BPU 칩은 채널 칩과 같다 — <b>전체</b>(모든 BPU 합)와 개별 BPU를 따로 켜고 끄며, 켠 것마다 <b>줄을 나눠</b> 보여 준다(4개를 모두 눌러도 합치지 않는다 · 차트는 색 = 채널, 선 모양 = BPU). <b>전체만</b> = 합계 한 줄, <b>BPU 모두</b> = BPU마다 한 줄. 전체를 켠 채 BPU를 고르면 '전체' 줄은 모든 BPU의 상품 기준 합이다. 상단 채널 · BPU · 카테고리는 <b>상품 구성</b> 영역에도 그대로 적용된다(드릴다운 · 기간별 표 · 상품군 표). 카테고리를 거르면 커버리지 · 상품UV · CR은 숨긴다. BPU <b>전체</b>와 개별 BPU를 함께 켜면 상품 구성의 BPU 목록은 모두 보이되 고른 BPU를 <b>강조</b>한다. 조직 카테고리 원천이 <b>덜 채워진 날짜</b>(양수 결제 거래액이 상품관점 · 실적의 30% 미만 — 평소 90% 이상)가 기간에 섞이면 상품 구성 위와 요약 설명에 ⚠ 경고를 띄우고, 새 데이터 추가 결과표에도 날짜 · 행 수 · 합계를 알린다.</li>
       <li><b>*(기울임)</b> = 전년 일자 raw가 없어 전년 주별 raw를 날짜별로 나눠 채운 추정값.</li>
       <li><b>KPI 목표</b>(맨 아래)는 <code>kpi.js</code> 의 연간 누적 목표 기준 · 필터와 무관하게 전체 채널. 첫구매 거래액 · 고객수 실적은 <b>신규회원실적대시보드의 총)첫구매 거래액 · 고객수 (당년신규)</b>. 전체관점 당월신규+기가입신규와 비슷하지만 집계 기준이 달라 조금 다르다. 목표 일평균 = 연간 목표 ÷ 연간 일수, 남은 기간 필요 일평균 = (목표 − 누적) ÷ 남은 일수. 트래픽 · 가입자 목표를 넣으면 목표 가입률도 환산된다.</li>
       <li><b>상품 구성</b>(KPI 위) — <code>조직 카테고리별 첫구매 실적</code>의 상품 단위 첫구매 실적. <b>기본 = 사업부 기준</b>: 사업부(BPU) → 카테고리 → 브랜드 → 상품을 <b>전 채널 합산</b>으로 드릴다운한다. 채널 칩으로 거르고(여러 개 선택), <b>카테고리 칩</b>은 모두 펼쳐 기본 모두 선택 — 누르면 그 카테고리만 빼거나 다시 넣고, '전체'는 모두 선택 ↔ 모두 해제. 행마다 위쪽에서 고른 기준(<b>거래액 또는 주문고객수</b>) 하나와 비교 기간 값 · 비교(전년비 등)를 보여 준다. 맨 위 <b>합계</b> 행 = 지금 범위 전체. 위쪽 거래액/주문고객수 버튼은 숫자 열 · 막대 · 정렬 · 구성비 · 채널 구성 띠의 기준(엑셀 다운로드에는 둘 다). <b>주 채널</b> = 가장 많이 판 채널 · 비중 · 판매 채널 수, 카테고리 · 브랜드 · 상품 단계에서 <b>판매 채널 많은 순</b>으로 정렬 가능. <b>상품UV · 상품CR</b>(상품관점 실측, CR = 상품관점 고객수 ÷ 상품UV)은 채널 · 사업부 단계 행에서만 보인다. 카테고리 단계는 <b>상품관점 상품군별 보조표</b>(드릴다운 아래 · 기본 접힘)로 따로 본다 — 상품관점의 상품군(골프 · 남성 · 슈즈 …)은 조직 대카테고리와 다른 분류라 드릴다운 행에 섞지 않는다(조직 카테고리와 상품관점 상품군은 분류가 달라 카테고리 단계 · 카테고리 필터 중에는 없음 · 채널을 여러 개 고르면 채널별 UV 합). <b>상품은 모두 개별로 보관</b>하고 각 단계(카테고리 · 브랜드 · 상품)에서 고른 기준 <b>상위 30개</b>를 보여 준다(나머지는 '그 외' 합계). 드릴다운 숫자는 <b>양수만</b> 담는다 — 원천의 취소 · 반품(음수 행)과 0원 행은 빼고 쌓는다(총결제 기준에 가깝다). 그래서 상단 실적(총결제)과는 상품 매칭 누락만큼 차이가 남는다. 2026-09-15 이전 형식의 백업(브랜드별 연간 상위 20개만 개별 · 나머지 '기타 상품', 상품UV 없음)을 열면 섹션 위에 안내가 뜨며, 최신 백업으로 다시 열어야 모두 보인다. 이 원천은 첫구매 거래액의 일부만 담고 있어 캡션에 <b>상품 원천 커버리지</b>(같은 채널 · BPU의 상품관점 실측 거래액 대비)를 표시한다. 주문고객수는 상품별 합이라 한 주문에 여러 상품이면 중복된다. <b>기간별 표</b>(기본 접힘)는 합계와 지금 단계 상위 항목의 기간별 값 · 비교. 기간은 상단 월별 · 주별 · 일별과 일평균/누계를 따르고(추이 막대를 누르면 그 기간 선택), 상품코드를 누르면 LF몰 상품 페이지가 새 탭으로 열린다. 사업부는 e-영업1 → 4 순서 고정.</li>
@@ -1072,7 +1077,8 @@ function renderSummary(cols) {
   const multi = selChans().length > 1 || selSegs().length > 1 || !!bpuRows();
   const who = chLabel(ch0) + (bpu0 != null ? ` · ${bpu0 < 0 ? 'BPU 전체' : PRD.bpu[bpu0]}` : '') + (seg0 !== 'T' ? ` · ${segLabel(seg0)}` : '') + (multi ? ' (선택 중 첫 번째)' : '');
   $('#sumDesc').textContent = `${col.tip} · ${modeName()} · ${who} · ${cmpLbl()}: ${col.ptip || '비교 기간 없음'}${pop ? '' : '(동요일)'} 대비`
-    + (prodFiltOn() ? ` · 상품 기준 ${prodFiltTxt()} — 거래액·고객수·객단가만 적용` : '');
+    + (prodFiltOn() ? ` · 상품 기준 ${prodFiltTxt()} — 거래액·고객수·객단가만 적용` : '')
+    + (prodFiltOn() && thinText(col.cur) ? ` · ⚠ 조직 카테고리 원천이 덜 채워진 날짜 ${thinText(col.cur)} — 상품 기준 값이 작게 나옴` : '');
   $('#tiles').innerHTML = METRICS.map(m => {
     const r = rowFor(m), v = evalCol(m, r, col), main = fmtDelta(v.d);
     const other = oPrev && oPrev.length ? fmtDelta(delta(m, v.c, compute(m, r, oPrev, oWk).v)) : {t: '–', c: ''};
@@ -1650,6 +1656,30 @@ function syncProdChans() {  // 상단 채널 필터를 상품 구성에도 그�
   if (!PRD) return;
   PD.chans = S.chans.includes('*TOTAL') ? [] : S.chans.map(c => PRD.ch.indexOf(c)).filter(k => k >= 0).sort((a, b) => a - b);
 }
+const THIN_RATIO = 0.3;  // 조직 카테고리 원천(양수 결제) 거래액이 상품관점(없으면 실적)의 이 비율보다 작은 날 = 덜 채워짐 (평소 90% 이상)
+let THIN = null;
+function thinDays() {  // Map(상품 날짜 번호 → 비율)
+  if (THIN) return THIN;
+  const nd = PRD.meta.days, have = new Float64Array(nd), ref = new Float64Array(nd), refOk = new Uint8Array(nd), amt = DAILY.s['amt|T|*TOTAL'];
+  for (let i = 0; i < PF.n; i++) have[PF.d[i]] += PF.a[i];
+  for (let j = 0; j < PC.n; j++) if (PC.c[j] === -1 && PC.b[j] === -1 && PC.a[j] > 0) { ref[PC.d[j]] = PC.a[j]; refOk[PC.d[j]] = 1; }
+  THIN = new Map();
+  for (let k = 0; k < nd; k++) {
+    let r = refOk[k] ? ref[k] : null;
+    if (r == null && amt) { const i = DAILY.idx.get(ymd(PSTART + k * DAY)); if (i != null && amt[i] > 0) r = amt[i]; }
+    if (r && have[k] / r < THIN_RATIO) THIN.set(k, have[k] / r);
+  }
+  return THIN;
+}
+function thinText(dates) {  // 고른 기간 안의 덜 채워진 날짜 → '9/13~9/16 (실적의 11~12%)'
+  const ks = dates.map(pDay).filter(k => thinDays().has(k)).sort((a, b) => a - b);
+  if (!ks.length) return '';
+  const runs = [];
+  for (const k of ks) { const r = runs[runs.length - 1]; if (r && k === r[1] + 1) r[1] = k; else runs.push([k, k]); }
+  const md2 = k => md(ymd(PSTART + k * DAY));
+  const rs = ks.map(k => Math.round(thinDays().get(k) * 100)), lo = Math.min(...rs), hi = Math.max(...rs);
+  return `${runs.map(([a, b]) => (a === b ? md2(a) : `${md2(a)}~${md2(b)}`)).join(', ')} (실적의 ${lo === hi ? lo : `${lo}~${hi}`}%)`;
+}
 let BPU_ORDER = null;
 function bpuOrder() {  // BPU 칩 순서 — e-영업1~4 먼저, 그 뒤는 거래액 큰 순
   if (BPU_ORDER) return BPU_ORDER;
@@ -1805,6 +1835,9 @@ function renderProd() {
   const legacyTop = PRD.meta.topN || PRD.meta.legacyTopN;  // 예전 형식 백업 안내 — 기타 상품 묶음 · 상품UV 없음
   $('#pdOld').hidden = !legacyTop && PC.hasUv;
   $('#pdOld').innerHTML = `<b>예전 형식의 백업</b>입니다 — ${[legacyTop ? `상품이 브랜드별 연간 상위 ${legacyTop}개만 개별(나머지는 '기타 상품'으로 묶임)` : '', PC.hasUv ? '' : '상품UV · 상품CR 없음'].filter(Boolean).join(' · ')}. <b>최신 백업 파일</b>(모든 상품 개별 · 상품UV 포함)로 다시 열면 모두 보입니다. 새 데이터 추가로 합친 날짜는 개별로 들어갑니다.`;
+  const thin = thinText(sel.cur);  // 조직 카테고리 원천이 덜 채워진 날짜가 기간에 섞였으면 알린다
+  $('#pdThin').hidden = !thin;
+  $('#pdThin').innerHTML = thin ? `⚠ <b>조직 카테고리 원천이 덜 채워진 날짜</b>: ${esc(thin)} — 이 기간의 상품 구성 합계 · 순위가 작게 나옵니다. 그 날짜의 '조직 카테고리별 첫구매 실적' 파일을 리포트가 다 채워진 뒤 다시 내려받아 <b>새 데이터 추가</b>로 올려 주세요(같은 날짜는 통째로 바뀜).` : '';
   if (!pInRange(sel.cur)) { $('#pdBody').innerHTML = `<div class="nodata" style="height:120px">${Y}년 상품 데이터가 없습니다</div>`; PVIEW = null; renderDl(); return; }
 
   const dims = pDims(), lv = PD.path.length, code = dims[lv];
@@ -1886,9 +1919,10 @@ function renderProd() {
   } else {
     const row = x => {
       const name = x.total ? '합계' : pName(code, x.k), yd = yv(x);
-      const attrs = x.total ? `class="pb pb-total${uvOn ? ' uv' : ''}"` : `class="pb${uvOn ? ' uv' : ''}" role="button" tabindex="0" data-pk="${x.k}" aria-label="${esc(name)} 하위 단계 보기"`;
+      const hi = !x.total && code === 1 && PD.bpuAll && PD.bpus.includes(x.k);  // 전체와 함께 고른 BPU 는 강조
+      const attrs = x.total ? `class="pb pb-total${uvOn ? ' uv' : ''}"` : `class="pb${uvOn ? ' uv' : ''}${hi ? ' pb-sel' : ''}" role="button" tabindex="0" data-pk="${x.k}" aria-label="${esc(name)}${hi ? ' (상단에서 고른 BPU)' : ''} 하위 단계 보기"`;
       const bar = x.total ? '<span class="pb-t pb-t0"></span>' : `<span class="pb-t"><i style="width:${Math.max(0, x.v / max * 100).toFixed(1)}%;background:${pColor(code, x.k)}"></i></span>`;
-      return `<div ${attrs}><span class="pb-n"><span class="pn" title="${esc(name)}">${esc(name)}</span></span>${bar}${mixBar(x.mix)}`
+      return `<div ${attrs}><span class="pb-n"><span class="pn" title="${esc(name)}">${esc(name)}</span>${hi ? '<small class="tag-b">선택</small>' : ''}</span>${bar}${mixBar(x.mix)}`
         + `<span class="pb-v">${fV(x)}</span><span class="pb-pv">${fP(x)}</span><span class="pb-d ${yd.c}">${yd.t}</span>`
         + `${uvCells(x)}<span class="pb-s">${x.total ? '100%' : share(x.v)}</span><span class="pb-c" title="${esc(spreadTip(x.sp))}">${spreadTxt(x.sp)}</span></div>`;
     };
