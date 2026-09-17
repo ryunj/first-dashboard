@@ -17,6 +17,7 @@ const OVERALL_METRIC = {'일평균거래액': 'amt', '일평균고객수': 'cust
 const SIMPLE_FILES = [['당일가입 첫구매율', 'cr'], ['첫구매율', 'fpr'], ['비회원 트래픽', 'tr'], ['비회원트래픽', 'tr'], ['가입자수', 'sg']];
 const RATE_TO_COUNT = [['cr', 'sg', 'crn'], ['fpr', 'tr', 'fpn']];
 const PRODUCT_TABLE_KEY = '조직 카테고리별', PRODUCT_CSV_KEY = '상품관점';
+const SEG_CODE = {'*TOTAL': 0, '1_당월신규': 1, '2_기가입신규': 2, '3_기존': 3};  // 상품관점 회원구분 → 대시보드 회원구분
 const THIN_RATIO = 0.3;  // 상품 원천이 실적의 이 비율보다 작으면 '덜 채워짐' (평소 90% 이상 · 2025-09~10 은 45% 안팎으로 꾸준히 낮음)
 const PRODUCT_COLS = [['date', '결제_일자'], ['bpu', 'BPU'], ['ch', 'AF대분류'], ['cat', '대카테고리'], ['brand', '브랜드'],
                       ['code', '상품코드'], ['name', '상품명'], ['amt', '거래액'], ['cust', '주문고객수']];
@@ -402,24 +403,35 @@ function loadSeriesFile(stem, rows, S) {  // build_data.load_file (상품 파일
 }
 function readCoverage(rows, name) {  // 상품관점 일자별 CSV → Map('날짜|채널|BPU|상품군' → [거래액, 고객수, 상품UV]) · 상품군 '*TOTAL' 이 커버리지용 합계
   const {kind, periods, records} = parseCrosstab(rows);
-  const out = new Map();
-  if (kind !== 'daily') return {out, note: '주별 — 상품 커버리지는 일자별 파일만 씀'};
+  const out = new Map(), seg = new Map();  // seg: '날짜|회원구분|채널|BPU' → [거래액, 고객수] (상품군 *TOTAL)
+  if (kind !== 'daily') return {out, seg, note: '주별 — 상품 커버리지는 일자별 파일만 씀'};
   const total = member => records.reduce((a, [l, vals]) => a + (l[0] === '일평균거래액' && l[1] === member && l[2] === '*TOTAL' && l[3] === '*TOTAL' && l[4] === '*TOTAL'
     ? vals.reduce((s, v) => s + (v || 0), 0) : 0), 0);
   const whole = total('*TOTAL'), existing = total('3_기존');
-  if (whole && existing / whole > MALL_EXISTING_SHARE) return {out, note: `기존회원 거래액 비중 ${Math.round(existing / whole * 100)}% → MALL 전체 파일로 보고 뺌`};
+  if (whole && existing / whole > MALL_EXISTING_SHARE) return {out, seg, note: `기존회원 거래액 비중 ${Math.round(existing / whole * 100)}% → MALL 전체 파일로 보고 뺌`};
   for (const [labels, vals] of records) {
     const met = {'일평균거래액': 0, '일평균고객수': 1, '상품UV': 2}[labels[0]];
-    if (met === undefined || labels.length < 5 || labels[1] !== '*TOTAL' || labels[4] === '' || labels[4] === '-') continue;
-    vals.forEach((v, j) => {
-      if (periods[j] == null || v === null) return;
-      const key = `${periods[j]}|${labels[2]}|${labels[3]}|${labels[4]}`;
-      const o = out.get(key) || [0, 0, 0];
-      o[met] = v;
-      out.set(key, o);
-    });
+    if (met === undefined || labels.length < 5 || labels[4] === '' || labels[4] === '-') continue;
+    if (labels[1] === '*TOTAL') {
+      vals.forEach((v, j) => {
+        if (periods[j] == null || v === null) return;
+        const key = `${periods[j]}|${labels[2]}|${labels[3]}|${labels[4]}`;
+        const o = out.get(key) || [0, 0, 0];
+        o[met] = v;
+        out.set(key, o);
+      });
+    }
+    if (met < 2 && labels[4] === '*TOTAL' && labels[1] in SEG_CODE) {  // build_data.read_product_csv(seg_out) 와 같다
+      vals.forEach((v, j) => {
+        if (periods[j] == null || v === null) return;
+        const key = `${periods[j]}|${labels[1]}|${labels[2]}|${labels[3]}`;
+        const o = seg.get(key) || [0, 0];
+        o[met] = v;
+        seg.set(key, o);
+      });
+    }
   }
-  return {out, note: `상품 커버리지 ${out.size.toLocaleString()}칸 (${span(periods)})`};
+  return {out, seg, note: `상품 커버리지 ${out.size.toLocaleString()}칸 · 회원구분별 ${seg.size.toLocaleString()}칸 (${span(periods)})`};
 }
 function productRows(header, rows) {  // build_data._product_rows
   header = header.map(h => String(h || '').trim());
@@ -546,10 +558,10 @@ function mergeSeries(base, S, sources) {
 }
 
 /* ---------- 합치기: 상품 구성 ---------- */
-const emptyProd = () => ({meta: {built: '', topN: null, covFields: 6, covFields2: 7, positiveOnly: true, start: null, days: 0, lastDate: null, rows: 0, products: 0}, ch: [], bpu: [], cat: [], brand: [], grp: [], paths: [], prods: [], f: [], cov: [], cov2: []});
-function mergeProducts(prod, byDay, cov, lastDate) {
+const emptyProd = () => ({meta: {built: '', topN: null, covFields: 6, covFields2: 7, covFields3: 6, positiveOnly: true, start: null, days: 0, lastDate: null, rows: 0, products: 0}, ch: [], bpu: [], cat: [], brand: [], grp: [], paths: [], prods: [], f: [], cov: [], cov2: [], cov3: []});
+function mergeProducts(prod, byDay, cov, lastDate, covSeg = new Map()) {
   prod = prod || emptyProd();
-  const stats = {days: [...byDay.keys()].sort(), rows: 0, newProducts: 0, covCells: cov.size};
+  const stats = {days: [...byDay.keys()].sort(), rows: 0, newProducts: 0, covCells: cov.size, segCells: covSeg.size};
   const lists = {ch: [...prod.ch], bpu: [...prod.bpu], cat: [...prod.cat], brand: [...prod.brand], grp: [...(prod.grp || [])]};
   const maps = Object.fromEntries(Object.entries(lists).map(([k, arr]) => [k, new Map(arr.map((v, i) => [v, i]))]));
   const idxOf = (k, v) => { let i = maps[k].get(v); if (i === undefined) { i = lists[k].length; lists[k].push(v); maps[k].set(v, i); } return i; };
@@ -644,6 +656,19 @@ function mergeProducts(prod, byDay, cov, lastDate) {
     if (grp === '*TOTAL') covMap.set(`${t}|${c}|${b}`, [t, c, b, a, u, uv || 0]);
     else { const g = idxOf('grp', grp); cov2Map.set(`${t}|${c}|${b}|${g}`, [t, c, b, g, a, u, uv || 0]); }
   }
+  // 회원구분 × 채널 × BPU 합계 — 같은 칸은 새 값으로 (build_data 와 같은 순서로 채널 · BPU 번호를 붙인다)
+  const cov3Map = new Map();
+  for (let j = 0, day = 0; j < (prod.cov3 || []).length; j += 6) {
+    day += prod.cov3[j];
+    const t = start0 + day * DAY, s = prod.cov3[j + 1], c = prod.cov3[j + 2], b = prod.cov3[j + 3];
+    cov3Map.set(`${t}|${s}|${c}|${b}`, [t, s, c, b, prod.cov3[j + 4], prod.cov3[j + 5]]);
+  }
+  for (const [key, [a, u]] of covSeg) {
+    const [day, sg, ch, bpu] = key.split('|');
+    const s = SEG_CODE[sg], c = ch === '*TOTAL' ? -1 : idxOf('ch', ch), b = bpu === '*TOTAL' ? -1 : idxOf('bpu', bpu), t = toUTC(day);
+    if (!isFinite(startT) || t < startT) continue;
+    cov3Map.set(`${t}|${s}|${c}|${b}`, [t, s, c, b, a, u]);
+  }
   if (!facts.length) return {prod: prod.f.length ? prod : null, stats};
 
   // 다시 인코딩 (날짜 차분)
@@ -674,10 +699,19 @@ function mergeProducts(prod, byDay, cov, lastDate) {
     prev = d;
     maxDay = Math.max(maxDay, d);
   }
+  const cov3Out = [];
+  prev = 0;
+  for (const [t, s, c, b, a, u] of [...cov3Map.values()].sort((x, y) => x[0] - y[0] || x[1] - y[1] || x[2] - y[2] || x[3] - y[3])) {
+    if (roundTo(a, 0) === 0 && roundTo(u, 0) === 0) continue;
+    const d = Math.round((t - startT) / DAY);
+    cov3Out.push(d - prev, s, c, b, roundTo(a, 0), roundTo(u, 0));
+    prev = d;
+    maxDay = Math.max(maxDay, d);
+  }
   const out = {
-    meta: {...prod.meta, built: nowText(), topN: null, legacyTopN: prod.meta.topN || prod.meta.legacyTopN || null, covFields: 6, covFields2: 7, positiveOnly: true, start: ymd(startT), days: maxDay + 1, lastDate: ymd(startT + maxDay * DAY),
+    meta: {...prod.meta, built: nowText(), topN: null, legacyTopN: prod.meta.topN || prod.meta.legacyTopN || null, covFields: 6, covFields2: 7, covFields3: 6, positiveOnly: true, start: ymd(startT), days: maxDay + 1, lastDate: ymd(startT + maxDay * DAY),
            rows: (prod.meta.rows || 0) + stats.rows, products: (prod.meta.products || 0) + stats.newProducts},
-    ch: lists.ch, bpu: lists.bpu, cat: lists.cat, brand: lists.brand, grp: lists.grp, paths, prods, f, cov: covOut, cov2: cov2Out,
+    ch: lists.ch, bpu: lists.bpu, cat: lists.cat, brand: lists.brand, grp: lists.grp, paths, prods, f, cov: covOut, cov2: cov2Out, cov3: cov3Out,
   };
   return {prod: out, stats};
 }
@@ -697,7 +731,7 @@ async function merge(base, files) {
   base = base || {};
   const baseData = base.data || emptyData();
   const S = {daily: new Map(), weekly: new Map()};
-  const byDay = new Map(), cov = new Map(), log = [], sources = new Set();
+  const byDay = new Map(), cov = new Map(), covSeg = new Map(), log = [], sources = new Set();
   for (const {f, rel, dir} of orderFiles([...files])) {
     const name = f.name, dot = name.lastIndexOf('.'), stem = dot > 0 ? name.slice(0, dot) : name, ext = dot > 0 ? name.slice(dot + 1).toLowerCase() : '';
     const entry = {file: rel, status: '건너뜀', note: ''};
@@ -734,6 +768,7 @@ async function merge(base, files) {
       if (stem.includes(PRODUCT_CSV_KEY)) {
         const r = readCoverage(rows, name);
         for (const [k, v] of r.out) cov.set(k, v);
+        for (const [k, v] of r.seg) covSeg.set(k, v);
         res = r.out.size ? r.note : null;
         if (!res) entry.note = r.note;
       } else if (stem.includes(PRODUCT_TABLE_KEY)) {
@@ -765,7 +800,7 @@ async function merge(base, files) {
   }
   let prodOut = base.prod || null, pstats = null;
   if (byDay.size || cov.size) {
-    const r = mergeProducts(base.prod || null, byDay, cov, data.meta.lastDate);
+    const r = mergeProducts(base.prod || null, byDay, cov, data.meta.lastDate, covSeg);
     prodOut = r.prod;
     pstats = r.stats;
   } else if (prodOut) {

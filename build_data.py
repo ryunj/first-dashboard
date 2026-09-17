@@ -71,6 +71,7 @@ RATE_TO_COUNT = [('cr', 'sg', 'crn'), ('fpr', 'tr', 'fpn')]
 PRODUCT_XLSX_KEY = '조직 카테고리별'
 PRODUCT_CSV_KEY = '상품관점'
 PRODUCT_TOP_N = None  # None = 모든 상품 개별 보관(기타 없음) · 숫자면 브랜드 경로(BPU·카테고리·브랜드)별 연간 상위 N 만 개별, 나머지는 '기타 상품'
+SEG_CODE = {'*TOTAL': 0, '1_당월신규': 1, '2_기가입신규': 2, '3_기존': 3}  # 상품관점 회원구분 → 대시보드 회원구분(T · 1 · 2 · 3)
 THIN_RATIO = 0.3  # 조직 카테고리 원천(양수 결제)이 상품관점 합계의 이 비율보다 작으면 '덜 채워짐' 경고 (평소 90% 이상 · 2025-09~10 은 45% 안팎으로 꾸준히 낮아 제외)
 PRODUCT_COLS = {'date': '결제_일자', 'bpu': 'BPU', 'ch': 'AF대분류', 'cat': '대카테고리', 'brand': '브랜드',
                 'code': '상품코드', 'name': '상품명', 'amt': '거래액', 'cust': '주문고객수'}
@@ -497,9 +498,10 @@ def read_product_table(path):
     return read_product_xlsx(path)
 
 
-def read_product_csv(path):
+def read_product_csv(path, seg_out=None):
     """상품관점 일자별 실적 CSV → {(날짜, 채널, BPU, 상품군): [거래액, 고객수, 상품UV]} — 회원구분은 *TOTAL 행만.
-    상품군 '*TOTAL' 이 채널×BPU 합계(커버리지용), 나머지는 상품군별 값(상품CR = 고객수 ÷ 상품UV)"""
+    상품군 '*TOTAL' 이 채널×BPU 합계(커버리지용), 나머지는 상품군별 값(상품CR = 고객수 ÷ 상품UV)
+    seg_out 을 주면 회원구분 × 채널 × BPU 합계(상품군 *TOTAL)도 {(날짜, 회원구분, 채널, BPU): [거래액, 고객수]} 로 채운다"""
     kind, periods, records = parse_crosstab(read_rows(path))
     out = {}
     if kind != 'daily':
@@ -514,17 +516,22 @@ def read_product_csv(path):
         return out
     for labels, vals in records:
         met = {'일평균거래액': 0, '일평균고객수': 1, '상품UV': 2}.get(labels[0])
-        if met is None or len(labels) < 5 or labels[1] != '*TOTAL' or labels[4] in ('', '-'):
+        if met is None or len(labels) < 5 or labels[4] in ('', '-'):
             continue
-        for p, v in zip(periods, vals):
-            if p is not None and v is not None:
-                out.setdefault((p, labels[2], labels[3], labels[4]), [0.0, 0.0, 0.0])[met] = v
+        if labels[1] == '*TOTAL':
+            for p, v in zip(periods, vals):
+                if p is not None and v is not None:
+                    out.setdefault((p, labels[2], labels[3], labels[4]), [0.0, 0.0, 0.0])[met] = v
+        if seg_out is not None and met < 2 and labels[4] == '*TOTAL' and labels[1] in SEG_CODE:
+            for p, v in zip(periods, vals):
+                if p is not None and v is not None:
+                    seg_out.setdefault((p, labels[1], labels[2], labels[3]), [0.0, 0.0])[met] = v
     return out
 
 
 def build_products(dirs, last_date, verbose=True):
     """상품 구성 드릴다운 데이터 — 일 × 채널 × 브랜드 경로 × 상품(상위 N, 나머지 -1 = 기타 상품)"""
-    by_date, cov_daily = {}, {}
+    by_date, cov_daily, cov_seg = {}, {}, {}
     for d in dirs:
         for f in sorted([*d.glob('*.xlsx'), *d.glob('*.csv')]):
             if PRODUCT_XLSX_KEY not in f.stem or f.name.startswith('~$'):
@@ -551,7 +558,7 @@ def build_products(dirs, last_date, verbose=True):
         for f in sorted(d.glob('*.csv')):
             if PRODUCT_CSV_KEY in f.stem:
                 try:
-                    cov_daily.update(read_product_csv(f))
+                    cov_daily.update(read_product_csv(f, cov_seg))
                 except Exception as e:
                     print(f'  [오류] {dir_label(d)}/{f.name}: {e}')
     if not by_date:
@@ -633,6 +640,20 @@ def build_products(dirs, last_date, verbose=True):
         o[1] += u
         o[2] += uv
 
+    covs = defaultdict(lambda: [0.0, 0.0])   # 회원구분 × 채널 × BPU 합계 — 상단 BPU 필터 때 거래액 · 고객수(회원구분 포함)
+    for (day, seg, ch, bpu), (a, u) in cov_seg.items():
+        if ch != '*TOTAL' and ch not in ci:
+            ci[ch] = len(chs)
+            chs.append(ch)
+        if bpu != '*TOTAL' and bpu not in bi:
+            bi[bpu] = len(bpus)
+            bpus.append(bpu)
+        if day < start.isoformat():
+            continue
+        o = covs[(day_idx(day), SEG_CODE[seg], -1 if ch == '*TOTAL' else ci[ch], -1 if bpu == '*TOTAL' else bi[bpu])]
+        o[0] += a
+        o[1] += u
+
     # 날짜순으로 정렬하고 날짜는 앞 행과의 차이만 저장(대부분 0) → 파일 크기 절약
     flat, prev_d = [], 0
     for (d, c, p, q), (a, u) in sorted(facts.items()):
@@ -648,12 +669,18 @@ def build_products(dirs, last_date, verbose=True):
     for (d, c, b_, g), (a, u, uv) in sorted(covg.items()):
         cov2.extend([d - prev_d, c, b_, g, round(a), round(u), round(uv)])
         prev_d = d
-    days = max([k[0] for k in facts] + [k[0] for k in covm] + [k[0] for k in covg]) + 1
+    cov3, prev_d = [], 0
+    for (d, sg, c, b_), (a, u) in sorted(covs.items()):
+        if round(a) == 0 and round(u) == 0:
+            continue
+        cov3.extend([d - prev_d, sg, c, b_, round(a), round(u)])
+        prev_d = d
+    days = max([k[0] for k in facts] + [k[0] for k in covm] + [k[0] for k in covg] + [k[0] for k in covs]) + 1
     return {
         'meta': {'built': dt.datetime.now().strftime('%Y-%m-%d %H:%M'), 'topN': PRODUCT_TOP_N, 'start': start.isoformat(),
-                 'days': days, 'lastDate': (start + dt.timedelta(days=days - 1)).isoformat(), 'rows': len(rows), 'dropped': dropped, 'products': len(names), 'covFields': 6, 'covFields2': 7, 'positiveOnly': True,
-                 'encoding': 'f=[날짜차분, 채널, 경로, 상품(-1=기타), 거래액, 주문고객수] · cov=[날짜차분, 채널(-1=전체), BPU(-1=전체), 거래액, 고객수, 상품UV] · cov2=[날짜차분, 채널, BPU, 상품군, 거래액, 고객수, 상품UV]'},
-        'ch': chs, 'bpu': bpus, 'cat': cats, 'brand': brands, 'grp': grps, 'paths': paths, 'prods': prods, 'f': flat, 'cov': cov, 'cov2': cov2,
+                 'days': days, 'lastDate': (start + dt.timedelta(days=days - 1)).isoformat(), 'rows': len(rows), 'dropped': dropped, 'products': len(names), 'covFields': 6, 'covFields2': 7, 'covFields3': 6, 'positiveOnly': True,
+                 'encoding': 'f=[날짜차분, 채널, 경로, 상품(-1=기타), 거래액, 주문고객수] · cov=[날짜차분, 채널(-1=전체), BPU(-1=전체), 거래액, 고객수, 상품UV] · cov2=[날짜차분, 채널, BPU, 상품군, 거래액, 고객수, 상품UV] · cov3=[날짜차분, 회원구분(0=전체 1 2 3), 채널(-1=전체), BPU(-1=전체), 거래액, 고객수]'},
+        'ch': chs, 'bpu': bpus, 'cat': cats, 'brand': brands, 'grp': grps, 'paths': paths, 'prods': prods, 'f': flat, 'cov': cov, 'cov2': cov2, 'cov3': cov3,
     }
 
 
