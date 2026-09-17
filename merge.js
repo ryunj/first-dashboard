@@ -77,6 +77,103 @@ async function readText(file) {
   try { return new TextDecoder('utf-8', {fatal: true}).decode(buf).replace(/^﻿/, ''); }
   catch (e) { return new TextDecoder('euc-kr').decode(buf); }
 }
+/* ---------- xlsx 읽기 — 엑셀이 저장해 둔 값을 읽는다(수식 칸은 마지막으로 계산된 결과) ----------
+   build_data.py 의 openpyxl(data_only=True) 와 같다. zip 은 브라우저 내장 DecompressionStream 으로 푼다(외부 라이브러리 없음). */
+const XML_ENT = {lt: '<', gt: '>', amp: '&', quot: '"', apos: "'"};
+const xmlText = s => String(s)
+  .replace(/&(#x[0-9a-fA-F]+|#\d+|lt|gt|amp|quot|apos);/g, (all, k) => (k[0] === '#' ? String.fromCodePoint(k[1] === 'x' ? parseInt(k.slice(2), 16) : +k.slice(1)) : XML_ENT[k]))
+  .replace(/_x([0-9A-Fa-f]{4})_/g, (all, h) => String.fromCharCode(parseInt(h, 16)));
+const xmlAttrs = tag => Object.fromEntries([...String(tag).matchAll(/([\w:]+)="([^"]*)"/g)].map(x => [x[1], xmlText(x[2])]));
+async function inflateRaw(bytes) {
+  if (typeof DecompressionStream !== 'function') throw new Error('이 브라우저는 xlsx 압축을 풀 수 없습니다 — 엑셀에서 CSV로 저장해 올려 주세요');
+  const out = await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer();
+  return new Uint8Array(out);
+}
+function unzipIndex(buf) {  // zip 목차 → 이름으로 파일 내용을 꺼내는 함수
+  const u8 = new Uint8Array(buf), dv = new DataView(buf);
+  if (u8.length >= 5 && String.fromCharCode(...u8.subarray(0, 5)) === 'SCDSA') throw new Error('DRM 암호화 파일(SCDSA) — DRM 해제 후 올리거나 엑셀에서 CSV로 저장해 올려 주세요');
+  if (u8.length < 22 || u8[0] !== 0x50 || u8[1] !== 0x4b) throw new Error('xlsx 형식이 아닙니다');
+  let eocd = -1;
+  for (let i = u8.length - 22; i >= Math.max(0, u8.length - 65557); i--) if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+  if (eocd < 0) throw new Error('xlsx 목차를 찾지 못함(파일이 깨졌을 수 있음)');
+  const count = dv.getUint16(eocd + 10, true), cdOff = dv.getUint32(eocd + 16, true);
+  if (count === 0xffff || cdOff === 0xffffffff) throw new Error('너무 큰 xlsx(zip64) — 엑셀에서 CSV로 저장해 올려 주세요');
+  const dec = new TextDecoder('utf-8'), files = new Map();
+  for (let i = 0, p = cdOff; i < count; i++) {
+    if (dv.getUint32(p, true) !== 0x02014b50) throw new Error('xlsx 목차가 깨짐');
+    const nl = dv.getUint16(p + 28, true), el = dv.getUint16(p + 30, true), cl = dv.getUint16(p + 32, true);
+    files.set(dec.decode(u8.subarray(p + 46, p + 46 + nl)), {method: dv.getUint16(p + 10, true), size: dv.getUint32(p + 20, true), at: dv.getUint32(p + 42, true)});
+    p += 46 + nl + el + cl;
+  }
+  return async name => {
+    const e = files.get(name);
+    if (!e) return null;
+    const start = e.at + 30 + dv.getUint16(e.at + 26, true) + dv.getUint16(e.at + 28, true), raw = u8.subarray(start, start + e.size);
+    if (e.method !== 0 && e.method !== 8) throw new Error(`xlsx 압축 방식(${e.method})을 지원하지 않음`);
+    return dec.decode(e.method === 0 ? raw : await inflateRaw(raw));
+  };
+}
+const DATE_FMT_IDS = new Set([14, 15, 16, 17, 22, 27, 28, 29, 30, 31, 34, 35, 36, 45, 46, 47, 50, 51, 52, 53, 54, 55, 56, 57, 58]);
+const colOfRef = ref => { let n = 0; for (const ch of /^[A-Z]+/.exec(ref)[0]) n = n * 26 + ch.charCodeAt(0) - 64; return n - 1; };
+function sheetRows(xml, sst, isDateStyle, toDate, stat) {  // openpyxl iter_rows(values_only=True) 처럼 빈 칸은 null
+  const rows = [];
+  for (const rm of xml.matchAll(/<row\b([^>]*?)(?:\/>|>([\s\S]*?)<\/row>)/g)) {
+    const ra = xmlAttrs(rm[1]), ri = ra.r ? +ra.r - 1 : rows.length, row = [];
+    let next = 0;
+    for (const cm of (rm[2] || '').matchAll(/<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)) {
+      const a = xmlAttrs(cm[1]), body = cm[2] || '', ci = a.r ? colOfRef(a.r) : next, t = a.t || 'n';
+      next = ci + 1;
+      const vm = /<v(?:\s[^>]*)?>([\s\S]*?)<\/v>/.exec(body);
+      if (/<f[\s>/]/.test(body) && !vm && !/<v\s*\/>/.test(body)) stat.noCache++;  // 수식은 있는데 저장된 값이 없음(엑셀에서 한 번도 계산 안 됨)
+      let v = null;
+      if (t === 's') v = vm ? (sst[+vm[1]] ?? null) : null;
+      else if (t === 'inlineStr') v = [...body.matchAll(/<t(?:\s[^>]*)?>([\s\S]*?)<\/t>/g)].map(x => xmlText(x[1])).join('');
+      else if (t === 'str' || t === 'd') v = vm ? xmlText(vm[1]) : null;  // 빈 문자열 결과(<v/>)는 openpyxl 처럼 None
+      else if (t === 'b') v = vm ? vm[1].trim() === '1' : null;
+      else if (t === 'e') v = null;
+      else if (vm && vm[1].trim() !== '') {
+        const x = Number(vm[1]);
+        v = isDateStyle(+(a.s || 0)) ? toDate(x) : x;
+      }
+      row[ci] = v;
+    }
+    for (let i = 0; i < row.length; i++) if (row[i] === undefined) row[i] = null;
+    rows[ri] = row;
+  }
+  for (let i = 0; i < rows.length; i++) if (!rows[i]) rows[i] = [];
+  return rows;
+}
+async function readXlsx(file, allSheets) {  // → [{name, rows}] · 기본은 첫 시트만(build_data 와 같다)
+  const get = unzipIndex(await file.arrayBuffer());
+  const wb = await get('xl/workbook.xml');
+  if (!wb) throw new Error('엑셀 통합문서(workbook.xml)가 없음');
+  const rels = new Map([...((await get('xl/_rels/workbook.xml.rels')) || '').matchAll(/<Relationship\b[^>]*>/g)].map(x => xmlAttrs(x[0])).map(r => [r.Id, r]));
+  const part = target => (target.startsWith('/') ? target.slice(1) : `xl/${target}`);
+  const relOf = type => [...rels.values()].find(r => String(r.Type).endsWith(`/${type}`));
+  const sstXml = await get(relOf('sharedStrings') ? part(relOf('sharedStrings').Target) : 'xl/sharedStrings.xml');
+  const sst = sstXml ? [...sstXml.matchAll(/<si(?:\s[^>]*)?>([\s\S]*?)<\/si>/g)]
+    .map(x => [...x[1].replace(/<rPh\b[\s\S]*?<\/rPh>/g, '').matchAll(/<t(?:\s[^>]*)?>([\s\S]*?)<\/t>/g)].map(t => xmlText(t[1])).join('')) : [];
+  const styles = (await get(relOf('styles') ? part(relOf('styles').Target) : 'xl/styles.xml')) || '';
+  const fmts = new Map([...styles.matchAll(/<numFmt\b[^>]*>/g)].map(x => xmlAttrs(x[0])).map(f => [+f.numFmtId, f.formatCode || '']));
+  const xfs = ((/<cellXfs\b[^>]*>([\s\S]*?)<\/cellXfs>/.exec(styles) || [])[1] || '').match(/<xf\b[^>]*>/g) || [];
+  const dateStyle = xfs.map(tag => {
+    const id = +(xmlAttrs(tag).numFmtId || 0);
+    if (DATE_FMT_IDS.has(id)) return true;
+    const code = fmts.get(id);
+    return !!code && /[yd]/i.test(code.replace(/"[^"]*"|\\.|\[[^\]]*\]/g, ''));
+  });
+  const base = /<workbookPr\b[^>]*date1904="(1|true)"/.test(wb) ? Date.UTC(1904, 0, 1) : Date.UTC(1899, 11, 30);
+  const toDate = x => new Date(base + Math.floor(x + 1e-9) * 86400000).toISOString().slice(0, 10);
+  const sheets = [...wb.matchAll(/<sheet\b[^>]*>/g)].map(x => xmlAttrs(x[0])).map(a => ({name: a.name, rel: rels.get(a['r:id'])})).filter(s => s.rel);
+  if (!sheets.length) throw new Error('시트를 찾지 못함');
+  const out = [], stat = {noCache: 0};
+  for (const s of (allSheets ? sheets : sheets.slice(0, 1))) {
+    const xml = await get(part(s.rel.Target));
+    if (xml) out.push({name: s.name, rows: sheetRows(xml, sst, k => !!dateStyle[k], toDate, stat)});
+  }
+  out.noCache = stat.noCache;
+  return out;
+}
 function parseCsv(text) {  // 파이썬 csv.reader(기본 방언) 와 같게 — 따옴표는 칸 맨 앞에서만, "" 는 따옴표 하나
   const head = text.split('\n', 1)[0];
   const delim = head.split('\t').length >= head.split(',').length ? '\t' : ',';
@@ -254,17 +351,22 @@ function loadApp(rows, S) {
   const dateCol = header.findIndex((h, i) => h === '날짜' && rows.slice(1, 6).some(r => r.length > i && asDay(r[i])));
   if (dateCol < 0) throw new Error('날짜 열(YYYY-MM-DD)을 찾지 못함');
   const cols = Object.entries(APP_COLS).filter(([h]) => header.includes(h)).map(([h, key]) => [key, header.indexOf(h)]);
-  const seen = new Map();
+  const seen = new Map(), conflict = [];
   let dup = 0;
   for (const r of rows.slice(1)) {
     const day = r.length > dateCol ? asDay(r[dateCol]) : null;
     if (!day) continue;
-    if (seen.has(day)) dup++;
-    seen.set(day, cols.map(([, i]) => r[i]));  // 같은 날짜가 또 나오면 뒤 행
+    const vals = cols.map(([, i]) => r[i]);
+    if (seen.has(day)) {
+      dup++;
+      if (seen.get(day).some((v, j) => String(v ?? '') !== String(vals[j] ?? ''))) conflict.push(day);
+    }
+    seen.set(day, vals);  // 같은 날짜가 또 나오면 뒤 행
   }
   for (const [day, vals] of seen) cols.forEach(([key], j) => put(S, 'daily', `app|${key}`, day, vals[j] == null || vals[j] === '' ? null : toNum(vals[j])));
   const days = [...seen.keys()].sort();
-  return `일별 앱 설치 ${days.length}일 (${span(days)})${dup ? ` · 중복 날짜 ${dup}건은 뒤 행 사용` : ''}`;
+  const cf = [...new Set(conflict)].sort();
+  return `일별 앱 설치 ${days.length}일 (${span(days)})${dup ? ` · 중복 날짜 ${dup}건은 뒤 행 사용${cf.length ? ` (값이 다른 날짜 ${cf.join(', ')})` : ''}` : ''}`;
 }
 function overallIsFirstPurchase(records) {
   const total = group => records.reduce((a, [labels, vals]) => a + (labels[0] === '일평균거래액' && labels[1] === group && labels[2] === '*TOTAL'
@@ -600,28 +702,45 @@ async function merge(base, files) {
     const entry = {file: rel, status: '건너뜀', note: ''};
     log.push(entry);
     try {
-      if (ext === 'xlsx' || ext === 'xls') {
-        if (stem.includes(APP_KEY) || stem.includes(PRODUCT_TABLE_KEY)) throw new Error('xlsx 는 브라우저에서 읽지 않습니다 — 엑셀에서 CSV로 저장해 올려 주세요');
-        entry.note = 'xlsx — 대시보드가 쓰지 않는 파일';
-        continue;
-      }
+      const takeProducts = rs => {
+        const days = [...new Set(rs.map(r => r[0]))].sort();
+        for (const d of days) byDay.set(d, []);  // 같은 날짜는 나중 파일이 통째로 바꾼다
+        for (const r of rs) byDay.get(r[0]).push(r);
+        return `상품 ${rs.length.toLocaleString()}행 (${span(days)})`;
+      };
+      let res = null;
+      if (ext === 'xlsx' || ext === 'xlsm' || ext === 'xls') {
+        const isApp = stem.includes(APP_KEY), isProd = stem.includes(PRODUCT_TABLE_KEY);
+        if (!isApp && !isProd) { entry.note = '엑셀 — 대시보드가 쓰지 않는 파일'; continue; }
+        if (ext === 'xls') throw new Error('예전 xls 형식은 읽지 않습니다 — 엑셀에서 xlsx 또는 CSV로 저장해 올려 주세요');
+        const sheets = await readXlsx(f, isProd);  // 앱 설치 = 첫 시트 · 상품 표 = 모든 시트 (build_data 와 같다)
+        const cacheNote = sheets.noCache ? ` · 계산값이 없는 수식 ${sheets.noCache}칸(엑셀에서 열어 저장하면 채워짐)` : '';
+        if (isApp) res = loadApp(sheets[0].rows, S) + ' · 엑셀(수식은 저장된 값)' + cacheNote;
+        else {
+          const rs = [], miss = [];
+          for (const sh of sheets) {
+            let got;
+            try { got = productRows(sh.rows[0] || [], sh.rows.slice(1)); } catch (err) { miss.push(`${sh.name}(${err.message})`); continue; }  // 열이 없는 시트는 건너뜀
+            for (const r of got) rs.push(r);  // 수십만 행 — 펼쳐 넣으면(...) 인자 한도를 넘는다
+          }
+          if (!rs.length) throw new Error(`상품 행을 찾지 못함${miss.length ? ` — ${miss.join(', ')}` : ''}`);
+          res = takeProducts(rs) + (miss.length ? ` · 건너뛴 시트 ${miss.join(', ')}` : '') + cacheNote;
+        }
+      } else {
       if (ext !== 'csv' && ext !== 'txt') { entry.note = '지원하지 않는 형식'; continue; }
       const rows = parseCsv(await readText(f));
       if (!rows.length) { entry.note = '빈 파일'; continue; }
-      let res = null;
       if (stem.includes(PRODUCT_CSV_KEY)) {
         const r = readCoverage(rows, name);
         for (const [k, v] of r.out) cov.set(k, v);
         res = r.out.size ? r.note : null;
         if (!res) entry.note = r.note;
       } else if (stem.includes(PRODUCT_TABLE_KEY)) {
-        const rs = productRows(rows[0], rows.slice(1)), days = [...new Set(rs.map(r => r[0]))].sort();
-        for (const d of days) byDay.set(d, []);  // 같은 날짜는 나중 파일이 통째로 바꾼다
-        for (const r of rs) byDay.get(r[0]).push(r);
-        res = `상품 ${rs.length.toLocaleString()}행 (${span(days)})`;
+        res = takeProducts(productRows(rows[0], rows.slice(1)));
       } else {
         res = loadSeriesFile(stem, rows, S);
         if (!res) entry.note = stem.includes('전체관점') ? 'MALL 전체 파일 — 대시보드 미사용' : stem.includes('가입율') ? '가입률은 가입자수 ÷ 트래픽으로 다시 계산 — 읽지 않음' : '대시보드가 쓰지 않는 파일';
+      }
       }
       if (res) { entry.status = '읽음'; entry.note = res; sources.add(dir || '업로드'); }
     } catch (e) {
@@ -648,5 +767,5 @@ async function merge(base, files) {
   return {data, kpi: base.kpi || null, prod: prodOut, log, summary};
 }
 
-window.FP_MERGE = {merge, parseCsv, parseCrosstab, inferMdDates, isoWeekMap, readText, toNum, roundTo, version: 1};
+window.FP_MERGE = {merge, parseCsv, parseCrosstab, inferMdDates, isoWeekMap, readText, readXlsx, productRows, toNum, roundTo, version: 2};
 })();
