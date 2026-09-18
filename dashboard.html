@@ -50,6 +50,7 @@ main.wrap{position:relative;z-index:0}
 .menu button{background:none;border:0;padding:15px 0 13px;font-size:14px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer}
 .menu button[aria-pressed="true"]{color:var(--ink);border-bottom-color:var(--ink)}
 .bar2{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding-block:6px}
+#fCmpY.off{opacity:.45}
 /* 상단 필터(회원구분 · 채널 · BPU · 카테고리) — 기본 접힘, 접힌 동안은 고른 조건을 한 줄로 */
 .filt-tg{display:inline-flex;align-items:center;gap:6px;max-width:min(560px,100%);min-width:0;padding:5px 11px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--ink);font-size:13px;font-weight:600;cursor:pointer}
 .filt-tg:hover{border-color:var(--axis)}
@@ -482,9 +483,10 @@ body.pdfcap .pgrid{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr)!important
       <label class="field" id="fRange">범위 <select id="selRange"></select></label>
       <span class="field">비교</span>
       <div class="seg" role="group" aria-label="비교 기준">
-        <button data-set="cmp" data-v="yoy">전년 동기간</button>
+        <button data-set="cmp" data-v="yoy" id="btnYoy">전년 동기간</button>
         <button data-set="cmp" data-v="pop" id="btnPop">전월</button>
       </div>
+      <label class="field" id="fCmpY" title="몇 년 전과 비교할지 — 364일 × N 전 동기간 · 동요일">비교 연도 <select id="selCmpY" aria-label="비교 연도"></select></label>
       <button class="filt-tg" id="btnFilt" type="button" aria-expanded="false" aria-controls="filtRows"><span class="filt-ic" aria-hidden="true">▸</span>필터<b id="filtN" hidden></b><span class="filt-sum" id="filtSum"></span></button>
     </div>
     <div id="filtRows" hidden>
@@ -614,7 +616,7 @@ body.pdfcap .pgrid{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr)!important
       <li><b>비회원 트래픽 기준</b> — 일별: 일 트래픽. <b>주별: 태블로 주간(중복 제거) 트래픽</b> → 트래픽 · 가입률 · 첫구매율이 내부 대시보드 주별 값과 같다. <b>월별 · 일별 누계: 일자 트래픽 합(중복 포함)</b> → 월간 중복 제거 raw가 없어서, 내부 대시보드보다 트래픽은 크고 가입률 · 첫구매율은 낮게 나온다(주 기준 약 0.8배 차이).</li>
       <li><b>주별 · 월별</b> 거래액 · 고객수 · 가입자수는 일자 raw 합산. <b>일평균</b> = 기간 합계 ÷ 데이터 일수. <b>누계</b> = 월별은 월 합계, 주별은 주 합계, 일별은 하루 값이라 일평균과 누계가 같다.</li>
       <li><b>주차</b> = ISO 주(월~일). 'M월 N주차' 는 그 주 목요일이 속한 달 기준(태블로 라벨과 동일).</li>
-      <li><b>전년비</b> = 364일 전 <b>동기간 · 동요일</b>. 예) 2026-09-01~13 ↔ 2025-09-02~14. 증가는 <span class="pos">+초록</span>, 감소는 <span class="neg">△빨강</span>.</li>
+      <li><b>비교 연도</b>(비교 옆)로 몇 년 전과 비교할지 고른다 — 기본 전년, 2년 전이면 728일 전 동기간 · 동요일('2024년비'). 요약 · 차트 · 표 · 인사이트 · 상품 구성 · 앱 설치 영역과 엑셀 · PDF 가 모두 따른다(KPI 는 연간 목표 기준이라 전년 그대로). 전년이 아닌 해와 비교하면 날짜가 달력보다 며칠씩 앞당겨진다(요일을 맞추려고 364일 단위로 옮김). <b>전년비</b> = 364일 전 <b>동기간 · 동요일</b>. 예) 2026-09-01~13 ↔ 2025-09-02~14. 증가는 <span class="pos">+초록</span>, 감소는 <span class="neg">△빨강</span>.</li>
       <li><b>기준 기간</b>(상단 '기준') — 월별은 월, 주별은 주차, 일별은 날짜를 고른다. 요약 타일 · 표 강조 열 · 차트 음영 · 상품 구성 기본 기간 · 앱 섹션이 모두 그 기간 기준이고, 주별 · 일별 표와 차트는 그 기간에서 끝나는 범위(8주 · 13주 …)를 보여 준다. '최근 · …'(기본)은 데이터가 있는 가장 최근 기간.</li>
       <li><b>비교</b> — 기본 <b>전년 동기간</b>(전년비). <b>전월 · 전주 · 전일</b>로 바꾸면 표 · 차트 툴팁 · 요약 · 상품 구성 · 앱 섹션의 비교가 모두 직전 기간 대비(전월비 · 전주비 · 전일비)로 바뀐다. 전월은 진행 중인 달이면 같은 일수끼리(예: 9/1~13 ↔ 8/1~13), 끝난 달은 전월 전체. 전주 = 7일 전 같은 요일들, 전일 = 하루 전. 직전 기간 모드에선 차트의 전년선을 숨긴다(값은 툴팁). 요약 타일은 두 비교를 함께 보여 준다. KPI는 항상 전년 동기 누적.</li>
       <li><b>상단 필터</b>(회원구분 · 채널 · BPU · 카테고리)는 기본으로 접혀 있고, <b>필터</b> 버튼 옆에 지금 고른 조건이 한 줄로 보인다(기본값이 아닌 필터 수는 파란 숫자). 버튼을 누르면 펼쳐진다. <b>채널 · 회원구분</b>은 여러 개를 고를 수 있다. 차트 선 하나(채널 1개 × 구분 1개)면 당해 vs 전년, 여러 개면 비교선 — 색 = 채널, 선 모양 = 회원구분. 요약 타일은 선택 중 첫 번째 기준.</li>
@@ -834,11 +836,13 @@ let S = (() => {
   if (h.has('segs')) s.segs = h.get('segs').split(',');
   if (h.get('range') && s.grain !== 'month') s.range[s.grain] = h.get('range');
   if (h.get('at')) s.at[s.grain] = h.get('at');
+  if (h.get('cy')) s.cmpY = +h.get('cy');
   // 기준 기간 id: 월 YYYY-MM · 주 YYYY-Www · 일 YYYY-MM-DD (없는 기간이면 화면에서 '최근'으로 처리)
   const AT_RE = {month: /^\d{4}-\d{2}$/, week: /^\d{4}-W\d{2}$/, day: /^\d{4}-\d{2}-\d{2}$/};
   s.at = Object.fromEntries(Object.keys(AT_RE).map(g => [g, typeof (s.at || {})[g] === 'string' && AT_RE[g].test(s.at[g]) ? s.at[g] : '']));
   for (const [k, vs] of Object.entries(ALLOWED)) if (!vs.includes(s[k])) s[k] = DEF[k];
   if (!YEARS.includes(s.year)) s.year = DEF.year;
+  s.cmpY = Number.isInteger(s.cmpY) && s.cmpY >= 1 && YEARS.includes(s.year - s.cmpY) ? s.cmpY : 1;  // 비교 연도 = 몇 년 전(기본 1 = 전년)
   s.chans = CHS.filter(c => (s.chans || []).includes(c));
   if (!s.chans.length) s.chans = DEF.chans.slice();
   s.segs = SEG_KEYS.filter(c => (s.segs || []).includes(c));
@@ -853,6 +857,7 @@ const save = () => {
   const h = new URLSearchParams({mode: S.mode, grain: S.grain, year: S.year, chans: selChans().join(','), segs: selSegs().join(','), layout: S.layout});
   if (S.grain !== 'month') h.set('range', S.range[S.grain]);
   if (S.cmp !== 'yoy') h.set('cmp', S.cmp);
+  if (S.cmpY > 1) h.set('cy', S.cmpY);
   if (S.at[S.grain]) h.set('at', S.at[S.grain]);
   if (PRD) {
     if (PD.view !== 'bpu') h.set('pv', PD.view);
@@ -895,17 +900,20 @@ const trNote = m => [UNIQUE_TR.has(m) && S.grain === 'month' ? '일자 합산 �
 /* ---------- 기간 열: 각 열 = 당해 날짜 목록(cur) + 비교 날짜 목록(prev) ----------
    비교 기준 S.cmp — yoy: 364일 전 동기간·동요일(prevY) · pop: 직전 기간 = 전월·전주·전일(prevP). 두 쪽을 다 들고 있고 선택한 쪽을 prev 로 쓴다. */
 const clip = dates => dates.filter(d => d >= FIRST && d <= LAST);
-const back = dates => dates.map(d => addDays(d, -364));
+const yk = () => (S.cmpY > 1 ? S.cmpY : 1);  // 비교 연도 = 몇 년 전
+const back = dates => dates.map(d => addDays(d, -364 * yk()));  // 364일 × N 전 = 같은 요일
 const rangeTxt = ds => ds.length ? (ds.length === 1 ? `${ds[0]}` : `${ds[0]} ~ ${md(ds.at(-1))}`) : '';
 const CMP_NAME = {month: '전월', week: '전주', day: '전일'};
 const cmpPop = () => S.cmp === 'pop';
-const cmpLbl = () => cmpPop() ? `${CMP_NAME[S.grain]}비` : '전년비';          // 선택한 비교
-const otherLbl = () => cmpPop() ? '전년비' : `${CMP_NAME[S.grain]}비`;        // 나머지 비교(요약 타일 둘째 줄)
-const baseShort = () => cmpPop() ? CMP_NAME[S.grain] : '전년';                 // 비교 기간 값 이름
-const baseLbl = () => cmpPop() ? CMP_NAME[S.grain] : `${S.year - 1} 동기간`;
+const yoyLbl = () => (yk() === 1 ? '전년비' : `${S.year - yk()}년비`);   // 연도 비교 이름 — 2년 전부터는 '2024년비'
+const yoyBase = () => (yk() === 1 ? '전년' : `${S.year - yk()}년`);
+const cmpLbl = () => cmpPop() ? `${CMP_NAME[S.grain]}비` : yoyLbl();          // 선택한 비교
+const otherLbl = () => cmpPop() ? yoyLbl() : `${CMP_NAME[S.grain]}비`;        // 나머지 비교(요약 타일 둘째 줄)
+const baseShort = () => cmpPop() ? CMP_NAME[S.grain] : yoyBase();              // 비교 기간 값 이름
+const baseLbl = () => cmpPop() ? CMP_NAME[S.grain] : `${S.year - yk()} 동기간`;
 const cmpDesc = () => cmpPop()
   ? `${cmpLbl()} = 직전 ${{month: '달', week: '주', day: '날'}[S.grain]} 대비${S.grain === 'month' ? '(진행 중인 달은 같은 일수끼리)' : ''}`
-  : '전년비 = 364일 전 동기간·동요일';
+  : `${yoyLbl()} = ${364 * yk()}일 전 동기간·동요일${yk() > 1 ? `(${yk()}년 전)` : ''}`;
 function pickCmp(col) {  // 선택한 비교 기준을 prev · ptip · wk.prev 에 싣는다
   const pop = cmpPop();
   col.prev = pop ? col.prevP : col.prevY;
@@ -950,7 +958,7 @@ function weekCols(y) {
 function dayCols(y) {
   // 하루는 일평균 = 누계 — 일평균/누계 메뉴와 상관없이 그날 값 하나
   return clip(span(`${y}-01-01`, `${y}-12-31`)).map(d => {
-    const pd = addDays(d, -364), qd = addDays(d, -1);
+    const pd = addDays(d, -364 * yk()), qd = addDays(d, -1);
     return pickCmp({id: d, date: d, label: md(d), sub: WD[dow(d)], partial: false, cur: [d], prevY: [pd], prevP: [qd],
       opt: `${d} (${WD[dow(d)]})`, tip: `${d} (${WD[dow(d)]})`, ptipY: `${pd} (${WD[dow(pd)]})`, ptipP: `${qd} (${WD[dow(qd)]})`});
   });
@@ -1002,6 +1010,13 @@ function syncControls() {
   const atOk = !!S.at[S.grain] && avail.some(c => c.id === S.at[S.grain]);
   $('#atLbl').textContent = AT_LBL[S.grain];
   $('#btnPop').textContent = CMP_NAME[S.grain];
+  // 비교 연도 — 지금 연도보다 앞선 해(데이터가 있는 해)만
+  const ys = YEARS.filter(y => y < S.year).sort((a, b) => b - a);
+  if (!ys.includes(S.year - yk())) S.cmpY = 1;
+  $('#selCmpY').innerHTML = ys.length ? ys.map(y => `<option value="${S.year - y}"${S.year - y === yk() ? ' selected' : ''}>${S.year - y === 1 ? `전년 (${y})` : `${y}년`}</option>`).join('') : '<option value="1">전년</option>';
+  $('#selCmpY').disabled = cmpPop() || ys.length < 2;
+  $('#fCmpY').classList.toggle('off', cmpPop());
+  $('#btnYoy').textContent = yk() === 1 ? '전년 동기간' : `${S.year - yk()}년 동기간`;
   $('#selAt').hidden = S.grain === 'day';
   $('#dateAt').hidden = S.grain !== 'day';
   $('#btnAtReset').hidden = !atOk;
@@ -1101,6 +1116,7 @@ document.addEventListener('click', e => {
   render();
 });
 $('#selYear').addEventListener('change', e => { S.year = +e.target.value; S.at = {month: '', week: '', day: ''}; PD.sel = null; render(); });
+$('#selCmpY').addEventListener('change', e => { S.cmpY = +e.target.value || 1; S.cmp = 'yoy'; PD.sel = null; render(); });
 // 기준 기간을 바꾸면 상품 구성 기간도 그 기간으로 따라간다
 const setAt = v => { S.at[S.grain] = v || ''; PD.sel = null; render(); };
 $('#selAt').addEventListener('change', e => setAt(e.target.value));
@@ -1302,15 +1318,15 @@ function renderCharts(cols) {
   const y = S.year, chans = selChans(), segs = selSegs(), host = $('#charts'), pop = cmpPop();
   const anySingle = METRICS.some(m => MODEL[m].length === 1), focus = focusSet() ? focusIdx(cols) : null;
   $('#chartTitle').textContent = `${{month: '월별', week: '주별', day: '일별'}[S.grain]} 흐름`;
-  $('#chartDesc').textContent = `${modeName()} · ${pop ? `${y} · 마우스를 올리면 ${cmpLbl()}` : anySingle && chans.length === 1 ? `${y} vs ${y - 1} 동기간·동요일` : `${y} 비교 · 마우스를 올리면 전년비`}${focus != null ? ' · 음영 = 기준 기간' : ''}`;
+  $('#chartDesc').textContent = `${modeName()} · ${pop ? `${y} · 마우스를 올리면 ${cmpLbl()}` : anySingle && chans.length === 1 ? `${y} vs ${y - yk()} 동기간·동요일` : `${y} 비교 · 마우스를 올리면 전년비`}${focus != null ? ' · 음영 = 기준 기간' : ''}`;
   const lg = [];
-  if (anySingle) lg.push(`<span><i class="k" style="background:${chColor(chans[0])}"></i>${y}</span>${pop ? '' : `<span><i class="k prev"></i>${y - 1} 동기간</span>`}`);
+  if (anySingle) lg.push(`<span><i class="k" style="background:${chColor(chans[0])}"></i>${y}</span>${pop ? '' : `<span><i class="k prev"></i>${y - yk()} 동기간</span>`}`);
   if (chans.length > 1) lg.push(chans.map(ch => `<span><i class="k" style="background:${chColor(ch)}"></i>${esc(chLabel(ch))}</span>`).join(''));
   if (segs.length > 1) lg.push(`<span class="lg-g">회원구분</span>` + segs.map(sg => `<span>${dashSvg(sg)}${esc(segLabel(sg))}</span>`).join(''));
   $('#legend').innerHTML = lg.join('');
   host.innerHTML = METRICS.map((m, k) => {
     const single = MODEL[m].length === 1, hasPrev = single && MODEL[m][0].vals.some(v => ok(v.p));
-    const sub = [single ? MODEL[m][0].label : '', unitOf(m) === '%' ? '' : unitOf(m), trNote(m), single && !hasPrev && !pop ? '전년 없음' : ''].filter(Boolean).join(' · ');
+    const sub = [single ? MODEL[m][0].label : '', unitOf(m) === '%' ? '' : unitOf(m), trNote(m), single && !hasPrev && !pop ? `${yoyBase()} 없음` : ''].filter(Boolean).join(' · ');
     return `<div class="card cc"><div class="cc-t">${esc(MET[m].name)}</div><div class="cc-s">${esc(sub) || '&nbsp;'}</div><div class="cc-b" data-k="${k}"></div></div>`;
   }).join('');
   METRICS.forEach((m, k) => {
@@ -1320,7 +1336,7 @@ function renderCharts(cols) {
       labels: cols.map(c => c.label), tips: cols.map(c => c.tip), ptips: cols.map(c => c.ptip),
       series: MODEL[m].map(r => ({name: r.label, color: chColor(r.ch), dash: rowDash(m, r),
                                    cur: r.vals.map(v => v.c), prev: r.vals.map(v => v.p), pest: r.vals.map(v => v.pe)})),
-      aria: `${MET[m].name} ${single ? `${MODEL[m][0].label} ${y}년${pop ? '' : `과 ${y - 1}년 동기간`}` : `${MODEL[m].map(r => r.label).join(', ')} 비교`} 추이`,
+      aria: `${MET[m].name} ${single ? `${MODEL[m][0].label} ${y}년${pop ? '' : `과 ${y - yk()}년 동기간`}` : `${MODEL[m].map(r => r.label).join(', ')} 비교`} 추이`,
     });
   });
 }
@@ -1356,7 +1372,7 @@ function renderTable(cols) {
           + vals.map((v, k) => cell(fmt(m, v.p), -9, 'pv' + (k === 0 ? ' bk' : ''), v.pe && ok(v.p), rawOf(m, v.p))).join('') + '</tr>';
       } else {
         h += `<tr class="${cls} r-cur"><th class="stick s1">${lab}</th><th class="stick s2">${y}</th>${vals.map((v, k) => cell(fmt(m, v.c), k, '', v.ce, rawOf(m, v.c))).join('')}</tr>`
-          + `<tr class="${cls} r-prev"><th class="stick s1"></th><th class="stick s2">${cmpPop() ? CMP_NAME[S.grain] : y - 1}</th>${vals.map((v, k) => cell(fmt(m, v.p), k, 'pv', v.pe && ok(v.p), rawOf(m, v.p))).join('')}</tr>`
+          + `<tr class="${cls} r-prev"><th class="stick s1"></th><th class="stick s2">${cmpPop() ? CMP_NAME[S.grain] : y - yk()}</th>${vals.map((v, k) => cell(fmt(m, v.p), k, 'pv', v.pe && ok(v.p), rawOf(m, v.p))).join('')}</tr>`
           + `<tr class="${cls} r-yoy"><th class="stick s1"></th><th class="stick s2">${cmpLbl()}</th>${vals.map((v, k) => dCell(v, k, '')).join('')}</tr>`;
       }
     }
@@ -1463,7 +1479,7 @@ function computeKpi() {
   if (!KPI || !KPI.targets) return null;
   const y = KPI.year, yearAll = span(`${y}-01-01`, `${y}-12-31`), dates = yearAll.filter(d => DAILY.idx.has(d));
   if (!dates.length) return null;
-  const segs = KPI.segs && KPI.segs.length ? KPI.segs : ['T'], prevDates = back(dates), T = KPI.targets;
+  const segs = KPI.segs && KPI.segs.length ? KPI.segs : ['T'], prevDates = dates.map(x => addDays(x, -364)), T = KPI.targets;  // KPI 는 비교 연도와 상관없이 늘 전년 동기
   // 실적 원천: 신규회원실적대시보드 총)첫구매 거래액·고객수 (당년신규) — 없으면 전체관점 회원구분(segs) 합
   const NY = {amt: 'nya', cust: 'nyc'};
   const fromNew = KPI.source === 'newmember' && !!DAILY.s['nya|*TOTAL'] && !!DAILY.s['nyc|*TOTAL'];
@@ -1880,7 +1896,7 @@ function trendBars(host, bars) {
     }
     if (ok(x.p)) {
       const hw = Math.max(1, slot * 0.4), y = Yp(x.p).toFixed(1);
-      s += `<line class="mprev" x1="${(cx - hw).toFixed(1)}" x2="${(cx + hw).toFixed(1)}" y1="${y}" y2="${y}"><title>전년 ${pFmt(x.p)}</title></line>`;
+      s += `<line class="mprev" x1="${(cx - hw).toFixed(1)}" x2="${(cx + hw).toFixed(1)}" y1="${y}" y2="${y}"><title>${yoyBase()} ${pFmt(x.p)}</title></line>`;
     }
   });
   for (const i of labelIdx(n, slot * (n - 1), LABEL_GAP[S.grain] || 40)) {
@@ -1909,7 +1925,7 @@ function renderProd() {
   const fk = focusIdx(cols), fkey = fk >= 0 ? cols[fk].tip : null;
   const all = [ytd, ...opts], sel = all.find(o => o.key === PD.sel) || all.find(o => o.key === fkey) || opts[0] || ytd;  // 기본 = 상단 기준 기간
   PD.sel = sel.key;
-  const cLbl = sel === ytd ? '전년비' : cmpLbl(), noPrevLine = sel !== ytd && cmpPop(), baseName = sel === ytd ? '전년' : baseShort();  // 연간 누계는 늘 전년 동기와 비교
+  const cLbl = sel === ytd ? yoyLbl() : cmpLbl(), noPrevLine = sel !== ytd && cmpPop(), baseName = sel === ytd ? yoyBase() : baseShort();  // 연간 누계는 늘 전년 동기와 비교
   $('#pdPeriodLbl').textContent = `${gName.slice(0, 1)} 선택`;
   $('#pdPeriod').innerHTML = all.map(o => `<option value="${esc(o.key)}">${esc(o.tip)}</option>`).join('');
   $('#pdPeriod').value = sel.key;
@@ -2125,7 +2141,7 @@ function renderProd() {
     ${grpHtml}
     <div class="pgrid">
       <div><h3>${esc(sideTitle)}</h3>${sideHtml || '<div class="nodata" style="height:60px">데이터 없음</div>'}</div>
-      <div><h3>${gName} 추이${avg ? ' (일평균)' : ''}<span><i class="k"></i>${Y}</span>${cmpPop() ? '' : '<span><i class="k prev"></i>전년 동기간</span>'}<span>막대를 누르면 그 기간 선택</span></h3><div class="pd-m" id="pdTrend"></div></div>
+      <div><h3>${gName} 추이${avg ? ' (일평균)' : ''}<span><i class="k"></i>${Y}</span>${cmpPop() ? '' : `<span><i class="k prev"></i>${esc(baseLbl())}</span>`}<span>막대를 누르면 그 기간 선택</span></h3><div class="pd-m" id="pdTrend"></div></div>
     </div>
     <div class="pcap">${esc(sel.tip)} · ${PD.view === 'bpu' ? 'BPU 기준' : '채널 기준'} · ${chm ? `채널 ${esc(PD.chans.map(k => PRD.ch[k]).join('·'))}` : '전 채널'}${PCM ? ` · 카테고리 ${esc(catTxt())}` : ''} · 첫구매 · 표시 ${avg ? '일평균' : '합계'} 거래액 <b>${fmtM(totA)}</b> · 주문고객수 <b>${fU(totU)}</b>${covTxt} · ${cLbl} = ${hasPrev ? `${esc(sel.ptip)}${noPrevLine ? '' : ' (364일 전 동요일)'}` : '비교 데이터 없음'}${uvOn ? ' · 상품UV · CR = 상품관점 실측(채널을 여러 개 고르면 채널별 UV 합)' : ''}${PCM ? ' · 카테고리를 거르면 커버리지 · 상품UV · CR 은 숨김' : ''} · 주 채널 = 가장 많이 판 채널과 비중 · N개 = 판매한 채널 수 · ${capTop} · 주문고객수는 상품별 합이라 한 주문에 여러 상품이면 중복돼 실제 첫구매 고객수보다 클 수 있음</div>`;
   trendBars($('#pdTrend'), tbars);
@@ -2259,7 +2275,7 @@ function renderApp() {
     const sub = subId ? `<div class="t-r"><span>${esc(AX[subId].short || AX[subId].name)}</span><span>${fmtAX(subId, axVal(subId, col.cur))}</span></div>`
       : APP_DEP.has(id) && !ok(c) && appLast && col.cur[0] > appLast  // 고른 기간에 앱 설치 raw 가 아직 없음(갱신 전)
         ? `<div class="t-r"><span>앱 설치 데이터</span><span>~${md(appLast)}까지</span></div>`
-        : `<div class="t-r"><span>${pop ? CMP_NAME[S.grain] : '전년 동기간'}</span><span>${fmtAX(id, p)}</span></div>`;
+        : `<div class="t-r"><span>${pop ? CMP_NAME[S.grain] : baseLbl()}</span><span>${fmtAX(id, p)}</span></div>`;
     return `<div class="tile" data-ax="${id}"${M.formula ? ` title="${esc(M.formula)}"` : ''}><div class="t-l">${esc(M.name)}${M.type === 'stock' ? '<span class="t-tag">기간 말</span>' : ''}</div>
       <div class="t-v">${fmtAX(id, c)}${M.unit && ok(c) ? `<small>${M.unit}</small>` : ''}</div>
       <div class="t-r"><span>${cmpLbl()}</span><b class="${dl.c}">${dl.t}</b></div>${sub}</div>`;
@@ -2276,7 +2292,7 @@ function renderApp() {
   ];
   const host = $('#appCharts');
   host.innerHTML = charts.map((c, i) => {
-    const lg = c.single ? `<span class="lg-in"><i class="k" style="background:${c.series[0].color}"></i>${y}</span>${pop ? '' : `<span class="lg-in"><i class="k prev"></i>${y - 1}</span>`}`
+    const lg = c.single ? `<span class="lg-in"><i class="k" style="background:${c.series[0].color}"></i>${y}</span>${pop ? '' : `<span class="lg-in"><i class="k prev"></i>${y - yk()}</span>`}`
       : c.series.map(sr => `<span class="lg-in"><i class="k" style="background:${sr.color}"></i>${esc(sr.name)}</span>`).join('');
     return `<div class="card cc"><div class="cc-t">${esc(c.t)}</div><div class="cc-s">${esc(c.s)} · ${lg}</div><div class="cc-b" data-ak="${i}"></div></div>`;
   }).join('');
@@ -2632,12 +2648,12 @@ const memoViewAt = (grain, at) => {  // 메모에 붙일 기간 — 고른 기�
   v.range = v.grain === 'month' ? '' : S.range[v.grain];
   return v;
 };
-const memoView = () => ({year: S.year, grain: S.grain, mode: S.mode, cmp: S.cmp, at: S.at[S.grain] || '', range: S.grain === 'month' ? '' : S.range[S.grain],
+const memoView = () => ({year: S.year, grain: S.grain, mode: S.mode, cmp: S.cmp, cmpY: yk(), at: S.at[S.grain] || '', range: S.grain === 'month' ? '' : S.range[S.grain],
   chans: selChans(), segs: selSegs(), layout: S.layout, bpus: PRD ? PD.bpus.slice() : [], bpuAll: PRD ? PD.bpuAll : true, cats: PRD ? PD.cats.slice() : [], catNone: !!PD.catNone, pd: {view: PD.view, path: PD.path.slice(), chans: PD.chans.slice(), cats: PD.cats.slice(), catNone: !!PD.catNone, metric: PD.metric}});
 const memoLabel = v => {
   const c = v.at ? memoColsFor(v.grain).find(x => x.id === v.at) : null;
   const at = v.at ? (c ? `${v.year}년 ${c.opt || c.tip}` : v.at) : `${v.year}년 최근`;
-  return [at, {month: '월별', week: '주별', day: '일별'}[v.grain], v.mode === 'sum' ? '누계' : '일평균', v.cmp === 'pop' ? `${CMP_NAME[v.grain]}비` : '전년비',
+  return [at, {month: '월별', week: '주별', day: '일별'}[v.grain], v.mode === 'sum' ? '누계' : '일평균', v.cmp === 'pop' ? `${CMP_NAME[v.grain]}비` : (v.cmpY > 1 ? `${v.year - v.cmpY}년비` : '전년비'),
     `채널 ${(v.chans || []).map(chLabel).join('·')}`, memoFiltTxt(v)].filter(Boolean).join(' · ');
 };
 const memoSpan = at => {  // 메모 · 화면이 보고 있는 기간의 실제 날짜 구간 (없으면 null = 기간 고정 안 함)
@@ -2664,6 +2680,7 @@ function memoGo(v) {  // 메모가 붙은 보기로 — 없는 연도 · 채널�
   if (!v) return;
   if (YEARS.includes(v.year)) S.year = v.year;
   for (const k of ['grain', 'mode', 'cmp', 'layout']) if (ALLOWED[k].includes(v[k])) S[k] = v[k];
+  S.cmpY = Number.isInteger(v.cmpY) && YEARS.includes(S.year - v.cmpY) ? v.cmpY : 1;
   S.at[S.grain] = v.at || '';
   if (v.range && S.grain !== 'month') S.range[S.grain] = v.range;
   const ch = CHS.filter(c => (v.chans || []).includes(c)), sg = SEG_KEYS.filter(c => (v.segs || []).includes(c));
