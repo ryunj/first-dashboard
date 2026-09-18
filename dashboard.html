@@ -609,7 +609,7 @@ body.pdfcap .pgrid{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr)!important
   <details class="notes">
     <summary>지표 정의 · 집계 기준</summary>
     <ul>
-      <li><b>첫구매</b> = 전체관점 <code>_첫구매</code> raw 기준. 거래액 단위 백만원. <b>회원구분</b>(당월신규 · 기가입신규 · 기존)은 거래액 · 고객수 · 객단가에만 적용된다.</li>
+      <li><b>첫구매</b> = 전체관점 <code>_첫구매</code> raw 기준. 전체관점 원천이 없는 해(2024년 이전)의 첫구매 거래액 · 고객수 · 객단가는 <b>신규회원대시보드 '총)첫구매 거래액 · 고객수 (전체)'</b>(채널별)로 대신한다 — 2025~2026년에 두 원천을 대조하면 평소 신규회원대시보드가 1~3% 높고, 2025년 9~10월은 전체관점이 크게 높다(대량 첫구매 이벤트 등이 한쪽에만 잡힘). 이 원천엔 회원구분이 없어 당월신규 · 기가입신규 · 기존은 비어 있다. 이 값이 화면에 섞이면 요약 설명과 지표 설명에 표시한다. 거래액 단위 백만원. <b>회원구분</b>(당월신규 · 기가입신규 · 기존)은 거래액 · 고객수 · 객단가에만 적용된다.</li>
       <li><b>첫구매율</b> = 태블로 첫구매율 raw(0.1% 단위 반올림)를 트래픽으로 가중해 재집계 · <b>가입률</b> = 가입자수 ÷ 비회원 트래픽 · <b>객단가</b> = 거래액 ÷ 고객수 · <b>당일가입 CR</b> = 당일가입 첫구매자 ÷ 가입자수.</li>
       <li><b>비회원 트래픽 기준</b> — 일별: 일 트래픽. <b>주별: 태블로 주간(중복 제거) 트래픽</b> → 트래픽 · 가입률 · 첫구매율이 내부 대시보드 주별 값과 같다. <b>월별 · 일별 누계: 일자 트래픽 합(중복 포함)</b> → 월간 중복 제거 raw가 없어서, 내부 대시보드보다 트래픽은 크고 가입률 · 첫구매율은 낮게 나온다(주 기준 약 0.8배 차이).</li>
       <li><b>주별 · 월별</b> 거래액 · 고객수 · 가입자수는 일자 raw 합산. <b>일평균</b> = 기간 합계 ÷ 데이터 일수. <b>누계</b> = 월별은 월 합계, 주별은 주 합계, 일별은 하루 값이라 일평균과 누계가 같다.</li>
@@ -695,13 +695,23 @@ const FIRST = [DAILY.dates[0], ...wCover.map(p => p.start)].filter(Boolean).sort
 const LAST = [DAILY.dates.at(-1), ...wCover.map(p => addDays(p.start, p.d - 1))].filter(Boolean).sort().at(-1);
 const YEARS = [...new Set([...DAILY.dates.map(d => +d.slice(0, 4)), ...wCover.map(p => p.y)])].sort((a, b) => b - a);
 
+// 전체관점 첫구매 원천이 시작되기 전(2024년 이전)은 신규회원대시보드 '총)첫구매 (전체)'로 대신한다 — 회원구분 '전체'만
+const AMT_FIRST = (() => { const a = DAILY.s['amt|T|*TOTAL']; if (a) for (let i = 0; i < a.length; i++) if (a[i] != null) return DAILY.dates[i]; return '9999'; })();
+const ALT_BASE = {amt: 'nma', cust: 'nmc'};
+const altKey = (base, key) => (ALT_BASE[base] && key.startsWith(`${base}|T|`) ? `${ALT_BASE[base]}|${key.slice(base.length + 3)}` : null);
+const altUsed = dates => { const a = DAILY.s['nma|*TOTAL']; return !!a && dates.some(d => d < AMT_FIRST && a[DAILY.idx.get(d)] != null); };
 function sumBase(base, key, dates, allowWeekly) {
-  const da = DAILY.s[key], wa = allowWeekly && FALLBACK.has(base) ? WEEKLY.s[key] : null;
+  const da = DAILY.s[key], wa = allowWeekly && FALLBACK.has(base) ? WEEKLY.s[key] : null, ak = altKey(base, key), aa = ak ? DAILY.s[ak] : null;
   let v = 0, n = 0, gap = false, est = false;
   const need = new Map();
   for (const d of dates) {
     const i = DAILY.idx.get(d);
-    if (i != null) { const x = da ? da[i] : null; if (x != null) { v += x; n++; } continue; }
+    if (i != null) {
+      let x = da ? da[i] : null;
+      if (x == null && aa && d < AMT_FIRST) x = aa[i];  // 신규회원대시보드 기준
+      if (x != null) { v += x; n++; }
+      continue;
+    }
     const iw = isoWeek(d), wi = wa ? WEEKLY.byIso.get(`${iw.y}-${iw.w}`) : undefined;
     if (wi == null || wa[wi] == null) { gap = true; continue; }
     need.set(wi, (need.get(wi) || 0) + 1);
@@ -877,7 +887,10 @@ const PROD_MET = new Set(['amt', 'cust', 'aov']);  // 상품 데이터로 다시
 const filtBase = () => (cubeOn() ? '상품관점 기준' : '상품 기준');
 const baseNote = m => !prodFiltOn() ? '' : PROD_MET.has(m) ? filtBase() : '전체 기준(이 필터 미적용)';
 const baseTag = m => !prodFiltOn() ? '' : `<small class="tag-b${PROD_MET.has(m) ? '' : ' off'}" title="${PROD_MET.has(m) ? filtBase() : '전체 기준(이 필터 미적용)'}">${PROD_MET.has(m) ? (cubeOn() ? '상품관점' : '상품 기준') : '전체 기준'}</small>`;  // 타일 칸이 좁아 짧게
-const trNote = m => [UNIQUE_TR.has(m) && S.grain === 'month' ? '일자 합산 트래픽 기준' : '', baseNote(m)].filter(Boolean).join(' · ');
+let ALT_NOTE = false;  // 지금 보는 기간(당해 · 비교)에 신규회원대시보드 대체 값이 섞였는가 — render 때 정한다
+const altYear = () => String(+AMT_FIRST.slice(0, 4) - 1);
+const altNote = m => (ALT_NOTE && PROD_MET.has(m) && !prodFiltOn() ? `${altYear()}년 이전 = 신규회원대시보드 총)첫구매(전체) 기준` : '');
+const trNote = m => [UNIQUE_TR.has(m) && S.grain === 'month' ? '일자 합산 트래픽 기준' : '', baseNote(m), altNote(m)].filter(Boolean).join(' · ');
 
 /* ---------- 기간 열: 각 열 = 당해 날짜 목록(cur) + 비교 날짜 목록(prev) ----------
    비교 기준 S.cmp — yoy: 364일 전 동기간·동요일(prevY) · pop: 직전 기간 = 전월·전주·전일(prevP). 두 쪽을 다 들고 있고 선택한 쪽을 prev 로 쓴다. */
@@ -967,6 +980,7 @@ function getCols(all) {  // all = 연도 전체 · 아니면 주별·일별은 �
 /* 한 번 렌더할 때 지표 × 계열 값을 한 번만 계산해 차트·표·CSV가 같이 쓴다 */
 let lastCols = [], MODEL = {};
 function buildModel(cols) {
+  ALT_NOTE = cols.some(c => altUsed(c.cur) || altUsed(c.prev || []));
   const mdl = {};
   for (const m of METRICS) mdl[m] = seriesKeys(m).map(r => ({...r, label: rowLabel(m, r), vals: cols.map(c => evalCol(m, r, c))}));
   return mdl;
@@ -1117,7 +1131,8 @@ function renderSummary(cols) {
   const who = chLabel(ch0) + (bpu0 != null ? ` · ${bpu0 < 0 ? 'BPU 전체' : PRD.bpu[bpu0]}` : '') + (seg0 !== 'T' ? ` · ${segLabel(seg0)}` : '') + (multi ? ' (선택 중 첫 번째)' : '');
   $('#sumDesc').textContent = `${col.tip} · ${modeName()} · ${who} · ${cmpLbl()}: ${col.ptip || '비교 기간 없음'}${pop ? '' : '(동요일)'} 대비`
     + (prodFiltOn() ? ` · ${filtBase()} ${prodFiltTxt()} — 거래액·고객수·객단가만 적용` : '')
-    + (prodFiltOn() && !cubeOn() && thinText(col.cur) ? ` · ⚠ 조직 카테고리 원천이 덜 채워진 날짜 ${thinText(col.cur)} — 상품 기준 값이 작게 나옴` : '');
+    + (prodFiltOn() && !cubeOn() && thinText(col.cur) ? ` · ⚠ 조직 카테고리 원천이 덜 채워진 날짜 ${thinText(col.cur)} — 상품 기준 값이 작게 나옴` : '')
+    + (!prodFiltOn() && (altUsed(col.cur) || altUsed(col.prev || [])) ? ` · 첫구매 거래액 · 고객수 · 객단가의 ${altYear()}년 이전 값은 신규회원대시보드 총)첫구매(전체) 기준(전체관점과 평소 1~3% 차이 · 회원구분은 '전체'만)` : '');
   $('#tiles').innerHTML = METRICS.map(m => {
     const r = rowFor(m), v = evalCol(m, r, col), main = fmtDelta(v.d);
     const other = oPrev && oPrev.length ? fmtDelta(delta(m, v.c, compute(m, r, oPrev, oWk).v)) : {t: '–', c: ''};

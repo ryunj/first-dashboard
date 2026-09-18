@@ -79,7 +79,9 @@ PRODUCT_COLS = {'date': '결제_일자', 'bpu': 'BPU', 'ch': 'AF대분류', 'cat
 # 신규회원 실적 대시보드(첫구매) — '당년신규' 첫구매 실적 원천. 연령대 Total 행만 쓴다
 NEWMEMBER_KEY = '신규회원실적대시보드'
 NEWMEMBER_METRICS = {'총)첫구매 거래액 (당년신규)': 'nya', '총)첫구매 고객수 (당년신규)': 'nyc',
-                     '순)첫구매 거래액 (당년신규)': 'nyna', '순)첫구매 고객수 (당년신규)': 'nync'}
+                     '순)첫구매 거래액 (당년신규)': 'nyna', '순)첫구매 고객수 (당년신규)': 'nync',
+                     # 전체 첫구매(총) — 전체관점 원천이 없는 해(2024년 이전)의 첫구매 거래액 · 고객수를 대신한다(대시보드가 판단)
+                     '총)첫구매 거래액 (전체)': 'nma', '총)첫구매 고객수 (전체)': 'nmc'}
 # 앱 설치 · 앱푸시 수신동의 · 회원현황
 APP_KEY = 'APP설치'
 APP_COLS = {'전체 설치': 'all', '신규 설치': 'new', '재설치': 're', '스토어 방문': 'visit', '삭제': 'del',
@@ -89,7 +91,7 @@ PUSH_SEG = {'기존': 'ex', '신규': 'ny', 'Total': 'tot'}
 PUSH_ITEM = {'수신동의': 'stock', '증감': 'chg', '신규추가(+)': 'add', '기존이탈(-)': 'out'}
 MEMBER_STATUS_KEY = '회원현황'
 MEMBER_STATUS = {'누적회원수(천)': 'cum', '신규회원수': 'new', '유효회원수': 'valid'}
-CHANNEL_BASES = {'amt', 'cust', 'tr', 'sg', 'cr', 'fpr', 'nya', 'nyc', 'nyna', 'nync'}  # 키 뒤쪽이 채널명인 시리즈
+CHANNEL_BASES = {'amt', 'cust', 'tr', 'sg', 'cr', 'fpr', 'nya', 'nyc', 'nyna', 'nync', 'nma', 'nmc'}  # 키 뒤쪽이 채널명인 시리즈
 WEEKDAY_KO = '월화수목금토일'
 
 YEAR_RE = re.compile(r'^\d{4}$')
@@ -284,7 +286,7 @@ def _load_newmember(rows, series):
         for p, v in zip(dates, r[first:]):
             put(series, 'daily', f'{base}|{ch}', p, to_num(v))
         n += 1
-    return f'daily 신규회원 당년신규 첫구매 {n}행'
+    return f'daily 신규회원 첫구매(당년신규 · 전체) {n}행'
 
 
 def _load_member_status(rows, series):
@@ -510,6 +512,11 @@ def read_product_csv(path, seg_out=None):
     def total(member):  # 회원구분 member · 채널 · BPU · 상품군 모두 *TOTAL 인 거래액 합
         return sum(v for labels, vals in records
                    if labels[:5] == ['일평균거래액', member, '*TOTAL', '*TOTAL', '*TOTAL'] for v in vals if v)
+    # BPU 자리(구분08)에 채널 이름만 들어 있으면 내보내기 설정이 바뀐 파일 — 읽으면 BPU 값이 섞이므로 통째로 뺀다
+    chans = {l[2] for l, _ in records if len(l) > 3} - {'*TOTAL', '', '-'}
+    bpus = {l[3] for l, _ in records if len(l) > 3} - {'*TOTAL', '', '-'}
+    if bpus and bpus <= chans:
+        raise ValueError(f'BPU 열(구분08)에 채널 이름만 있음 {sorted(bpus)[:4]} — 태블로 내보내기의 구분08 을 BPU 로 바꿔 다시 받아 주세요 (이 파일은 읽지 않음)')
     whole, existing = total('*TOTAL'), total('3_기존')
     if whole and existing / whole > MALL_EXISTING_SHARE:  # 파일명에 _첫구매 가 없어도 내용으로 판별
         print(f'  [건너뜀] {path.name}: 기존회원 거래액 비중 {existing / whole:.0%} → MALL 전체 파일로 보고 커버리지에서 뺌')

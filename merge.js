@@ -23,7 +23,8 @@ const PRODUCT_COLS = [['date', '결제_일자'], ['bpu', 'BPU'], ['ch', 'AF대�
                       ['code', '상품코드'], ['name', '상품명'], ['amt', '거래액'], ['cust', '주문고객수']];
 const NEWMEMBER_KEY = '신규회원실적대시보드';
 const NEWMEMBER_METRICS = {'총)첫구매 거래액 (당년신규)': 'nya', '총)첫구매 고객수 (당년신규)': 'nyc',
-                           '순)첫구매 거래액 (당년신규)': 'nyna', '순)첫구매 고객수 (당년신규)': 'nync'};
+                           '순)첫구매 거래액 (당년신규)': 'nyna', '순)첫구매 고객수 (당년신규)': 'nync',
+                           '총)첫구매 거래액 (전체)': 'nma', '총)첫구매 고객수 (전체)': 'nmc'};  // nma · nmc = 전체관점이 없는 해의 첫구매 대체
 const APP_KEY = 'APP설치';
 const APP_COLS = {'전체 설치': 'all', '신규 설치': 'new', '재설치': 're', '스토어 방문': 'visit', '삭제': 'del', 'Push 활성 기기': 'pushdev', '순증 설치': 'net'};
 const PUSH_KEY = 'PUSH';
@@ -31,7 +32,7 @@ const PUSH_SEG = {'기존': 'ex', '신규': 'ny', 'Total': 'tot'};
 const PUSH_ITEM = {'수신동의': 'stock', '증감': 'chg', '신규추가(+)': 'add', '기존이탈(-)': 'out'};
 const MEMBER_STATUS_KEY = '회원현황';
 const MEMBER_STATUS = {'누적회원수(천)': 'cum', '신규회원수': 'new', '유효회원수': 'valid'};
-const CHANNEL_BASES = new Set(['amt', 'cust', 'tr', 'sg', 'cr', 'fpr', 'nya', 'nyc', 'nyna', 'nync']);
+const CHANNEL_BASES = new Set(['amt', 'cust', 'tr', 'sg', 'cr', 'fpr', 'nya', 'nyc', 'nyna', 'nync', 'nma', 'nmc']);
 const WEEKDAY_KO = '월화수목금토일';
 const MALL_EXISTING_SHARE = 0.7;
 const YEAR_RE = /^\d{4}$/, DATE_RE = /^(\d{1,2})\/(\d{1,2})$/, WEEK_RE = /^(\d{1,2})월\s*(\d)주차$/;
@@ -303,7 +304,7 @@ function loadNewmember(rows, S) {
     r.slice(first).forEach((v, j) => put(S, 'daily', `${base}|${ch}`, dates[j], toNum(v)));
     n++;
   }
-  return `일별 신규회원 당년신규 첫구매 ${n}행 (${span(dates)})`;
+  return `일별 신규회원 첫구매(당년신규 · 전체) ${n}행 (${span(dates)})`;
 }
 function loadMemberStatus(rows, S) {
   const wd = rows.length > 1 && rows[1].slice(1, 4).some(c => c.startsWith('(')) ? rows[1].slice(1) : null;
@@ -407,6 +408,10 @@ function readCoverage(rows, name) {  // 상품관점 일자별 CSV → Map('날�
   if (kind !== 'daily') return {out, seg, note: '주별 — 상품 커버리지는 일자별 파일만 씀'};
   const total = member => records.reduce((a, [l, vals]) => a + (l[0] === '일평균거래액' && l[1] === member && l[2] === '*TOTAL' && l[3] === '*TOTAL' && l[4] === '*TOTAL'
     ? vals.reduce((s, v) => s + (v || 0), 0) : 0), 0);
+  // BPU 자리(구분08)에 채널 이름만 들어 있으면 내보내기 설정이 바뀐 파일 — 읽으면 BPU 값이 섞이므로 통째로 뺀다 (build_data 와 같다)
+  const setOf = i => new Set(records.filter(([l]) => l.length > 3).map(([l]) => l[i]).filter(x => x && x !== '*TOTAL' && x !== '-'));
+  const chs = setOf(2), bps = setOf(3);
+  if (bps.size && [...bps].every(x => chs.has(x))) throw new Error(`BPU 열(구분08)에 채널 이름만 있음 (${[...bps].slice(0, 4).join(', ')}) — 태블로 내보내기의 구분08 을 BPU 로 바꿔 다시 받아 주세요 (이 파일은 읽지 않음)`);
   const whole = total('*TOTAL'), existing = total('3_기존');
   if (whole && existing / whole > MALL_EXISTING_SHARE) return {out, seg, note: `기존회원 거래액 비중 ${Math.round(existing / whole * 100)}% → MALL 전체 파일로 보고 뺌`};
   for (const [labels, vals] of records) {
@@ -493,7 +498,7 @@ function mergeSeries(base, S, sources) {
   stats.filledDates = [...incomingDates].filter(p => oldDates.has(p)).length;
   const last = dates.length ? dates[dates.length - 1] : null;
   // 진행 중인 주의 일수는 실적 시리즈 기준 (build_data.py 와 같게)
-  const PERF_BASES = new Set(['amt', 'cust', 'tr', 'sg', 'cr', 'fpr', 'nya', 'nyc', 'nyna', 'nync']);
+  const PERF_BASES = new Set(['amt', 'cust', 'tr', 'sg', 'cr', 'fpr', 'nya', 'nyc', 'nyna', 'nync', 'nma', 'nmc']);
   let lastPerf = null;
   for (const [k, ser] of dSer) if (PERF_BASES.has(k.split('|')[0])) for (const [p, v] of ser) if (v != null && (!lastPerf || p > lastPerf)) lastPerf = p;
   const lastWk = lastPerf || last;
