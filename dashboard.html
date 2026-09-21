@@ -2663,10 +2663,14 @@ const memoSpan = at => {  // 메모 · 화면이 보고 있는 기간의 실제 
   if (m) { const mon = isoMonday(+m[1], +m[2]); return [mon, addDays(mon, 6)]; }
   return /^\d{4}-\d{2}-\d{2}$/.test(at || '') ? [at, at] : null;
 };
+const memoCurrentAt = () => {  // '최근'(빈 값)도 화면에 실제 표시 중인 최신 월·주·일로 풀어 기간을 비교한다
+  const cols = memoColsFor(S.grain), k = focusIdx(cols);
+  return k >= 0 ? cols[k].id : '';
+};
 const memoHit = v => {  // 기간이 겹치면 같은 화면으로 본다 — 주별 9월 2주차 메모는 월별 9월에서도
-  const ms = memoSpan(v.at), cs = memoSpan(S.at[S.grain] || '');
-  if (!ms) return !cs && v.grain === S.grain;  // 기간을 고정하지 않은 메모는 기준 기간이 없는 같은 단위 화면에서
-  return !cs || (ms[0] <= cs[1] && ms[1] >= cs[0]);  // 화면에 기준 기간이 없으면 그 해 메모를 모두
+  const curAt = S.at[S.grain] || '', ms = memoSpan(v.at), cs = memoSpan(curAt || memoCurrentAt());
+  if (!ms) return !curAt && v.grain === S.grain;  // 기간을 고정하지 않은 메모는 '최근'인 같은 단위 화면에서
+  return !!cs && ms[0] <= cs[1] && ms[1] >= cs[0];
 };
 const memoFiltTxt = v => {  // 메모를 붙일 때의 BPU · 카테고리 (상품 데이터가 있을 때만 뜻이 있다)
   if (!PRD) return '';
