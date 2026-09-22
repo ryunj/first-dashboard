@@ -19,7 +19,9 @@ let html = fs.readFileSync(new URL('dashboard.html', root), 'utf8');
 const aiSource = fs.readFileSync(new URL('ai_question.js', root), 'utf8');
 const marker = /<script>\r?\nwindow\.__dashMain = function \(\) \{/;
 const safeData = JSON.stringify(backup.data).replace(/<\//g, '<\\/');
-const inject = `<script>window.DASH_EMBED='test';window.DASH_DATA=${safeData};window.DASH_KPI=null;window.DASH_PROD=null;</script><script>${aiSource}</script>`;
+const safeKpi = JSON.stringify(backup.kpi).replace(/<\//g, '<\\/');
+const safeProd = JSON.stringify(backup.prod).replace(/<\//g, '<\\/');
+const inject = `<script>window.DASH_EMBED='test';window.DASH_DATA=${safeData};window.DASH_KPI=${safeKpi};window.DASH_PROD=${safeProd};</script><script>${aiSource}</script>`;
 html = html.replace(marker, match => inject + match);
 
 const executablePath = [
@@ -62,5 +64,40 @@ assert.ok(Math.abs(dashboardAverage - independentAverage) < 0.001, 'dashboard av
 const formatted = await page.evaluate(value => window.__dash.fmt('amt', value), dashboardAverage);
 assert.ok(answer.includes(formatted), `answer must show independently verified value ${formatted}`);
 
+await page.locator('#aiQuestionInput').fill('24년 9월 3주차, 25년 9월3주차, 26년 9월 3주차 비교 및 인사이트');
+await page.locator('#aiQuestionSend').click();
+const weekAnswer = await page.locator('.aiq-answer').last().innerText();
+assert.match(weekAnswer, /2024-09-16~2024-09-22/);
+assert.match(weekAnswer, /2025-09-15~2025-09-21/);
+assert.match(weekAnswer, /2026-09-14~2026-09-20/);
+
+const stateBeforeAll = await page.evaluate(() => JSON.stringify(window.__dash.state));
+await page.locator('#aiQuestionInput').fill('2026년 9월 모든 실적 채널별 BPU별 카테고리별 보여줘');
+await page.locator('#aiQuestionSend').click();
+const allAnswer = await page.locator('.aiq-answer').last().innerText();
+assert.match(allAnswer, /앱·푸시·회원 실적/);
+assert.match(allAnswer, /KPI/);
+assert.match(allAnswer, /상품 실적/);
+assert.match(allAnswer, /채널별 상위 실적/);
+assert.match(allAnswer, /BPU별 상위 실적/);
+assert.match(allAnswer, /카테고리별 상위 실적/);
+assert.doesNotMatch(allAnswer, /지원하지 않는 조건/);
+assert.equal(await page.evaluate(() => JSON.stringify(window.__dash.state)), stateBeforeAll, 'all-results question must not mutate dashboard state');
+
+const labelCheck = await page.evaluate(() => {
+  const q = window.__dash.queryProducts({dates:['2026-09-21'],dimensions:['category']});
+  const outdoor = q.groups.category.all.find(row => row.name === '아웃도어');
+  if (!outdoor) return {found:false};
+  window.__dash.prodState.cats = [outdoor.key];
+  window.__dash.prodState.catNone = false;
+  window.__dash.render();
+  const groups = [...document.querySelectorAll('#tblWrap tr.grp')].map(row => row.innerText.replace(/\s+/g, ' '));
+  return {found:true, amount:groups.find(x => x.startsWith('첫구매 거래액')), traffic:groups.find(x => x.startsWith('비회원 트래픽'))};
+});
+assert.equal(labelCheck.found, true, 'real backup must include 아웃도어 category');
+assert.match(labelCheck.amount, /카테고리 아웃도어/);
+assert.match(labelCheck.traffic, /카테고리 아웃도어 필터 미적용/);
+assert.equal(errors.length, 0, `page errors after all queries: ${errors.join(' | ')}`);
+
 await browser.close();
-console.log(`OK: real backup ${backup.data.meta.lastDate}, official/raw parity and representative question`);
+console.log(`OK: real backup ${backup.data.meta.lastDate}, weekly periods, all metric families, category labels and official parity`);

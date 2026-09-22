@@ -44,10 +44,30 @@ assert.throws(
   () => ai.parseQuestion('추석 전후 영향 알려줘', {}),
   /연도|날짜/,
 );
-assert.throws(
-  () => ai.parseQuestion('25년 추석 10월 3-9 BPU별로 알려줘', {}),
-  /지원하지 않는 조건.*BPU/,
-);
+const dimensional = ai.parseQuestion('25년 추석 10월 3-9 채널/BPU/카테고리까지 알려줘', {});
+assert.deepEqual(plain(dimensional.dimensions), ['channel', 'bpu', 'category']);
+assert.deepEqual(plain(dimensional.families), ['product']);
+const selectedProductFilters = ai.parseQuestion('26년 9월 아웃도어 카테고리 e-영업1 BPU 실적', {
+  availableBpus: ['e-영업1', 'e-영업2'], availableCategories: ['아웃도어', '리빙'],
+});
+assert.deepEqual(plain(selectedProductFilters.bpus), ['e-영업1']);
+assert.deepEqual(plain(selectedProductFilters.categories), ['아웃도어']);
+assert.equal(selectedProductFilters.explicit.bpus, true);
+assert.equal(selectedProductFilters.explicit.categories, true);
+
+const weekly = ai.parseQuestion('24년 9월 3주차, 25년 9월3주차, 26년 9월 3주차 비교 및 인사이트', {});
+assert.deepEqual(plain(weekly.events.map(({start, end}) => [start, end])), [
+  ['2024-09-16', '2024-09-22'], ['2025-09-15', '2025-09-21'], ['2026-09-14', '2026-09-20'],
+]);
+
+const monthly = ai.parseQuestion('2026년 8월 앱 신규 설치와 KPI 알려줘', {});
+assert.deepEqual(plain(monthly.events.map(({start, end}) => [start, end])), [['2026-08-01', '2026-08-31']]);
+assert.ok(monthly.families.includes('app'));
+assert.ok(monthly.families.includes('kpi'));
+assert.deepEqual(plain(monthly.appMetrics), ['appNew']);
+
+const everything = ai.parseQuestion('2026년 9월 모든 실적 보여줘', {});
+assert.deepEqual(plain(everything.families), ['core', 'app', 'kpi', 'product']);
 assert.throws(
   () => ai.parseQuestion(`25년 행사 10월 3-9 ${'질문'.repeat(600)}`, {}),
   /1,000자/,

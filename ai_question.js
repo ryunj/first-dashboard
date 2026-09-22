@@ -11,6 +11,13 @@ const METRIC_ALIASES = [
 const SEGMENT_ALIASES = [
   ['당월신규', '1'], ['기가입신규', '2'], ['기존회원', '3'], ['기존', '3'], ['회원전체', 'T'],
 ];
+const APP_ALIASES = [
+  ['앱 신규 설치', 'appNew'], ['신규 설치', 'appNew'], ['전체 설치', 'appAll'], ['재설치', 'appRe'],
+  ['스토어 방문', 'appVisit'], ['순증 설치', 'appNet'], ['앱 삭제', 'appDel'], ['Push 활성 기기', 'appDev'],
+  ['수신동의 순증', 'pChg'], ['수신동의 이탈', 'pOut'], ['수신동의 추가', 'pAdd'], ['수신동의 회원', 'pTot'],
+  ['유효회원수', 'mValid'], ['누적회원수', 'mCum'], ['신규회원수', 'mNew'],
+];
+const DIMENSIONS = [['채널', 'channel'], ['BPU', 'bpu'], ['카테고리', 'category'], ['브랜드', 'brand'], ['상품', 'product']];
 
 const pad = n => String(n).padStart(2, '0');
 const toTime = s => Date.UTC(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10));
@@ -33,6 +40,15 @@ function validDate(year, month, day) {
   return d.getUTCFullYear() === year && d.getUTCMonth() === month - 1 && d.getUTCDate() === day;
 }
 
+function weekPeriod(year, month, nth) {
+  if (month < 1 || month > 12 || nth < 1 || nth > 6) throw new Error('주차를 확인해 주세요.');
+  const first = Date.UTC(year, month - 1, 1), day = new Date(first).getUTCDay();
+  const firstThursday = first + ((4 - day + 7) % 7) * DAY;
+  const thursday = firstThursday + (nth - 1) * 7 * DAY;
+  if (new Date(thursday).getUTCMonth() !== month - 1) throw new Error(`${year}년 ${month}월 ${nth}주차는 존재하지 않습니다.`);
+  return {start: ymd(thursday - 3 * DAY), end: ymd(thursday + 3 * DAY)};
+}
+
 function normalizeDefaults(defaults) {
   const source = defaults || {};
   return {
@@ -40,6 +56,10 @@ function normalizeDefaults(defaults) {
     channels: Array.isArray(source.channels) && source.channels.length ? source.channels.slice() : ['*TOTAL'],
     segments: Array.isArray(source.segments) && source.segments.length ? source.segments.slice() : ['T'],
     availableChannels: Array.isArray(source.availableChannels) ? source.availableChannels.slice() : [],
+    bpus: Array.isArray(source.bpus) ? source.bpus.slice() : [],
+    categories: Array.isArray(source.categories) ? source.categories.slice() : [],
+    availableBpus: Array.isArray(source.availableBpus) ? source.availableBpus.slice() : [],
+    availableCategories: Array.isArray(source.availableCategories) ? source.availableCategories.slice() : [],
   };
 }
 
@@ -58,31 +78,47 @@ function parseQuestion(input, defaults) {
   const text = String(input || '').trim();
   if (!text) throw new Error('질문에 연도와 날짜 범위를 적어 주세요.');
   if (text.length > 1000) throw new Error('질문은 1,000자 이내로 적어 주세요.');
-  const unsupported = [
-    [/\bBPU\b/i, 'BPU'], [/카테고리|상품별/, '카테고리·상품'],
-    [/앱\s*설치|앱푸시/, '앱 설치·앱푸시'], [/\bKPI\b/i, 'KPI'],
-  ].filter(([pattern]) => pattern.test(text)).map(([, label]) => label);
-  if (unsupported.length) throw new Error(`지원하지 않는 조건: ${unsupported.join(', ')}. 현재는 실적 지표·채널·회원구분 질문을 지원합니다.`);
   const fallback = normalizeDefaults(defaults);
-  const normalized = text
-    .replace(/(\d{1,2})\s*\/\s*(\d{1,2})/g, '$1월 $2')
-    .replace(/[–—]/g, '-');
-  const events = [];
-  const eventRe = /(?:^|[,\n]\s*|그리고\s*|vs\s*|비교\s*)(20\d{2}|\d{2})\s*년\s*([^,\n\d]{0,24}?)\s*(\d{1,2})\s*월\s*(\d{1,2})\s*(?:일)?\s*(?:-|~|부터)\s*(?:(\d{1,2})\s*월\s*)?(\d{1,2})\s*(?:일|일까지)?/gi;
+  const normalized = text.replace(/(\d{1,2})\s*\/\s*(\d{1,2})/g, '$1월 $2').replace(/[–—]/g, '-');
+  const found = [], overlaps = (a, b) => found.some(x => a < x.endIndex && b > x.index);
+  const add = (index, raw, event) => { const endIndex = index + raw.length; if (!overlaps(index, endIndex)) found.push({...event, index, endIndex}); };
+  const yearOf = value => +value < 100 ? 2000 + +value : +value;
   let match;
-  while ((match = eventRe.exec(normalized))) {
-    const year = +match[1] < 100 ? 2000 + +match[1] : +match[1];
-    const startMonth = +match[3], startDay = +match[4], endMonth = +(match[5] || match[3]), endDay = +match[6];
-    if (!validDate(year, startMonth, startDay) || !validDate(year, endMonth, endDay)) {
-      throw new Error(`${year}년 날짜가 올바르지 않습니다.`);
-    }
-    const start = `${year}-${pad(startMonth)}-${pad(startDay)}`;
-    const end = `${year}-${pad(endMonth)}-${pad(endDay)}`;
+  const rangeRe = /(20\d{2}|\d{2})\s*년\s*([^,\n\d]{0,24}?)\s*(\d{1,2})\s*월\s*(\d{1,2})\s*(?:일)?\s*(?:-|~|부터)\s*(?:(\d{1,2})\s*월\s*)?(\d{1,2})\s*(?:일|일까지)?/gi;
+  while ((match = rangeRe.exec(normalized))) {
+    const year = yearOf(match[1]), sm = +match[3], sd = +match[4], em = +(match[5] || match[3]), ed = +match[6];
+    if (!validDate(year, sm, sd) || !validDate(year, em, ed)) throw new Error(`${year}년 날짜가 올바르지 않습니다.`);
+    const start = `${year}-${pad(sm)}-${pad(sd)}`, end = `${year}-${pad(em)}-${pad(ed)}`;
     if (toTime(end) < toTime(start)) throw new Error('행사 종료 날짜는 시작 날짜보다 빠를 수 없습니다.');
-    const name = match[2].replace(/\s*(행사|기간)\s*$/i, '').trim() || `행사 ${events.length + 1}`;
-    events.push({name, start, end});
+    const label = match[2].replace(/\s*(행사|기간)\s*$/i, '').trim();
+    add(match.index, match[0], {name: label || `${year}년 ${sm}월 ${sd}-${ed}일`, start, end, kind: 'range'});
   }
-  if (!events.length) throw new Error('연도와 날짜 범위를 확인해 주세요. 예: 24년 추석 9월 14-18');
+  const weekRe = /(20\d{2}|\d{2})\s*년\s*(\d{1,2})\s*월\s*(\d{1,2})\s*주차/gi;
+  while ((match = weekRe.exec(normalized))) {
+    const year = yearOf(match[1]), month = +match[2], nth = +match[3], period = weekPeriod(year, month, nth);
+    add(match.index, match[0], {name: `${year}년 ${month}월 ${nth}주차`, ...period, kind: 'week'});
+  }
+  const dayRe = /(20\d{2}|\d{2})\s*년\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일/gi;
+  while ((match = dayRe.exec(normalized))) {
+    const year = yearOf(match[1]), month = +match[2], day = +match[3];
+    if (!validDate(year, month, day)) throw new Error(`${year}년 날짜가 올바르지 않습니다.`);
+    const date = `${year}-${pad(month)}-${pad(day)}`;
+    add(match.index, match[0], {name: `${year}년 ${month}월 ${day}일`, start: date, end: date, kind: 'day'});
+  }
+  const monthRe = /(20\d{2}|\d{2})\s*년\s*(\d{1,2})\s*월(?!\s*\d)/gi;
+  while ((match = monthRe.exec(normalized))) {
+    const year = yearOf(match[1]), month = +match[2];
+    if (month < 1 || month > 12) throw new Error(`${year}년 월을 확인해 주세요.`);
+    add(match.index, match[0], {name: `${year}년 ${month}월`, start: `${year}-${pad(month)}-01`, end: `${year}-${pad(month)}-${pad(new Date(Date.UTC(year, month, 0)).getUTCDate())}`, kind: 'month'});
+  }
+  const allIntent = /(?:전체|모든)\s*실적/.test(normalized);
+  const kpiIntent = /\bKPI\b|목표|달성률/i.test(normalized);
+  if (!found.length && (allIntent || kpiIntent)) {
+    const ym = normalized.match(/(20\d{2}|\d{2})\s*년/);
+    if (ym) { const year = yearOf(ym[1]); found.push({name: `${year}년`, start: `${year}-01-01`, end: `${year}-12-31`, kind: 'year', index: ym.index, endIndex: ym.index + ym[0].length}); }
+  }
+  const events = found.sort((a, b) => a.index - b.index).map(({index, endIndex, ...event}) => event);
+  if (!events.length) throw new Error('연도와 날짜 범위를 확인해 주세요. 예: 24년 9월 3주차 또는 24년 추석 9월 14-18');
 
   let preDays = 7, postDays = 7;
   const both = normalized.match(/전후\s*(\d{1,3})\s*일/);
@@ -92,10 +128,19 @@ function parseQuestion(input, defaults) {
   if (preDays < 1 || postDays < 1 || preDays > 90 || postDays > 90) throw new Error('전·후 기간은 각각 1~90일로 적어 주세요.');
 
   const metrics = findAliases(normalized, METRIC_ALIASES);
+  const appMetrics = findAliases(normalized, APP_ALIASES);
   const segments = findAliases(normalized, SEGMENT_ALIASES);
   const available = fallback.availableChannels.filter(ch => ch && ch !== '*TOTAL');
   const channelAliases = [...available.map(ch => [ch, ch]), ['직접', '직접'], ['제휴', '제휴'], ['네이버', '네이버'], ['카카오', '카카오']];
   const channels = findAliases(normalized, channelAliases);
+  const bpus = findAliases(normalized, fallback.availableBpus.map(name => [name, name]));
+  const categories = findAliases(normalized, fallback.availableCategories.map(name => [name, name]));
+  const dimensions = DIMENSIONS.filter(([label]) => new RegExp(`${label}\\s*(?:별|까지)?`, 'i').test(normalized)).map(([, value]) => value);
+  const productIntent = dimensions.length > 0 || /상품\s*실적|상품\s*구성/i.test(normalized);
+  const appIntent = appMetrics.length > 0 || /앱\s*실적|앱푸시|앱\s*설치|회원\s*실적/i.test(normalized);
+  const families = allIntent ? ['core', 'app', 'kpi', 'product'] : [
+    ...(metrics.length > 0 || (!appIntent && !kpiIntent && !productIntent) ? ['core'] : []), ...(appIntent ? ['app'] : []), ...(kpiIntent ? ['kpi'] : []), ...(productIntent ? ['product'] : []),
+  ];
 
   return {
     text,
@@ -103,9 +148,15 @@ function parseQuestion(input, defaults) {
     preDays,
     postDays,
     metrics: metrics.length ? metrics : fallback.metrics,
+    appMetrics,
+    dimensions,
+    families,
+    allIntent,
     channels: channels.length ? channels : fallback.channels,
     segments: segments.length ? segments : fallback.segments,
-    explicit: {metrics: metrics.length > 0, channels: channels.length > 0, segments: segments.length > 0},
+    bpus: bpus.length ? bpus : fallback.bpus,
+    categories: categories.length ? categories : fallback.categories,
+    explicit: {metrics: metrics.length > 0, channels: channels.length > 0, segments: segments.length > 0, bpus: bpus.length > 0, categories: categories.length > 0, dimensions: dimensions.length > 0},
   };
 }
 
@@ -174,13 +225,13 @@ function analyze(parsed, dash) {
   const segmentKeys = dash.SEGS.map(item => item[0]);
   const invalidSegments = parsed.segments.filter(segment => !segmentKeys.includes(segment));
   if (invalidSegments.length) throw new Error(`회원구분을 찾지 못했습니다. 지원 회원구분: ${dash.SEGS.map(item => item[1]).join(', ')}`);
-  const unknownMetrics = parsed.metrics.filter(metric => !dash.MET[metric]);
+  const unknownMetrics = parsed.families.includes('core') ? parsed.metrics.filter(metric => !dash.MET[metric]) : [];
   if (unknownMetrics.length) throw new Error('지원하지 않는 지표가 포함되어 있습니다.');
 
   const eventResults = parsed.events.map(event => {
     const periods = buildPeriods(event, parsed.preDays, parsed.postDays);
     const items = [];
-    for (const metric of parsed.metrics) {
+    for (const metric of (parsed.families.includes('core') ? parsed.metrics : [])) {
       const rows = dash.questionRows(metric, parsed.channels, parsed.segments);
       for (const row of rows) {
         const values = {};
@@ -202,8 +253,18 @@ function analyze(parsed, dash) {
     return {event, periods, items};
   });
 
-  const primaryMetric = parsed.metrics[0];
-  const primaryRows = dash.questionRows(primaryMetric, parsed.channels, parsed.segments);
+  const appIds = parsed.appMetrics.length ? parsed.appMetrics : (dash.AX_ORDER || []);
+  const appResults = parsed.families.includes('app') && typeof dash.queryApp === 'function' ? parsed.events.map(event => ({
+    event, rows: dash.queryApp(span(event.start, event.end), appIds, 'sum'),
+  })) : [];
+  const productResults = parsed.families.includes('product') && typeof dash.queryProducts === 'function' ? parsed.events.map(event => ({
+    event, result: dash.queryProducts({dates: span(event.start, event.end), dimensions: parsed.dimensions.length ? parsed.dimensions : ['category'], channels: parsed.channels,
+      ...(parsed.explicit.bpus ? {bpus: parsed.bpus} : {}), ...(parsed.explicit.categories ? {categories: parsed.categories} : {}), limit: 10}),
+  })) : [];
+  const kpi = parsed.families.includes('kpi') && typeof dash.queryKpi === 'function' ? dash.queryKpi() : null;
+
+  const primaryMetric = parsed.families.includes('core') ? parsed.metrics[0] : null;
+  const primaryRows = primaryMetric ? dash.questionRows(primaryMetric, parsed.channels, parsed.segments) : [];
   const primaryRow = primaryRows[0];
   const historical = parsed.events.filter(event => event.end <= dash.dataLast);
   const target = parsed.events.find(event => event.start > dash.dataLast) || null;
@@ -226,7 +287,7 @@ function analyze(parsed, dash) {
   };
 
   const summary = [];
-  for (const result of eventResults.slice(0, 2)) {
+  for (const result of (primaryMetric ? eventResults.slice(0, 2) : [])) {
     const item = result.items.find(value => value.metric === primaryMetric);
     if (!item || item.values.during.avg == null) {
       summary.push(`${result.event.name}: 행사 기간의 ${dash.MET[primaryMetric].name} 데이터가 부족합니다.`);
@@ -234,7 +295,7 @@ function analyze(parsed, dash) {
     }
     summary.push(`${result.event.name}: 행사 중 ${dash.MET[primaryMetric].name}은 전 ${parsed.preDays}일 대비 ${signed(item.preToDuring)} 변했습니다.`);
   }
-  if (eventResults.length > 1) {
+  if (primaryMetric && eventResults.length > 1) {
     const first = eventResults[0].items.find(value => value.metric === primaryMetric);
     const last = eventResults.at(-1).items.find(value => value.metric === primaryMetric);
     const comparison = first && last ? dash.delta(primaryMetric, last.values.during.avg, first.values.during.avg) : null;
@@ -246,10 +307,14 @@ function analyze(parsed, dash) {
     const high = signed({v: range.max, unit: range.unit, dp: range.dp});
     summary.push(`과거 관찰 변화 범위는 행사 전 기준선 대비 ${low}${low === high ? '' : ` ~ ${high}`}입니다.`);
   }
-  if (action.insufficient) summary.push(`상승 시점 예측은 계산 가능한 과거 행사가 2개 이상 필요합니다(현재 ${action.evidenceCount}개).`);
-  else summary.push(`예상 상승 시점은 ${offsetText(action.onsetOffset)}, 권장 액션 시작은 그보다 14일 전인 ${action.actionDate || offsetText(action.actionOffset)}입니다.`);
+  if (primaryMetric && action.insufficient) summary.push(`상승 시점 예측은 계산 가능한 과거 행사가 2개 이상 필요합니다(현재 ${action.evidenceCount}개).`);
+  else if (primaryMetric) summary.push(`예상 상승 시점은 ${offsetText(action.onsetOffset)}, 권장 액션 시작은 그보다 14일 전인 ${action.actionDate || offsetText(action.actionOffset)}입니다.`);
 
-  return {parsed, eventResults, primaryMetric, action, summary: summary.slice(0, 5)};
+  if (!parsed.families.includes('core')) {
+    summary.length = 0;
+    summary.push(`요청한 ${parsed.families.map(x => ({app: '앱·회원', kpi: 'KPI', product: '상품'}[x] || x)).join('·')} 실적을 기존 대시보드 산식으로 조회했습니다.`);
+  }
+  return {parsed, eventResults, appResults, productResults, kpi, primaryMetric, action, summary: summary.slice(0, 5)};
 }
 
 function formatValue(dash, metric, value) {
@@ -274,10 +339,24 @@ function renderAnalysis(result, dash) {
     }).join('');
     return `<section class="aiq-result"><h4>${esc(eventResult.event.name)} <span>${esc(eventResult.event.start)} ~ ${esc(eventResult.event.end)}</span></h4><div class="aiq-table-wrap"><table class="aiq-table"><thead><tr><th>지표</th><th>전 ${p.preDays}일</th><th>행사 중</th><th>후 ${p.postDays}일</th><th>전→중</th><th>중→후</th></tr></thead><tbody>${rows}</tbody></table></div></section>`;
   }).join('');
-  const action = result.action.insufficient
+  const app = result.appResults.map(eventResult => `<section class="aiq-result"><h4>${esc(eventResult.event.name)} · 앱·푸시·회원 실적</h4><div class="aiq-table-wrap"><table class="aiq-table"><thead><tr><th>지표</th><th>값</th></tr></thead><tbody>${eventResult.rows.map(row => `<tr><th>${esc(row.name)}<small>${esc(row.group)}</small></th><td>${row.value == null ? '데이터 부족' : esc(row.pct ? `${(row.value * 100).toFixed(2)}%` : `${Math.round(row.value).toLocaleString('ko-KR')} ${row.unit}`)}</td></tr>`).join('')}</tbody></table></div></section>`).join('');
+  const dimLabel = {channel: '채널', bpu: 'BPU', category: '카테고리', brand: '브랜드', product: '상품'};
+  const products = result.productResults.map(eventResult => {
+    const q = eventResult.result;
+    if (!q.available) return `<section class="aiq-result"><h4>${esc(eventResult.event.name)} · 상품 실적</h4><p>${esc(q.reason)}</p></section>`;
+    const groups = Object.entries(q.groups).map(([dim, group]) => {
+      const visible = group.rows.slice(0, 10);
+      const body = visible.map(row => `<tr><th>${esc(row.name)}</th><td>${esc((row.a / 1e6).toLocaleString('ko-KR', {maximumFractionDigits: 1}))} 백만원</td><td>${esc(Math.round(row.u).toLocaleString('ko-KR'))} 명</td><td>${row.aov == null ? '–' : esc(Math.round(row.aov).toLocaleString('ko-KR')) + ' 원'}</td></tr>`).join('');
+      const full = group.all.length > visible.length ? `<details><summary>전체 ${group.totalCount.toLocaleString('ko-KR')}개 상세</summary><div class="aiq-table-wrap"><table class="aiq-table"><tbody>${group.all.map(row => `<tr><th>${esc(row.name)}</th><td>${esc((row.a / 1e6).toLocaleString('ko-KR', {maximumFractionDigits: 1}))} 백만원</td></tr>`).join('')}</tbody></table></div></details>` : '';
+      return `<h5>${esc(dimLabel[dim])}별 상위 실적</h5><div class="aiq-table-wrap"><table class="aiq-table"><thead><tr><th>${esc(dimLabel[dim])}</th><th>거래액</th><th>주문고객수</th><th>객단가</th></tr></thead><tbody>${body}</tbody></table></div>${full}`;
+    }).join('');
+    return `<section class="aiq-result"><h4>${esc(eventResult.event.name)} · 상품 실적</h4><div class="aiq-conditions">채널 ${esc(q.filters.channels.join('·'))} · BPU ${esc(q.filters.bpus.join('·'))} · 카테고리 ${esc(q.filters.categories.join('·'))}</div><p><b>합계</b> · 거래액 ${esc((q.total.a / 1e6).toLocaleString('ko-KR', {maximumFractionDigits: 1}))} 백만원 · 주문고객수 ${esc(Math.round(q.total.u).toLocaleString('ko-KR'))} 명</p>${groups}</section>`;
+  }).join('');
+  const kpi = result.kpi ? `<section class="aiq-result"><h4>${esc(result.kpi.y)}년 KPI</h4><div class="aiq-table-wrap"><table class="aiq-table"><thead><tr><th>지표</th><th>실적</th><th>목표</th><th>달성률</th><th>남은 기간 일평균 필요</th></tr></thead><tbody>${Object.entries(result.kpi.rows).map(([id, row]) => `<tr><th>${esc(dash.MET[id].name)}</th><td>${esc(dash.fmt(id, row.act))}</td><td>${row.target == null ? '데이터 없음' : esc(dash.fmt(id, row.target))}</td><td>${row.ach == null ? '–' : esc((row.ach * 100).toFixed(1)) + '%'}</td><td>${row.need == null ? '–' : esc(dash.fmt(id, row.need))}</td></tr>`).join('')}</tbody></table></div></section>` : (p.families.includes('kpi') ? '<section class="aiq-result"><h4>KPI</h4><p>이 백업에 KPI 목표 데이터가 없습니다.</p></section>' : '');
+  const action = !result.primaryMetric ? '' : result.action.insufficient
     ? `<b>예측 근거 부족</b> · 계산 가능한 과거 행사 ${result.action.evidenceCount}개 (2개 이상 필요)`
     : `<b>권장 액션 시작</b> · ${esc(result.action.actionDate || offsetText(result.action.actionOffset))} <span>예상 상승 ${esc(offsetText(result.action.onsetOffset))}보다 14일 전</span>`;
-  return `<div class="aiq-conditions"><b>해석한 조건</b> · 전 ${p.preDays}일 / 행사 중 / 후 ${p.postDays}일 · ${esc(filters)}</div>${events}<div class="aiq-action">${action}</div><div class="aiq-summary"><b>자동 요약</b><ul>${result.summary.map(line => `<li>${esc(line)}</li>`).join('')}</ul></div><div class="aiq-cap">기존 대시보드 공식 산식으로 브라우저 안에서 계산했습니다. 원인을 단정하지 않으며, 예측은 과거 패턴을 이어 본 참고값입니다.</div>`;
+  return `<div class="aiq-conditions"><b>해석한 조건</b> · ${esc(p.events.map(e => `${e.name} ${e.start}~${e.end}`).join(' · '))} · ${esc(filters)}</div>${events}${app}${kpi}${products}${action ? `<div class="aiq-action">${action}</div>` : ''}<div class="aiq-summary"><b>자동 요약</b><ul>${result.summary.map(line => `<li>${esc(line)}</li>`).join('')}</ul></div><div class="aiq-cap">기존 대시보드 공식 산식으로 브라우저 안에서 계산했습니다. 원인을 단정하지 않으며, 예측은 과거 패턴을 이어 본 참고값입니다.</div>`;
 }
 
 function mount(dash) {
@@ -296,11 +375,13 @@ function mount(dash) {
     const user = document.createElement('div');
     user.className = 'aiq-user'; user.textContent = text; thread.appendChild(user);
     try {
+      const productFilters = typeof dash.productQuestionFilters === 'function' ? dash.productQuestionFilters() : {};
       const parsed = parseQuestion(text, {
         metrics: dash.METRICS,
         channels: dash.selChans(),
         segments: dash.selSegs(),
         availableChannels: dash.CHS,
+        ...productFilters,
       });
       const result = analyze(parsed, dash);
       const answer = document.createElement('div');
@@ -324,5 +405,5 @@ function mount(dash) {
   });
 }
 
-root.FP_AI_QUESTION = {parseQuestion, buildPeriods, estimateAction, analyze, mount};
+root.FP_AI_QUESTION = {parseQuestion, weekPeriod, buildPeriods, estimateAction, analyze, mount};
 })(typeof window !== 'undefined' ? window : globalThis);

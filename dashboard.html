@@ -943,7 +943,9 @@ const baseTag = m => !prodFiltOn() ? '' : `<small class="tag-b${PROD_MET.has(m) 
 let ALT_NOTE = false;  // 지금 보는 기간(당해 · 비교)에 신규회원대시보드 대체 값이 섞였는가 — render 때 정한다
 const altYear = () => String(+AMT_FIRST.slice(0, 4) - 1);
 const altNote = m => (ALT_NOTE && PROD_MET.has(m) && !prodFiltOn() ? `${altYear()}년 이전 = 신규회원대시보드 총)첫구매(전체) 기준` : '');
-const trNote = m => [UNIQUE_TR.has(m) && S.grain === 'month' ? '일자 합산 트래픽 기준' : '', baseNote(m), altNote(m)].filter(Boolean).join(' · ');
+const catMetricNote = m => !catFiltOn() ? '' : PROD_MET.has(m)
+  ? `카테고리 ${catTxt()}` : `카테고리 ${catTxt()} 필터 미적용`;
+const trNote = m => [UNIQUE_TR.has(m) && S.grain === 'month' ? '일자 합산 트래픽 기준' : '', catMetricNote(m), baseNote(m), altNote(m)].filter(Boolean).join(' · ');
 
 /* ---------- 기간 열: 각 열 = 당해 날짜 목록(cur) + 비교 날짜 목록(prev) ----------
    비교 기준 S.cmp — yoy: 364일 전 동기간·동요일(prevY) · pop: 직전 기간 = 전월·전주·전일(prevP). 두 쪽을 다 들고 있고 선택한 쪽을 prev 로 쓴다. */
@@ -993,9 +995,9 @@ function weekCols(y) {
   for (let mon = isoMonday(y, 1); isoWeek(mon).y === y && mon <= LAST; mon = addDays(mon, 7)) {
     const cur = clip(span(mon, addDays(mon, 6)));
     if (!cur.length) continue;
-    const w = isoWeek(mon), pv = back(cur), pw = isoWeek(pv[0]), pp = cur.map(d => addDays(d, -7)), qw = isoWeek(pp[0]);
-    cols.push(pickCmp({id: `${w.y}-W${pad(w.w)}`, label: `${w.m}월 ${w.n}주`, sub: `${md(mon)}~`, partial: cur.length < 7, cur, prevY: pv, prevP: pp,
-      wk: {cur: WEEKLY.byIso.get(`${w.y}-${w.w}`)}, wkY: WEEKLY.byIso.get(`${pw.y}-${pw.w}`), wkP: WEEKLY.byIso.get(`${qw.y}-${qw.w}`),
+    const w = isoWeek(mon), pv = back(cur), pw = isoWeek(pv[0]), pp = cur.map(d => addDays(d, -7)), qw = isoWeek(pp[0]), partial = cur.length < 7;
+    cols.push(pickCmp({id: `${w.y}-W${pad(w.w)}`, label: `${w.m}월 ${w.n}주`, sub: `${md(mon)}~`, partial, cur, prevY: pv, prevP: pp,
+      wk: partial ? null : {cur: WEEKLY.byIso.get(`${w.y}-${w.w}`)}, wkY: partial ? null : WEEKLY.byIso.get(`${pw.y}-${pw.w}`), wkP: partial ? null : WEEKLY.byIso.get(`${qw.y}-${qw.w}`),
       opt: `${w.m}월 ${w.n}주차 (${md(cur[0])}~${md(cur.at(-1))})`,
       tip: `${w.y}년 ${w.m}월 ${w.n}주차 (${md(cur[0])}~${md(cur.at(-1))})`,
       ptipY: `${pw.y}년 ${pw.m}월 ${pw.n}주차 (${md(pv[0])}~${md(pv.at(-1))})`,
@@ -1872,6 +1874,47 @@ function pAgg(code, cond, mask, chm, mix) {  // code = 묶을 차원(null = 하�
   }
   return out;
 }
+function queryProducts(opts = {}) {  // AI 실적문의용 읽기 전용 집계 — 화면 필터나 드릴 상태를 바꾸지 않는다
+  prodInit();
+  if (!PRD || !PF) return {available: false, reason: '이 백업에 상품 원천 데이터가 없습니다.'};
+  const dates = Array.isArray(opts.dates) ? opts.dates : [];
+  const daySet = new Set(dates.map(pDay).filter(d => d >= 0 && d < PRD.meta.days));
+  const namesToSet = (values, labels) => values && values.length ? new Set(values.map(v => typeof v === 'number' ? v : labels.indexOf(v)).filter(v => v >= 0)) : null;
+  const askedChannels = Array.isArray(opts.channels) ? opts.channels : selChans();
+  const chSet = askedChannels.includes('*TOTAL') ? null : namesToSet(askedChannels, PRD.ch);
+  const bpuSet = Array.isArray(opts.bpus) && opts.bpus.length ? namesToSet(opts.bpus, PRD.bpu)
+    : (!PD.bpuAll && PD.bpus.length ? new Set(PD.bpus) : null);
+  const catSet = Array.isArray(opts.categories) && opts.categories.length ? namesToSet(opts.categories, PRD.cat)
+    : (PD.catNone ? new Set() : PD.cats.length ? new Set(PD.cats) : null);
+  const dimCode = {channel: 0, bpu: 1, category: 2, brand: 3, product: 4};
+  const requested = (opts.dimensions || []).filter(x => dimCode[x] != null);
+  const stores = new Map(requested.map(dim => [dim, new Map()]));
+  const total = {a: 0, u: 0};
+  const add = (map, key, a, u) => { let row = map.get(key); if (!row) map.set(key, row = {a: 0, u: 0}); row.a += a; row.u += u; };
+  if (catSet && !catSet.size) return {available: true, filters: {channels: askedChannels, bpus: [], categories: []}, total: {a: 0, u: 0, aov: null}, groups: {}};
+  for (let i = 0; i < PF.n; i++) {
+    if (!daySet.has(PF.d[i]) || (chSet && !chSet.has(PF.c[i]))) continue;
+    const path = PF.p[i] * 3, b = PRD.paths[path], c = PRD.paths[path + 1];
+    if ((bpuSet && !bpuSet.has(b)) || (catSet && !catSet.has(c))) continue;
+    const a = PF.a[i], u = PF.u[i]; total.a += a; total.u += u;
+    for (const dim of requested) add(stores.get(dim), pVal(i, dimCode[dim]), a, u);
+  }
+  const limit = Math.max(1, Math.min(100, opts.limit || 30)), groups = {};
+  for (const dim of requested) {
+    const code = dimCode[dim], all = [...stores.get(dim)].map(([key, row]) => ({key, name: pName(code, key), a: row.a, u: row.u, aov: row.u ? row.a / row.u : null})).sort((x, y) => y.a - x.a);
+    groups[dim] = {totalCount: all.length, rows: all.slice(0, limit), all};
+  }
+  return {available: true, filters: {
+    channels: chSet ? [...chSet].map(k => PRD.ch[k]) : ['전체'],
+    bpus: bpuSet ? [...bpuSet].map(k => PRD.bpu[k]) : ['전체'],
+    categories: catSet ? [...catSet].map(k => PRD.cat[k]) : ['전체'],
+  }, total: {a: total.a, u: total.u, aov: total.u ? total.a / total.u : null}, groups};
+}
+const productQuestionFilters = () => !PRD ? {availableBpus: [], availableCategories: [], bpus: [], categories: []} : ({
+  availableBpus: PRD.bpu.slice(), availableCategories: PRD.cat.slice(),
+  bpus: !PD.bpuAll && PD.bpus.length ? PD.bpus.map(k => PRD.bpu[k]) : [],
+  categories: PD.catNone ? [] : PD.cats.length ? PD.cats.map(k => PRD.cat[k]) : [],
+});
 function pSeries(code, cond, mask, chm, keys) {  // 기간별 표용 — Map('T' 합계 | 항목 → Map(날짜 → {a, u}))
   const out = new Map([['T', new Map()]]), cl = cond.length;
   for (const k of keys) out.set(k, new Map());
@@ -2297,6 +2340,9 @@ function axVal(id, dates, mode) {  // mode 를 주면 상단 일평균/누계 �
   for (const d of dates) { const x = at(M.num, d), y = at(M.den, d); if (x != null && y != null) { a += x; b += y; n++; } }
   return n && b && n * 2 >= dates.length ? a / b : null;
 }
+const queryApp = (dates, ids = AX_ORDER, mode = 'sum') => ids.filter(id => AX[id]).map(id => ({
+  id, name: AX[id].name, group: AX[id].grp, value: axVal(id, dates, mode), unit: AX[id].unit || '', pct: !!AX[id].pct,
+}));
 const axDelta = (id, c, p) => !ok(c) || !ok(p) ? null : AX[id].pct ? {v: (c - p) * 100, unit: '%p', dp: 2} : (p > 0 ? {v: (c / p - 1) * 100, unit: '%', dp: 1} : null);
 // 이탈 · 삭제는 늘어나면 나쁜 지표 → 색만 반대로 (+빨강 / △초록)
 const axFmtDelta = (id, c, p) => { const f = fmtDelta(axDelta(id, c, p)); return AX[id].inv && f.c ? {...f, c: f.c === 'pos' ? 'neg' : 'pos'} : f; };
@@ -2935,11 +2981,11 @@ render();
 if (PRINT_HASH) printParts(PRINT_HASH === 'all' ? DL_PARTS.map(p => p[0]) : PRINT_HASH.split(','), false);
 window.__dash = {get state() { return S; }, render, compute, evalCol, getCols, seriesKeys, questionRows, fmt, MET, METRICS, CHS, SEGS, YEARS,
                  dataFirst: FIRST, dataLast: LAST, get MODEL() { return MODEL; },
-                 computeKpi, selStats: () => SEL.stats, selTSV, prodState: PD, renderProd, prodView: () => PVIEW, prodReady: () => !!PRD, axVal, AX, AX_ORDER, renderApp,
+                 computeKpi, queryKpi: computeKpi, selStats: () => SEL.stats, selTSV, prodState: PD, renderProd, prodView: () => PVIEW, prodReady: () => !!PRD, queryProducts, productQuestionFilters, axVal, queryApp, AX, AX_ORDER, renderApp,
                  // 엑셀 다운로드(export.js)가 화면과 같은 값을 쓰도록
                  get lastCols() { return lastCols; }, get lastSum() { return LAST_SUM; }, get dataMeta() { return D.meta; },
                  focusIdx, unitOf, fmtDelta, delta, axFmtDelta, fmtAX, cmpLbl, otherLbl, baseLbl, baseShort, modeName, trNote,
-                 selChans, selSegs, chLabel, segLabel, prodFiltOn, prodFiltTxt, cubeOn, filtBase, KPI, printParts, runDownload, renderDl, DL, DL_PARTS, makePdf, renderMemos, memoGo, renderInsight, syncFloatHeads, memoClean,
+                 selChans, selSegs, chLabel, segLabel, prodFiltOn, prodFiltTxt, cubeOn, filtBase, catMetricNote, KPI, printParts, runDownload, renderDl, DL, DL_PARTS, makePdf, renderMemos, memoGo, renderInsight, syncFloatHeads, memoClean,
                  get prodTblOpen() { return PD_TBL_OPEN; }, set prodTblOpen(v) { PD_TBL_OPEN = !!v; },
                  get prodGrpOpen() { return PD_GRP_OPEN; }, set prodGrpOpen(v) { PD_GRP_OPEN = !!v; }};
 if (window.FP_AI_QUESTION && typeof window.FP_AI_QUESTION.mount === 'function') window.FP_AI_QUESTION.mount(window.__dash);
