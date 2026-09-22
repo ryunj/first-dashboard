@@ -352,6 +352,26 @@ details.notes li{margin:3px 0}
 .ins-g li{margin:3px 0;font-size:12.5px;line-height:1.65;color:var(--ink-2)}
 .ins-g li b{color:var(--ink);font-weight:650}
 .ins-cap{margin-top:10px;padding-top:8px;border-top:1px solid var(--grid);font-size:11.5px;color:var(--muted)}
+/* 자연어 실적 질문 — 기존 인사이트 카드의 시각 언어를 그대로 사용 */
+.aiq-lead{margin:10px 0 8px;font-size:12.5px;line-height:1.6;color:var(--ink-2)}
+.aiq-thread{display:flex;flex-direction:column;gap:9px;max-height:620px;overflow:auto;padding:2px 2px 8px}
+.aiq-user{align-self:flex-end;max-width:min(82%,680px);padding:8px 11px;border-radius:10px 10px 2px 10px;background:var(--ink);color:var(--surface);font-size:12.5px;line-height:1.55;white-space:pre-wrap}
+.aiq-answer{align-self:stretch;padding:11px 12px;border:1px solid var(--grid);border-radius:2px 10px 10px;background:var(--surface-2);font-size:12px;color:var(--ink-2)}
+.aiq-error{color:var(--neg);border-left:3px solid var(--neg)}
+.aiq-compose{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:9px;align-items:end}
+.aiq-compose textarea{width:100%;min-height:58px;max-height:150px;resize:vertical;box-sizing:border-box;border:1px solid var(--border);border-radius:7px;padding:8px 10px;background:var(--surface);color:var(--ink);font:inherit;line-height:1.5}
+.aiq-compose textarea:focus{outline:2px solid color-mix(in srgb,var(--c1) 45%,transparent);outline-offset:1px}
+.aiq-tools{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-top:8px}
+.aiq-conditions{margin-bottom:9px;line-height:1.55}
+.aiq-result{margin-top:10px}.aiq-result h4{margin:0 0 5px;color:var(--ink);font-size:12.5px}.aiq-result h4 span{font-weight:400;color:var(--muted);margin-left:5px}
+.aiq-table-wrap{overflow:auto;border:1px solid var(--grid);border-radius:7px;background:var(--surface)}
+.aiq-table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;white-space:nowrap}
+.aiq-table th,.aiq-table td{padding:6px 8px;border-bottom:1px solid var(--grid);text-align:right}.aiq-table th:first-child{text-align:left}.aiq-table thead th{font-size:11px;color:var(--muted);font-weight:600;background:var(--surface-2)}
+.aiq-table tbody th{font-size:11.5px;color:var(--ink);font-weight:600}.aiq-table tbody th small,.aiq-table td small{display:block;font-size:10px;font-weight:400;color:var(--muted);margin-top:1px}
+.aiq-action{margin-top:10px;padding:9px 11px;border-radius:7px;background:color-mix(in srgb,var(--c1) 9%,var(--surface));color:var(--ink)}.aiq-action span{color:var(--muted);margin-left:5px}
+.aiq-summary{margin-top:10px}.aiq-summary>b{color:var(--ink)}.aiq-summary ul{margin:5px 0 0;padding-left:18px}.aiq-summary li{margin:3px 0;line-height:1.55}
+.aiq-cap{margin-top:9px;padding-top:8px;border-top:1px solid var(--grid);font-size:11px;color:var(--muted)}
+@media screen and (max-width:600px){.aiq-compose{grid-template-columns:1fr}.aiq-compose .btn{justify-self:end}.aiq-user{max-width:92%}.aiq-action span{display:block;margin:3px 0 0}}
 /* 메모 편집기 */
 .memo-tb{display:flex;flex-wrap:wrap;gap:3px;align-items:center;margin-bottom:6px}
 .memo-tb button{border:0;background:none;color:inherit;cursor:pointer;border-radius:4px;padding:2px 6px;font-size:12px;line-height:1.4}
@@ -414,7 +434,7 @@ details.notes li{margin:3px 0}
 body.pdfcap::after{content:"PDF 만드는 중…";position:fixed;inset:0;z-index:300;display:grid;place-items:center;background:color-mix(in srgb,var(--page) 90%,transparent);font-size:15px;font-weight:650;color:var(--ink)}
 body.pdfcap main.wrap{width:1160px;max-width:none;padding-inline:0;margin:0}
 body.pdfcap main>section:not(.pr-on){display:none!important}
-body.pdfcap .float-head,body.pdfcap #insightSec,body.pdfcap #bkBanner,body.pdfcap .sec-h .tools,body.pdfcap .pd-filter,body.pdfcap .crumbs .pd-spread,body.pdfcap #pdOld,body.pdfcap #pdThin,body.pdfcap #selbar,body.pdfcap .toast{display:none!important}
+body.pdfcap .float-head,body.pdfcap #insightSec,body.pdfcap #aiQuestionSec,body.pdfcap #bkBanner,body.pdfcap .sec-h .tools,body.pdfcap .pd-filter,body.pdfcap .crumbs .pd-spread,body.pdfcap #pdOld,body.pdfcap #pdThin,body.pdfcap #selbar,body.pdfcap .toast{display:none!important}
 body.pdfcap .fold::before{display:none}
 body.pdfcap #printHead{display:block;padding:0 2px 8px}
 body.pdfcap #printHead h1{font-size:19px;margin:0 0 3px}
@@ -436,7 +456,7 @@ body.pdfcap .pgrid{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr)!important
   /* 크롬은 A4 가로를 약 740px 폭으로 배치한다 → 본문을 줄여(zoom) 데스크톱 폭(약 1,000px)으로 · 여백 0 = 브라우저 머리글·바닥글(날짜 · 주소) 없음 */
   html,body{background:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   body{zoom:.72;padding:8mm 10mm!important}
-  header.top,.float-head,#insightSec,#bkBanner,#dlSec,details.notes,#selbar,dialog,.toast,.sec-h .tools,.pd-filter,.crumbs .pd-spread,#pdOld,#memoSec{display:none!important}
+  header.top,.float-head,#insightSec,#aiQuestionSec,#bkBanner,#dlSec,details.notes,#selbar,dialog,.toast,.sec-h .tools,.pd-filter,.crumbs .pd-spread,#pdOld,#memoSec{display:none!important}
   .fold::before{display:none}
   #printHead{display:block;margin:0 0 4mm}
   #printHead h1{font-size:18px;margin:0 0 2px}
@@ -537,6 +557,21 @@ body.pdfcap .pgrid{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr)!important
     </details>
   </section>
 
+  <section id="aiQuestionSec" hidden>
+    <details class="insight" id="aiQuestionBox">
+      <summary>AI 실적 질문<span class="ins-sub">브라우저 안에서 계산 · GPT 연결 없음</span></summary>
+      <div class="ins-body">
+        <p class="aiq-lead">행사명과 날짜를 채팅하듯 적으면 기존 지표 산식으로 전·중·후 변화와 권장 액션 시작일을 계산합니다.</p>
+        <div class="aiq-thread" id="aiQuestionThread" role="log" aria-live="polite"></div>
+        <div class="aiq-compose">
+          <textarea id="aiQuestionInput" aria-label="실적 질문" placeholder="예: 24년 추석 9월 14-18, 25년 추석 10월 3-9, 전후 영향 알려줘"></textarea>
+          <button class="btn primary" type="button" id="aiQuestionSend">질문하기</button>
+        </div>
+        <div class="aiq-tools"><button class="btn" type="button" id="aiQuestionExample">추석 비교 예시</button><span class="hint">Enter 전송 · Shift+Enter 줄바꿈 · 질문 내용은 저장하거나 전송하지 않음</span></div>
+      </div>
+    </details>
+  </section>
+
   <section id="memoSec" hidden>
     <details class="insight" id="memoBox">
       <summary>메모<span class="ins-sub" id="memoDesc"></span></summary>
@@ -619,6 +654,7 @@ body.pdfcap .pgrid{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr)!important
       <li><b>비교 연도</b>(비교 옆)로 몇 년 전과 비교할지 고른다 — 기본 전년, 2년 전이면 728일 전 동기간 · 동요일('2024년비'). 요약 · 차트 · 표 · 인사이트 · 상품 구성 · 앱 설치 영역과 엑셀 · PDF 가 모두 따른다(KPI 는 연간 목표 기준이라 전년 그대로). 전년이 아닌 해와 비교하면 날짜가 달력보다 며칠씩 앞당겨진다(요일을 맞추려고 364일 단위로 옮김). <b>전년비</b> = 364일 전 <b>동기간 · 동요일</b>. 예) 2026-09-01~13 ↔ 2025-09-02~14. 증가는 <span class="pos">+초록</span>, 감소는 <span class="neg">△빨강</span>.</li>
       <li><b>기준 기간</b>(상단 '기준') — 월별은 월, 주별은 주차, 일별은 날짜를 고른다. 요약 타일 · 표 강조 열 · 차트 음영 · 상품 구성 기본 기간 · 앱 섹션이 모두 그 기간 기준이고, 주별 · 일별 표와 차트는 그 기간에서 끝나는 범위(8주 · 13주 …)를 보여 준다. '최근 · …'(기본)은 데이터가 있는 가장 최근 기간.</li>
       <li><b>비교</b> — 기본 <b>전년 동기간</b>(전년비). <b>전월 · 전주 · 전일</b>로 바꾸면 표 · 차트 툴팁 · 요약 · 상품 구성 · 앱 섹션의 비교가 모두 직전 기간 대비(전월비 · 전주비 · 전일비)로 바뀐다. 전월은 진행 중인 달이면 같은 일수끼리(예: 9/1~13 ↔ 8/1~13), 끝난 달은 전월 전체. 전주 = 7일 전 같은 요일들, 전일 = 하루 전. 직전 기간 모드에선 차트의 전년선을 숨긴다(값은 툴팁). 요약 타일은 두 비교를 함께 보여 준다. KPI는 항상 전년 동기 누적.</li>
+      <li><b>AI 실적 질문</b> — 행사 날짜를 자연어로 적으면 현재 필터와 기존 공식 산식으로 전·중·후 실적을 계산한다. GPT/API 연결 없이 이 브라우저 안에서만 처리하며 질문은 저장하지 않는다. 상승 예상은 계산 가능한 과거 행사 2개 이상이 필요하고, 권장 액션 시작은 예상 상승 시점보다 14일 전이다.</li>
       <li><b>상단 필터</b>(회원구분 · 채널 · BPU · 카테고리)는 기본으로 접혀 있고, <b>필터</b> 버튼 옆에 지금 고른 조건이 한 줄로 보인다(기본값이 아닌 필터 수는 파란 숫자). 버튼을 누르면 펼쳐진다. <b>채널 · 회원구분</b>은 여러 개를 고를 수 있다. 차트 선 하나(채널 1개 × 구분 1개)면 당해 vs 전년, 여러 개면 비교선 — 색 = 채널, 선 모양 = 회원구분. 요약 타일은 선택 중 첫 번째 기준.</li>
       <li><b>BPU · 카테고리</b>(상단 필터, 상품 데이터가 있을 때만) — <b>BPU</b>만 고르면 거래액 · 고객수 · 객단가를 <b>상품관점</b>(회원구분 × 채널 × BPU, 실적과 같은 기준)에서 다시 계산하고 <b>회원구분 · 채널과 함께</b> 줄을 나눈다('상품관점 기준' 꼬리표). <b>카테고리</b>를 거르면 조직 카테고리 원천(결제 완료분만)으로 계산하며 이 원천엔 회원구분이 없어 회원구분은 전체로 고정된다('상품 기준' 꼬리표). <b>트래픽 · 가입자수 · 가입률 · 당일가입 CR · 첫구매율</b>과 앱 설치 · 수신동의는 그대로 <b>전체 기준</b>이다('전체 기준' 꼬리표). 상품 기준 거래액은 <b>결제 완료(양수)</b> 건만 더한 값이라 전체 첫구매 거래액보다 작고(취소 · 환불 · 상품 미매칭 제외), 고객수는 상품별 <b>주문고객수의 합</b>이라 한 사람이 여러 상품을 사면 여러 번 센다. BPU 칩은 채널 칩과 같다 — <b>전체</b>(모든 BPU 합)와 개별 BPU를 따로 켜고 끄며, 켠 것마다 <b>줄을 나눠</b> 보여 준다(4개를 모두 눌러도 합치지 않는다 · 차트는 색 = 채널, 선 모양 = BPU). <b>전체만</b> = 합계 한 줄, <b>BPU 모두</b> = BPU마다 한 줄. 전체를 켠 채 BPU를 고르면 '전체' 줄은 모든 BPU의 상품 기준 합이다. 상단 채널 · BPU · 카테고리는 <b>상품 구성</b> 영역에도 그대로 적용된다(드릴다운 · 기간별 표 · 상품군 표). 카테고리를 거르면 커버리지 · 상품UV · CR은 숨긴다. BPU <b>전체</b>와 개별 BPU를 함께 켜면 상품 구성의 BPU 목록은 모두 보이되 고른 BPU를 <b>강조</b>한다. 조직 카테고리 원천이 <b>덜 채워진 날짜</b>(양수 결제 거래액이 상품관점 · 실적의 30% 미만 — 평소 90% 이상)가 기간에 섞이면 상품 구성 위와 요약 설명에 ⚠ 경고를 띄우고, 새 데이터 추가 결과표에도 날짜 · 행 수 · 합계를 알린다.</li>
       <li><b>*(기울임)</b> = 전년 일자 raw가 없어 전년 주별 raw를 날짜별로 나눠 채운 추정값.</li>
@@ -760,7 +796,7 @@ const dashSvg = sg => `<svg width="18" height="8" aria-hidden="true"><line x1="1
 // BPU · 카테고리 필터가 걸리면 거래액 · 주문고객수는 상품 데이터에서 뽑는다(그 외 지표는 전체 기준 그대로)
 const baseSum = (base, row, dates, allow) => (prodFiltOn() && (base === 'amt' || base === 'cust'))
   ? (cubeOn() ? pCubeSum(base, row, dates) : pBaseSum(base, row.ch, dates, row.bpu)) : sumBase(base, keyOf(base, row), dates, allow);
-function compute(m, row, dates, wi) {
+function compute(m, row, dates, wi, mode = S.mode) {
   const M = MET[m];
   if (!dates || !dates.length) return {v: null, est: false};
   if (wi != null && UNIQUE_TR.has(m)) {
@@ -769,7 +805,7 @@ function compute(m, row, dates, wi) {
     const g = k => { const a = WEEKLY.s[k]; return a ? a[wi] : null; };
     const t = g(`tru|${row.ch}`);
     if (!t) return {v: null, est: false};
-    if (m === 'tr') return {v: S.mode === 'avg' ? t / WEEKLY.p[wi].d : t, est: false};
+    if (m === 'tr') return {v: mode === 'avg' ? t / WEEKLY.p[wi].d : t, est: false};
     const num = g(m === 'jr' ? `sg|${row.ch}` : `fpnu|${row.ch}`);
     return num == null ? {v: null, est: false} : {v: num / t, est: false};
   }
@@ -777,7 +813,7 @@ function compute(m, row, dates, wi) {
   const enough = n => n > 0 && n * 2 >= dates.length;
   if (M.type === 'flow') {
     const r = baseSum(M.base, row, dates, true);
-    return enough(r.n) ? {v: S.mode === 'avg' ? r.v / r.n : r.v, est: r.est} : {v: null, est: false};
+    return enough(r.n) ? {v: mode === 'avg' ? r.v / r.n : r.v, est: r.est} : {v: null, est: false};
   }
   // 분자·분모의 기간 커버리지를 맞추려고 둘 다 보조값이 가능할 때만 주별 raw 사용
   const allow = FALLBACK.has(M.num) && FALLBACK.has(M.den);
@@ -881,6 +917,18 @@ const seriesKeys = m => {
     }
   }
   return out;
+};
+const questionRows = (m, channels, segments) => {
+  const out = [], chosenChannels = CHS.filter(ch => channels.includes(ch)), chosenSegments = SEG_KEYS.filter(seg => segments.includes(seg));
+  for (const ch of chosenChannels) {
+    for (const seg of (segOn(m) ? chosenSegments : ['T'])) {
+      if (bpuSplit(m)) for (const bpu of bpuRows()) out.push({ch, seg, bpu});
+      else out.push({ch, seg});
+    }
+  }
+  return out.map(row => ({...row, label: chLabel(row.ch)
+    + (row.bpu != null && PRD ? ` · ${row.bpu < 0 ? 'BPU 전체' : PRD.bpu[row.bpu]}` : '')
+    + (segOn(m) && (chosenSegments.length > 1 || row.seg !== 'T') ? ` · ${segLabel(row.seg)}` : '')}));
 };
 const multiSeg = m => segOn(m) && selSegs().length > 1;
 const rowLabel = (m, r) => chLabel(r.ch)
@@ -2885,7 +2933,8 @@ new ResizeObserver(() => {
 }).observe($('#charts'));
 render();
 if (PRINT_HASH) printParts(PRINT_HASH === 'all' ? DL_PARTS.map(p => p[0]) : PRINT_HASH.split(','), false);
-window.__dash = {get state() { return S; }, render, compute, evalCol, getCols, seriesKeys, fmt, MET, METRICS, CHS, SEGS, YEARS, get MODEL() { return MODEL; },
+window.__dash = {get state() { return S; }, render, compute, evalCol, getCols, seriesKeys, questionRows, fmt, MET, METRICS, CHS, SEGS, YEARS,
+                 dataFirst: FIRST, dataLast: LAST, get MODEL() { return MODEL; },
                  computeKpi, selStats: () => SEL.stats, selTSV, prodState: PD, renderProd, prodView: () => PVIEW, prodReady: () => !!PRD, axVal, AX, AX_ORDER, renderApp,
                  // 엑셀 다운로드(export.js)가 화면과 같은 값을 쓰도록
                  get lastCols() { return lastCols; }, get lastSum() { return LAST_SUM; }, get dataMeta() { return D.meta; },
@@ -2893,6 +2942,11 @@ window.__dash = {get state() { return S; }, render, compute, evalCol, getCols, s
                  selChans, selSegs, chLabel, segLabel, prodFiltOn, prodFiltTxt, cubeOn, filtBase, KPI, printParts, runDownload, renderDl, DL, DL_PARTS, makePdf, renderMemos, memoGo, renderInsight, syncFloatHeads, memoClean,
                  get prodTblOpen() { return PD_TBL_OPEN; }, set prodTblOpen(v) { PD_TBL_OPEN = !!v; },
                  get prodGrpOpen() { return PD_GRP_OPEN; }, set prodGrpOpen(v) { PD_GRP_OPEN = !!v; }};
+if (window.FP_AI_QUESTION && typeof window.FP_AI_QUESTION.mount === 'function') window.FP_AI_QUESTION.mount(window.__dash);
+else {
+  const aiSec = $('#aiQuestionSec'), aiThread = $('#aiQuestionThread');
+  if (aiSec && aiThread) { aiSec.hidden = false; aiThread.innerHTML = '<div class="aiq-answer aiq-error">질문 기능을 불러오지 못했습니다. 새로고침해 주세요.</div>'; }
+}
 loadProducts();
 };
 </script>
@@ -3136,7 +3190,7 @@ $id('btnBkClear').addEventListener('click', () => clear().catch(err => say(err.m
   // 이 폴더의 data.js · kpi.js — 주소 뒤에 시각을 붙여 매번 새로 받는다(브라우저가 예전 data.js 를 캐시로 보여 주지 않게).
   // 웹 배포본처럼 파일이 없으면 그냥 넘어가고 백업(불러오기 · 끌어다 놓기)으로만 연다
   const bust = `?t=${Date.now()}`;
-  if (!window.DASH_EMBED) await Promise.all(['data/data.js', 'kpi.js'].map(src => loadScript(src + bust).catch(() => null)));  // Streamlit(app.py)은 파일 없이 백업으로만
+  if (!window.DASH_EMBED) await Promise.all(['data/data.js', 'kpi.js', 'ai_question.js'].map(src => loadScript(src + bust).catch(() => null)));  // Streamlit(app.py)은 파일 없이 백업으로만
   window.DASH_LOCAL = window.DASH_DATA ? {lastDate: window.DASH_DATA.meta.lastDate, built: window.DASH_DATA.meta.built} : null;
   let rec = null, boot = 'skip';
   if (!/selftest/.test(location.hash)) {

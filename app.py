@@ -3,7 +3,7 @@
 
 dashboard.html 을 그대로 화면 가득 띄운다. 데이터는 저장소에도 서버에도 없다:
 화면에 백업 파일(.json.gz)을 끌어다 놓거나 '백업 파일 열기'로 고르면, 보는 사람의 브라우저(IndexedDB)에만 저장해 조회한다.
-Streamlit 은 HTML 을 iframe(srcdoc)으로 넣어 같은 폴더의 merge.js 를 경로로 불러오지 못하므로 HTML 안에 넣어서 보낸다.
+Streamlit 은 HTML 을 iframe(srcdoc)으로 넣어 같은 폴더의 JS 파일을 경로로 불러오지 못하므로 HTML 안에 넣어서 보낸다.
 """
 from pathlib import Path
 
@@ -31,16 +31,17 @@ st.markdown(
 
 @st.cache_data(show_spinner=False)
 def page(stamp):
-    """dashboard.html + merge.js 를 한 장으로 — stamp(수정시각)가 바뀌면 다시 읽는다"""
+    """dashboard.html + 보조 JS 를 한 장으로 — stamp(수정시각)가 바뀌면 다시 읽는다"""
     html = (ROOT / 'dashboard.html').read_text(encoding='utf-8')
     merge = (ROOT / 'merge.js').read_text(encoding='utf-8')
     export = (ROOT / 'export.js').read_text(encoding='utf-8')
+    ai_question = (ROOT / 'ai_question.js').read_text(encoding='utf-8')
     marker = '<div id="selbar"'
     if marker not in html:
-        raise RuntimeError('dashboard.html 구조가 바뀌어 merge.js · export.js 를 넣을 자리를 찾지 못했습니다')
+        raise RuntimeError('dashboard.html 구조가 바뀌어 보조 JS 를 넣을 자리를 찾지 못했습니다')
     # DASH_EMBED: 같은 폴더의 data/data.js · kpi.js · products.js 를 찾지 않고 백업으로만 연다
-    return html.replace(marker, f"<script>window.DASH_EMBED = 'streamlit';</script>\n<script>\n{merge}\n</script>\n<script>\n{export}\n</script>\n{marker}", 1)
+    return html.replace(marker, f"<script>window.DASH_EMBED = 'streamlit';</script>\n<script>\n{merge}\n</script>\n<script>\n{export}\n</script>\n<script>\n{ai_question}\n</script>\n{marker}", 1)
 
 
-stamp = tuple((ROOT / f).stat().st_mtime for f in ('dashboard.html', 'merge.js', 'export.js'))
+stamp = tuple((ROOT / f).stat().st_mtime for f in ('dashboard.html', 'merge.js', 'export.js', 'ai_question.js'))
 components.html(page(stamp), height=900, scrolling=True)
