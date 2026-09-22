@@ -63,6 +63,57 @@ function normalizeDefaults(defaults) {
   };
 }
 
+function normalizeRemoteQuery(payload, defaults) {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) throw new Error('Gemini 응답 형식이 올바르지 않습니다.');
+  const fallback = normalizeDefaults(defaults);
+  const action = payload.action;
+  if (!['query', 'clarify'].includes(action)) throw new Error('Gemini 응답의 처리 유형이 올바르지 않습니다.');
+  const clarification = String(payload.clarification || '').trim().slice(0, 300);
+  if (!Array.isArray(payload.events) || payload.events.length > 12) throw new Error('Gemini가 반환한 기간 조건이 올바르지 않습니다.');
+  const events = payload.events.map(raw => {
+    if (!raw || typeof raw !== 'object') throw new Error('Gemini가 반환한 기간 조건이 올바르지 않습니다.');
+    const check = value => {
+      const match = typeof value === 'string' && value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (!match || !validDate(+match[1], +match[2], +match[3])) throw new Error('Gemini가 반환한 날짜가 올바르지 않습니다.');
+      return value;
+    };
+    const start = check(raw.start), end = check(raw.end);
+    if (toTime(end) < toTime(start)) throw new Error('행사 종료 날짜는 시작 날짜보다 빠를 수 없습니다.');
+    if (!['range', 'week', 'day', 'month', 'year'].includes(raw.kind)) throw new Error('Gemini가 반환한 기간 유형이 올바르지 않습니다.');
+    return {name: String(raw.name || `${start}~${end}`).trim().slice(0, 80), start, end, kind: raw.kind};
+  });
+  if (action === 'clarify' && !clarification) throw new Error('질문의 기간이나 조건을 조금 더 구체적으로 적어 주세요.');
+  if (action === 'query' && !events.length) throw new Error('연도와 날짜 범위를 확인해 주세요.');
+  const preDays = Number(payload.preDays), postDays = Number(payload.postDays);
+  if (!Number.isInteger(preDays) || !Number.isInteger(postDays) || preDays < 1 || postDays < 1 || preDays > 90 || postDays > 90) throw new Error('전·후 기간은 각각 1~90일로 적어 주세요.');
+
+  const list = (value, label) => {
+    if (!Array.isArray(value) || value.some(item => typeof item !== 'string' || !item.trim())) throw new Error(`Gemini가 반환한 ${label} 조건 형식이 올바르지 않습니다.`);
+    return [...new Set(value.map(item => item.trim()))];
+  };
+  const allowed = (values, choices, label) => {
+    if (values.some(value => !choices.includes(value))) throw new Error(`지원하지 않는 ${label} 조건이 포함되어 있습니다.`);
+    return values;
+  };
+  const metrics = allowed(list(payload.metrics, '지표'), ALL_METRICS, '지표');
+  const appMetrics = allowed(list(payload.appMetrics, '앱 지표'), APP_ALIASES.map(([, value]) => value), '앱 지표');
+  const dimensions = allowed(list(payload.dimensions, '구분'), DIMENSIONS.map(([, value]) => value), '구분');
+  const families = allowed(list(payload.families, '실적 영역'), ['core', 'app', 'kpi', 'product'], '실적 영역');
+  const availableChannels = fallback.availableChannels.length ? fallback.availableChannels : fallback.channels;
+  const channels = allowed(list(payload.channels, '채널'), availableChannels, '채널');
+  const segments = allowed(list(payload.segments, '회원구분'), ['T', '1', '2', '3'], '회원구분');
+  const bpus = allowed(list(payload.bpus, 'BPU'), fallback.availableBpus, 'BPU');
+  const categories = allowed(list(payload.categories, '카테고리'), fallback.availableCategories, '카테고리');
+  const rawExplicit = payload.explicit && typeof payload.explicit === 'object' ? payload.explicit : {};
+  return {
+    text: String(payload.text || '').slice(0, 1000), action, clarification, events, preDays, postDays,
+    metrics: metrics.length ? metrics : fallback.metrics, appMetrics, dimensions, families,
+    allIntent: !!payload.allIntent, channels: channels.length ? channels : fallback.channels,
+    segments: segments.length ? segments : fallback.segments, bpus, categories,
+    explicit: Object.fromEntries(['metrics', 'channels', 'segments', 'bpus', 'categories', 'dimensions'].map(key => [key, !!rawExplicit[key]])),
+  };
+}
+
 function findAliases(text, aliases) {
   const found = [], ordered = aliases.slice().sort((a, b) => b[0].length - a[0].length);
   let remaining = text;
@@ -359,6 +410,73 @@ function renderAnalysis(result, dash) {
   return `<div class="aiq-conditions"><b>해석한 조건</b> · ${esc(p.events.map(e => `${e.name} ${e.start}~${e.end}`).join(' · '))} · ${esc(filters)}</div>${events}${app}${kpi}${products}${action ? `<div class="aiq-action">${action}</div>` : ''}<div class="aiq-summary"><b>자동 요약</b><ul>${result.summary.map(line => `<li>${esc(line)}</li>`).join('')}</ul></div><div class="aiq-cap">기존 대시보드 공식 산식으로 브라우저 안에서 계산했습니다. 원인을 단정하지 않으며, 예측은 과거 패턴을 이어 본 참고값입니다.</div>`;
 }
 
+const REMOTE_PENDING = new Map();
+const REMOTE_HISTORY = [];
+
+function questionDefaults(dash) {
+  const productFilters = typeof dash.productQuestionFilters === 'function' ? dash.productQuestionFilters() : {};
+  return {
+    metrics: dash.METRICS,
+    channels: dash.selChans(),
+    segments: dash.selSegs(),
+    availableChannels: dash.CHS,
+    ...productFilters,
+  };
+}
+
+function appendLocalAnswer(answer, text, dash, defaults, fallbackMessage) {
+  try {
+    const parsed = parseQuestion(text, defaults);
+    const result = analyze(parsed, dash);
+    answer.className = 'aiq-answer';
+    answer.innerHTML = `${fallbackMessage ? `<div class="aiq-fallback">${esc(fallbackMessage)}</div>` : ''}${renderAnalysis(result, dash)}`;
+    return parsed;
+  } catch (error) {
+    answer.className = 'aiq-answer aiq-error';
+    answer.textContent = error && error.message ? error.message : '질문을 해석하지 못했습니다. 날짜와 조건을 확인해 주세요.';
+    return null;
+  }
+}
+
+function receiveRemote(response) {
+  if (!response || typeof response !== 'object') return;
+  const pending = REMOTE_PENDING.get(response.id);
+  if (!pending) return;
+  REMOTE_PENDING.delete(response.id);
+  const {answer, text, dash, defaults, thread} = pending;
+  if (!response.ok) {
+    appendLocalAnswer(answer, text, dash, defaults, response.message || 'Gemini 연결이 원활하지 않아 기존 질문 해석으로 처리했습니다.');
+  } else {
+    try {
+      const parsed = normalizeRemoteQuery(response.query, defaults);
+      if (parsed.action === 'clarify') {
+        answer.className = 'aiq-answer';
+        answer.innerHTML = `<div class="aiq-clarify"><b>조건 확인</b><p>${esc(parsed.clarification)}</p></div>`;
+      } else {
+        const result = analyze(parsed, dash);
+        answer.className = 'aiq-answer';
+        answer.innerHTML = renderAnalysis(result, dash);
+        REMOTE_HISTORY.push({question: text, query: {events: parsed.events, metrics: parsed.metrics, families: parsed.families, channels: parsed.channels, segments: parsed.segments, bpus: parsed.bpus, categories: parsed.categories}});
+        if (REMOTE_HISTORY.length > 3) REMOTE_HISTORY.shift();
+      }
+    } catch (error) {
+      appendLocalAnswer(answer, text, dash, defaults, 'Gemini 조건 검증에 실패해 기존 질문 해석으로 처리했습니다.');
+    }
+  }
+  thread.scrollTop = thread.scrollHeight;
+}
+
+function setConnectionStatus(status) {
+  if (typeof document === 'undefined') return;
+  const label = document.getElementById('aiQuestionStatus');
+  const hint = document.getElementById('aiQuestionHint');
+  const message = status && status.message ? status.message : 'Gemini 상태 확인 중';
+  if (label) label.textContent = message;
+  if (hint) hint.textContent = status && status.ok
+    ? 'Enter 전송 · Shift+Enter 줄바꿈 · 실적 원본은 외부로 전송하지 않음'
+    : 'Enter 전송 · Shift+Enter 줄바꿈 · Gemini 장애 시 기존 해석으로 자동 전환';
+}
+
 function mount(dash) {
   if (typeof document === 'undefined') return;
   const section = document.getElementById('aiQuestionSec');
@@ -369,28 +487,34 @@ function mount(dash) {
   if (!section || !input || !send || !example || !thread || section.dataset.mounted) return;
   section.dataset.mounted = 'true';
   section.hidden = false;
+  if (!root.FP_GEMINI_BRIDGE || !root.FP_GEMINI_BRIDGE.ready) {
+    setConnectionStatus({ok: false, message: '기존 질문 해석 사용'});
+  }
   const submit = () => {
     const text = input.value.trim();
     if (!text) return;
     const user = document.createElement('div');
     user.className = 'aiq-user'; user.textContent = text; thread.appendChild(user);
-    try {
-      const productFilters = typeof dash.productQuestionFilters === 'function' ? dash.productQuestionFilters() : {};
-      const parsed = parseQuestion(text, {
-        metrics: dash.METRICS,
-        channels: dash.selChans(),
-        segments: dash.selSegs(),
-        availableChannels: dash.CHS,
-        ...productFilters,
-      });
-      const result = analyze(parsed, dash);
-      const answer = document.createElement('div');
-      answer.className = 'aiq-answer'; answer.innerHTML = renderAnalysis(result, dash); thread.appendChild(answer);
-    } catch (error) {
-      const answer = document.createElement('div');
-      answer.className = 'aiq-answer aiq-error';
-      answer.textContent = error && error.message ? error.message : '질문을 해석하지 못했습니다. 날짜와 조건을 확인해 주세요.';
-      thread.appendChild(answer);
+    const answer = document.createElement('div');
+    const defaults = questionDefaults(dash);
+    const bridge = root.FP_GEMINI_BRIDGE;
+    thread.appendChild(answer);
+    if (bridge && bridge.ready && typeof bridge.request === 'function') {
+      const id = `gemini-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+      answer.className = 'aiq-answer aiq-pending';
+      answer.textContent = 'Gemini가 질문을 대시보드 조회조건으로 해석하고 있습니다…';
+      REMOTE_PENDING.set(id, {answer, text, dash, defaults, thread});
+      try {
+        bridge.request({
+          id, type: 'gemini_query', question: text,
+          context: {...defaults, dataFirst: dash.dataFirst, dataLast: dash.dataLast, history: REMOTE_HISTORY.slice()},
+        });
+      } catch (error) {
+        REMOTE_PENDING.delete(id);
+        appendLocalAnswer(answer, text, dash, defaults, 'Gemini 연결이 원활하지 않아 기존 질문 해석으로 처리했습니다.');
+      }
+    } else {
+      appendLocalAnswer(answer, text, dash, defaults, '');
     }
     input.value = '';
     thread.scrollTop = thread.scrollHeight;
@@ -405,5 +529,5 @@ function mount(dash) {
   });
 }
 
-root.FP_AI_QUESTION = {parseQuestion, weekPeriod, buildPeriods, estimateAction, analyze, mount};
+root.FP_AI_QUESTION = {parseQuestion, normalizeRemoteQuery, weekPeriod, buildPeriods, estimateAction, analyze, receiveRemote, setConnectionStatus, mount};
 })(typeof window !== 'undefined' ? window : globalThis);

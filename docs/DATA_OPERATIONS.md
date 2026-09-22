@@ -48,11 +48,12 @@ python -m pip install -r requirements.txt
 python -m streamlit run app.py
 ```
 
-Streamlit iframe에서는 `dashboard.html`, `merge.js`, `export.js`가 한 문서로 합쳐진다. 저장소에 `data/`가 없어도 백업 파일을 열어 사용할 수 있다.
+Streamlit 컴포넌트에서는 `dashboard.html`, `merge.js`, `export.js`, `ai_question.js`가 한 문서로 합쳐진다. 저장소에 `data/`가 없어도 백업 파일을 열어 사용할 수 있다. 로컬에 Gemini 키가 없으면 기존 브라우저 질문 해석으로 동작한다.
 
 ## 배포
 
 - Streamlit Community Cloud: repository `ryunj/first-dashboard`, branch `main`, main file `app.py`
+- Gemini 질문 기능: Settings → Secrets에 `GEMINI_API_KEY = "..."` 등록. 키 값은 로그·화면·저장소에 기록하지 않는다. 모델을 바꿀 때만 `GEMINI_MODEL = "..."`을 추가한다.
 - 코드/문서 수정은 검증 후 `main`에 push하면 자동 재배포된다.
 - 실적 업데이트만 하는 일반 운영은 새 백업 파일을 사용자에게 전달하면 되며 코드 배포가 필요 없다.
 - 같은 대시보드 주소를 여러 사람이 사용해도 백업은 사용자 브라우저별로 독립이다. 서버에 실적을 올리거나 자동 동기화하지 않는다.

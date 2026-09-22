@@ -51,6 +51,7 @@ assert.equal(errors.length, 0, `page errors: ${errors.join(' | ')}`);
 assert.equal(await page.locator('#insightSec + #aiQuestionSec').count(), 1, 'AI section must follow insights');
 assert.equal(await page.locator('#aiQuestionSec + #memoSec').count(), 1, 'AI section must precede memos');
 assert.equal(await page.locator('#aiQuestionBox').getAttribute('open'), null, 'AI panel must start collapsed');
+assert.match(await page.locator('#aiQuestionStatus').innerText(), /기존 질문 해석/, 'static page must show local parser status');
 
 await page.locator('#aiQuestionBox summary').click();
 await page.locator('#aiQuestionExample').click();

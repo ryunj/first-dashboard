@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>첫구매 실적 대시보드</title>
+<style>
+html,body,#dashboard{width:100%;height:100%;margin:0;overflow:hidden;border:0;background:#f6f6f3}
+</style>
+</head>
+<body>
+<iframe id="dashboard" title="첫구매 실적 대시보드"></iframe>
+<script>
+(() => {
+  'use strict';
+  const child = document.getElementById('dashboard');
+  let loaded = false, lastStamp = '', lastResponse = '', latestArgs = {};
+  const send = (type, data = {}) => window.parent.postMessage({isStreamlitMessage: true, type, ...data}, '*');
+  const setValue = value => send('streamlit:setComponentValue', {value});
+  const setHeight = () => send('streamlit:setFrameHeight', {height: Math.max(900, window.innerHeight || 0)});
+
+  function connectBridge() {
+    if (!loaded || !child.contentWindow) return;
+    child.contentWindow.FP_GEMINI_BRIDGE = {
+      ready: !!(latestArgs.geminiStatus && latestArgs.geminiStatus.configured),
+      request: request => setValue(request),
+    };
+    const api = child.contentWindow.FP_AI_QUESTION;
+    if (api && typeof api.setConnectionStatus === 'function') api.setConnectionStatus(latestArgs.geminiStatus || {});
+    const response = latestArgs.aiResponse;
+    if (response && response.id && response.id !== lastResponse && api && typeof api.receiveRemote === 'function') {
+      lastResponse = response.id;
+      api.receiveRemote(response);
+    }
+  }
+
+  child.addEventListener('load', () => {
+    loaded = true;
+    connectBridge();
+    setHeight();
+  });
+
+  window.addEventListener('message', event => {
+    const message = event.data || {};
+    if (message.type !== 'streamlit:render') return;
+    latestArgs = message.args || {};
+    const stamp = String(latestArgs.pageStamp || '');
+    if (!loaded || stamp !== lastStamp) {
+      loaded = false;
+      lastStamp = stamp;
+      child.srcdoc = String(latestArgs.html || '');
+    } else {
+      connectBridge();
+    }
+    setHeight();
+  });
+
+  window.addEventListener('resize', setHeight);
+  send('streamlit:componentReady', {apiVersion: 1});
+  setHeight();
+})();
+</script>
+</body>
+</html>

@@ -3,14 +3,26 @@
 
 dashboard.html 을 그대로 화면 가득 띄운다. 데이터는 저장소에도 서버에도 없다:
 화면에 백업 파일(.json.gz)을 끌어다 놓거나 '백업 파일 열기'로 고르면, 보는 사람의 브라우저(IndexedDB)에만 저장해 조회한다.
-Streamlit 은 HTML 을 iframe(srcdoc)으로 넣어 같은 폴더의 JS 파일을 경로로 불러오지 못하므로 HTML 안에 넣어서 보낸다.
+Gemini 는 서버에서 자연어를 조회조건으로만 바꾸며 실제 실적 계산은 브라우저의 기존 공식이 담당한다.
 """
 from pathlib import Path
 
 import streamlit as st
 import streamlit.components.v1 as components
 
+from gemini_query import (
+    GeminiQueryError,
+    connection_test,
+    generate_query,
+    load_gemini_config,
+    public_connection_status,
+)
+
 ROOT = Path(__file__).resolve().parent
+DASHBOARD_COMPONENT = components.declare_component(
+    "first_purchase_dashboard",
+    path=str(ROOT / "streamlit_component"),
+)
 
 st.set_page_config(page_title='첫구매 실적 대시보드', page_icon='📊', layout='wide', initial_sidebar_state='collapsed')
 # Streamlit 기본 헤더 · 여백을 걷어 내고 대시보드가 화면을 꽉 채우게
@@ -43,5 +55,45 @@ def page(stamp):
     return html.replace(marker, f"<script>window.DASH_EMBED = 'streamlit';</script>\n<script>\n{merge}\n</script>\n<script>\n{export}\n</script>\n<script>\n{ai_question}\n</script>\n{marker}", 1)
 
 
+@st.cache_data(ttl=3600, show_spinner=False)
+def check_gemini(api_key, model):
+    """배포 세션마다 반복 호출하지 않도록 최소 연결 확인을 캐시한다."""
+    return connection_test(api_key, model=model)
+
+
+config = load_gemini_config(st.secrets)
+if config.api_key:
+    try:
+        check = check_gemini(config.api_key, config.model)
+        gemini_status = public_connection_status(config, checked=True, ok=True, message=check["message"])
+    except GeminiQueryError:
+        gemini_status = public_connection_status(config, checked=True, ok=False)
+else:
+    gemini_status = public_connection_status(config, checked=False)
+
 stamp = tuple((ROOT / f).stat().st_mtime for f in ('dashboard.html', 'merge.js', 'export.js', 'ai_question.js'))
-components.html(page(stamp), height=900, scrolling=True)
+response = st.session_state.get("gemini_ai_response")
+request = DASHBOARD_COMPONENT(
+    html=page(stamp),
+    pageStamp="|".join(str(value) for value in stamp),
+    geminiStatus=gemini_status,
+    aiResponse=response,
+    key="first-purchase-dashboard",
+    default=None,
+)
+
+if isinstance(request, dict) and request.get("type") == "gemini_query" and request.get("id"):
+    request_id = str(request["id"])[:100]
+    if request_id != st.session_state.get("gemini_last_request_id"):
+        question = request.get("question", "")
+        context = request.get("context") if isinstance(request.get("context"), dict) else {}
+        try:
+            if not config.api_key:
+                raise GeminiQueryError("Gemini 키가 설정되지 않아 기존 질문 해석을 사용합니다.")
+            query = generate_query(question, context, config.api_key, model=config.model)
+            result = {"id": request_id, "ok": True, "query": query}
+        except GeminiQueryError as error:
+            result = {"id": request_id, "ok": False, "message": str(error)}
+        st.session_state["gemini_last_request_id"] = request_id
+        st.session_state["gemini_ai_response"] = result
+        st.rerun()
