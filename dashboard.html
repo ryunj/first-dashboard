@@ -648,7 +648,7 @@ body.pdfcap .pgrid{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr)!important
     <ul>
       <li><b>첫구매</b> = 전체관점 <code>_첫구매</code> raw 기준. 전체관점 원천이 없는 해(2024년 이전)의 첫구매 거래액 · 고객수 · 객단가는 <b>신규회원대시보드 '총)첫구매 거래액 · 고객수 (전체)'</b>(채널별)로 대신한다 — 2025~2026년에 두 원천을 대조하면 평소 신규회원대시보드가 1~3% 높고, 2025년 9~10월은 전체관점이 크게 높다(대량 첫구매 이벤트 등이 한쪽에만 잡힘). 이 원천엔 회원구분이 없어 당월신규 · 기가입신규 · 기존은 비어 있다. 이 값이 화면에 섞이면 요약 설명과 지표 설명에 표시한다. 거래액 단위 백만원. <b>회원구분</b>(당월신규 · 기가입신규 · 기존)은 거래액 · 고객수 · 객단가에만 적용된다.</li>
       <li><b>첫구매율</b> = 태블로 첫구매율 raw(0.1% 단위 반올림)를 트래픽으로 가중해 재집계 · <b>가입률</b> = 가입자수 ÷ 비회원 트래픽 · <b>객단가</b> = 거래액 ÷ 고객수 · <b>당일가입 CR</b> = 당일가입 첫구매자 ÷ 가입자수.</li>
-      <li><b>비회원 트래픽 기준</b> — 일별: 일 트래픽. <b>주별: 태블로 주간(중복 제거) 트래픽</b> → 트래픽 · 가입률 · 첫구매율이 내부 대시보드 주별 값과 같다. <b>월별 · 일별 누계: 일자 트래픽 합(중복 포함)</b> → 월간 중복 제거 raw가 없어서, 내부 대시보드보다 트래픽은 크고 가입률 · 첫구매율은 낮게 나온다(주 기준 약 0.8배 차이).</li>
+      <li><b>비회원 트래픽 기준</b> — 월별 · 주별 · 일별 모두 화면 기간의 <b>일자 트래픽 raw를 합산</b>한다. 주별 일평균은 월~일 일별 합계 ÷ 실제 데이터 일수다. 원천에 사용자 식별자가 없어 날짜 사이 중복 여부는 이 대시보드에서 확인하거나 제거하지 않는다. 가입률 · 첫구매율도 같은 일별 합산 트래픽을 분모로 계산한다.</li>
       <li><b>주별 · 월별</b> 거래액 · 고객수 · 가입자수는 일자 raw 합산. <b>일평균</b> = 기간 합계 ÷ 데이터 일수. <b>누계</b> = 월별은 월 합계, 주별은 주 합계, 일별은 하루 값이라 일평균과 누계가 같다.</li>
       <li><b>주차</b> = ISO 주(월~일). 'M월 N주차' 는 그 주 목요일이 속한 달 기준(태블로 라벨과 동일).</li>
       <li><b>비교 연도</b>(비교 옆)로 몇 년 전과 비교할지 고른다 — 기본 전년, 2년 전이면 728일 전 동기간 · 동요일('2024년비'). 요약 · 차트 · 표 · 인사이트 · 상품 구성 · 앱 설치 영역과 엑셀 · PDF 가 모두 따른다(KPI 는 연간 목표 기준이라 전년 그대로). 전년이 아닌 해와 비교하면 날짜가 달력보다 며칠씩 앞당겨진다(요일을 맞추려고 364일 단위로 옮김). <b>전년비</b> = 364일 전 <b>동기간 · 동요일</b>. 예) 2026-09-01~13 ↔ 2025-09-02~14. 증가는 <span class="pos">+초록</span>, 감소는 <span class="neg">△빨강</span>.</li>
@@ -656,10 +656,10 @@ body.pdfcap .pgrid{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr)!important
       <li><b>비교</b> — 기본 <b>전년 동기간</b>(전년비). <b>전월 · 전주 · 전일</b>로 바꾸면 표 · 차트 툴팁 · 요약 · 상품 구성 · 앱 섹션의 비교가 모두 직전 기간 대비(전월비 · 전주비 · 전일비)로 바뀐다. 전월은 진행 중인 달이면 같은 일수끼리(예: 9/1~13 ↔ 8/1~13), 끝난 달은 전월 전체. 전주 = 7일 전 같은 요일들, 전일 = 하루 전. 직전 기간 모드에선 차트의 전년선을 숨긴다(값은 툴팁). 요약 타일은 두 비교를 함께 보여 준다. KPI는 항상 전년 동기 누적.</li>
       <li><b>AI 실적 질문</b> — 행사 날짜를 자연어로 적으면 현재 필터와 기존 공식 산식으로 전·중·후 실적을 계산한다. GPT/API 연결 없이 이 브라우저 안에서만 처리하며 질문은 저장하지 않는다. 상승 예상은 계산 가능한 과거 행사 2개 이상이 필요하고, 권장 액션 시작은 예상 상승 시점보다 14일 전이다.</li>
       <li><b>상단 필터</b>(회원구분 · 채널 · BPU · 카테고리)는 기본으로 접혀 있고, <b>필터</b> 버튼 옆에 지금 고른 조건이 한 줄로 보인다(기본값이 아닌 필터 수는 파란 숫자). 버튼을 누르면 펼쳐진다. <b>채널 · 회원구분</b>은 여러 개를 고를 수 있다. 차트 선 하나(채널 1개 × 구분 1개)면 당해 vs 전년, 여러 개면 비교선 — 색 = 채널, 선 모양 = 회원구분. 요약 타일은 선택 중 첫 번째 기준.</li>
-      <li><b>BPU · 카테고리</b>(상단 필터, 상품 데이터가 있을 때만) — <b>BPU</b>만 고르면 거래액 · 고객수 · 객단가를 <b>상품관점</b>(회원구분 × 채널 × BPU, 실적과 같은 기준)에서 다시 계산하고 <b>회원구분 · 채널과 함께</b> 줄을 나눈다('상품관점 기준' 꼬리표). <b>카테고리</b>를 거르면 조직 카테고리 원천(결제 완료분만)으로 계산하며 이 원천엔 회원구분이 없어 회원구분은 전체로 고정된다('상품 기준' 꼬리표). <b>트래픽 · 가입자수 · 가입률 · 당일가입 CR · 첫구매율</b>과 앱 설치 · 수신동의는 그대로 <b>전체 기준</b>이다('전체 기준' 꼬리표). 상품 기준 거래액은 <b>결제 완료(양수)</b> 건만 더한 값이라 전체 첫구매 거래액보다 작고(취소 · 환불 · 상품 미매칭 제외), 고객수는 상품별 <b>주문고객수의 합</b>이라 한 사람이 여러 상품을 사면 여러 번 센다. BPU 칩은 채널 칩과 같다 — <b>전체</b>(모든 BPU 합)와 개별 BPU를 따로 켜고 끄며, 켠 것마다 <b>줄을 나눠</b> 보여 준다(4개를 모두 눌러도 합치지 않는다 · 차트는 색 = 채널, 선 모양 = BPU). <b>전체만</b> = 합계 한 줄, <b>BPU 모두</b> = BPU마다 한 줄. 전체를 켠 채 BPU를 고르면 '전체' 줄은 모든 BPU의 상품 기준 합이다. 상단 채널 · BPU · 카테고리는 <b>상품 구성</b> 영역에도 그대로 적용된다(드릴다운 · 기간별 표 · 상품군 표). 카테고리를 거르면 커버리지 · 상품UV · CR은 숨긴다. BPU <b>전체</b>와 개별 BPU를 함께 켜면 상품 구성의 BPU 목록은 모두 보이되 고른 BPU를 <b>강조</b>한다. 조직 카테고리 원천이 <b>덜 채워진 날짜</b>(양수 결제 거래액이 상품관점 · 실적의 30% 미만 — 평소 90% 이상)가 기간에 섞이면 상품 구성 위와 요약 설명에 ⚠ 경고를 띄우고, 새 데이터 추가 결과표에도 날짜 · 행 수 · 합계를 알린다.</li>
+      <li><b>BPU · 카테고리</b>(상단 필터, 상품 데이터가 있을 때만) — <b>BPU</b>만 고르면 거래액 · 고객수 · 객단가를 <b>상품관점</b>(회원구분 × 채널 × BPU, 실적과 같은 기준)에서 다시 계산하고 <b>회원구분 · 채널과 함께</b> 줄을 나눈다('상품관점 기준' 꼬리표). <b>카테고리</b>를 거르면 조직 카테고리 원천(결제 완료분만)으로 계산하며 이 원천엔 회원구분이 없어 회원구분은 전체로 고정된다. 선택한 카테고리는 합산하지 않고 카테고리별 행으로 나눠 표시한다('상품 기준' 꼬리표). <b>트래픽 · 가입자수 · 가입률 · 당일가입 CR · 첫구매율</b>과 앱 설치 · 수신동의는 그대로 <b>전체 기준</b>이다('전체 기준' 꼬리표). 상품 기준 거래액은 <b>결제 완료(양수)</b> 건만 더한 값이라 전체 첫구매 거래액보다 작고(취소 · 환불 · 상품 미매칭 제외), 고객수는 상품별 <b>주문고객수의 합</b>이라 한 사람이 여러 상품을 사면 여러 번 센다. BPU 칩은 채널 칩과 같다 — <b>전체</b>(모든 BPU 합)와 개별 BPU를 따로 켜고 끄며, 켠 것마다 <b>줄을 나눠</b> 보여 준다(4개를 모두 눌러도 합치지 않는다 · 차트는 색 = 채널, 선 모양 = BPU). <b>전체만</b> = 합계 한 줄, <b>BPU 모두</b> = BPU마다 한 줄. 전체를 켠 채 BPU를 고르면 '전체' 줄은 모든 BPU의 상품 기준 합이다. 상단 채널 · BPU · 카테고리는 <b>상품 구성</b> 영역에도 그대로 적용된다(드릴다운 · 기간별 표 · 상품군 표). 카테고리를 거르면 커버리지 · 상품UV · CR은 숨긴다. BPU <b>전체</b>와 개별 BPU를 함께 켜면 상품 구성의 BPU 목록은 모두 보이되 고른 BPU를 <b>강조</b>한다. 조직 카테고리 원천이 <b>덜 채워진 날짜</b>(양수 결제 거래액이 상품관점 · 실적의 30% 미만 — 평소 90% 이상)가 기간에 섞이면 상품 구성 위와 요약 설명에 ⚠ 경고를 띄우고, 새 데이터 추가 결과표에도 날짜 · 행 수 · 합계를 알린다.</li>
       <li><b>*(기울임)</b> = 전년 일자 raw가 없어 전년 주별 raw를 날짜별로 나눠 채운 추정값.</li>
       <li><b>KPI 목표</b>(맨 아래)는 <code>kpi.js</code> 의 연간 누적 목표 기준 · 필터와 무관하게 전체 채널. 첫구매 거래액 · 고객수 실적은 <b>신규회원실적대시보드의 총)첫구매 거래액 · 고객수 (당년신규)</b>. 전체관점 당월신규+기가입신규와 비슷하지만 집계 기준이 달라 조금 다르다. 목표 일평균 = 연간 목표 ÷ 연간 일수, 남은 기간 필요 일평균 = (목표 − 누적) ÷ 남은 일수. 트래픽 · 가입자 목표를 넣으면 목표 가입률도 환산된다.</li>
-      <li><b>상품 구성</b>(KPI 위) — <code>조직 카테고리별 첫구매 실적</code>의 상품 단위 첫구매 실적. <b>기본 = 사업부 기준</b>: 사업부(BPU) → 카테고리 → 브랜드 → 상품을 <b>전 채널 합산</b>으로 드릴다운한다. 채널 칩으로 거르고(여러 개 선택), <b>카테고리 칩</b>은 모두 펼쳐 기본 모두 선택 — 누르면 그 카테고리만 빼거나 다시 넣고, '전체'는 모두 선택 ↔ 모두 해제. 행마다 위쪽에서 고른 기준(<b>거래액 또는 주문고객수</b>) 하나와 비교 기간 값 · 비교(전년비 등)를 보여 준다. 맨 위 <b>합계</b> 행 = 지금 범위 전체. 위쪽 거래액/주문고객수 버튼은 숫자 열 · 막대 · 정렬 · 구성비 · 채널 구성 띠의 기준(엑셀 다운로드에는 둘 다). <b>주 채널</b> = 가장 많이 판 채널 · 비중 · 판매 채널 수, 카테고리 · 브랜드 · 상품 단계에서 <b>판매 채널 많은 순</b>으로 정렬 가능. <b>상품UV · 상품CR</b>(상품관점 실측, CR = 상품관점 고객수 ÷ 상품UV)은 채널 · 사업부 단계 행에서만 보인다. 카테고리 단계는 <b>상품관점 상품군별 보조표</b>(드릴다운 아래 · 기본 접힘)로 따로 본다 — 상품관점의 상품군(골프 · 남성 · 슈즈 …)은 조직 대카테고리와 다른 분류라 드릴다운 행에 섞지 않는다(조직 카테고리와 상품관점 상품군은 분류가 달라 카테고리 단계 · 카테고리 필터 중에는 없음 · 채널을 여러 개 고르면 채널별 UV 합). <b>상품은 모두 개별로 보관</b>하고 각 단계(카테고리 · 브랜드 · 상품)에서 고른 기준 <b>상위 30개</b>를 보여 준다(나머지는 '그 외' 합계). 드릴다운 숫자는 <b>양수만</b> 담는다 — 원천의 취소 · 반품(음수 행)과 0원 행은 빼고 쌓는다(총결제 기준에 가깝다). 그래서 상단 실적(총결제)과는 상품 매칭 누락만큼 차이가 남는다. 2026-09-15 이전 형식의 백업(브랜드별 연간 상위 20개만 개별 · 나머지 '기타 상품', 상품UV 없음)을 열면 섹션 위에 안내가 뜨며, 최신 백업으로 다시 열어야 모두 보인다. 이 원천은 첫구매 거래액의 일부만 담고 있어 캡션에 <b>상품 원천 커버리지</b>(같은 채널 · BPU의 상품관점 실측 거래액 대비)를 표시한다. 주문고객수는 상품별 합이라 한 주문에 여러 상품이면 중복된다. <b>기간별 표</b>(기본 접힘)는 합계와 지금 단계 상위 항목의 기간별 값 · 비교. 기간은 상단 월별 · 주별 · 일별과 일평균/누계를 따르고(추이 막대를 누르면 그 기간 선택), 상품코드를 누르면 LF몰 상품 페이지가 새 탭으로 열린다. 사업부는 e-영업1 → 4 순서 고정.</li>
+      <li><b>상품 구성</b>(KPI 위) — <code>조직 카테고리별 첫구매 실적</code>의 상품 단위 첫구매 실적. <b>기본 = 사업부 기준</b>: 사업부(BPU) → 카테고리 → 브랜드 → 상품을 <b>전 채널 합산</b>으로 드릴다운한다. 채널 칩으로 거르고(여러 개 선택), <b>카테고리 칩</b>은 모두 펼쳐 기본 모두 선택 — 전체 상태에서 개별 카테고리를 누르면 그 카테고리만 선택되고 이후 여러 개를 추가할 수 있다. 최소 1개를 유지하며 '전체'는 모든 카테고리를 다시 선택한다. 행마다 위쪽에서 고른 기준(<b>거래액 또는 주문고객수</b>) 하나와 비교 기간 값 · 비교(전년비 등)를 보여 준다. 맨 위 <b>합계</b> 행 = 지금 범위 전체. 위쪽 거래액/주문고객수 버튼은 숫자 열 · 막대 · 정렬 · 구성비 · 채널 구성 띠의 기준(엑셀 다운로드에는 둘 다). <b>주 채널</b> = 가장 많이 판 채널 · 비중 · 판매 채널 수, 카테고리 · 브랜드 · 상품 단계에서 <b>판매 채널 많은 순</b>으로 정렬 가능. <b>상품UV · 상품CR</b>(상품관점 실측, CR = 상품관점 고객수 ÷ 상품UV)은 채널 · 사업부 단계 행에서만 보인다. 카테고리 단계는 <b>상품관점 상품군별 보조표</b>(드릴다운 아래 · 기본 접힘)로 따로 본다 — 상품관점의 상품군(골프 · 남성 · 슈즈 …)은 조직 대카테고리와 다른 분류라 드릴다운 행에 섞지 않는다(조직 카테고리와 상품관점 상품군은 분류가 달라 카테고리 단계 · 카테고리 필터 중에는 없음 · 채널을 여러 개 고르면 채널별 UV 합). <b>상품은 모두 개별로 보관</b>하고 각 단계(카테고리 · 브랜드 · 상품)에서 고른 기준 <b>상위 30개</b>를 보여 준다(나머지는 '그 외' 합계). 드릴다운 숫자는 <b>양수만</b> 담는다 — 원천의 취소 · 반품(음수 행)과 0원 행은 빼고 쌓는다(총결제 기준에 가깝다). 그래서 상단 실적(총결제)과는 상품 매칭 누락만큼 차이가 남는다. 2026-09-15 이전 형식의 백업(브랜드별 연간 상위 20개만 개별 · 나머지 '기타 상품', 상품UV 없음)을 열면 섹션 위에 안내가 뜨며, 최신 백업으로 다시 열어야 모두 보인다. 이 원천은 첫구매 거래액의 일부만 담고 있어 캡션에 <b>상품 원천 커버리지</b>(같은 채널 · BPU의 상품관점 실측 거래액 대비)를 표시한다. 주문고객수는 상품별 합이라 한 주문에 여러 상품이면 중복된다. <b>기간별 표</b>(기본 접힘)는 합계와 지금 단계 상위 항목의 기간별 값 · 비교. 기간은 상단 월별 · 주별 · 일별과 일평균/누계를 따르고(추이 막대를 누르면 그 기간 선택), 상품코드를 누르면 LF몰 상품 페이지가 새 탭으로 열린다. 사업부는 e-영업1 → 4 순서 고정.</li>
       <li><b>신규회원 앱 설치 · 앱푸시 수신동의</b> — 모두 <b>앱 설치자 기준</b>. 흐름 차트(가입 → 설치 → 수신동의 · 추가 · 이탈)는 진행 중인 달 · 주가 뚝 떨어져 보이지 않게 누계 메뉴에서도 일평균으로 그린다(타일 · 표는 메뉴를 따름). 가입자수 → <b>앱 신규 설치</b>(APP설치데이터 '신규 설치', 재설치 제외) → <b>앱푸시 수신동의</b>(PUSH '신규' 회원의 신규추가(+)). 기존 대시보드 '앱푸시수신동의' · '앱푸시(앱포함)/신규회원'과 같은 값이다(원천 대조로 확인). <b>앱푸시 수신동의율(신규회원)</b> = 앱푸시 수신동의 ÷ 가입자수 · <b>앱 신규 설치 대비 수신동의율</b> = 앱푸시 수신동의 ÷ 앱 신규 설치. 비율은 분자 · 분모가 모두 있는 날만 합산.</li>
       <li><b>앱푸시 수신동의 회원</b>(PUSH, 앱 설치자 기준): 기존 · 신규(당년 가입) · 합계. 회원 수는 기간 말 값, 추가 · 이탈 · 순증은 기간 합(일평균 메뉴면 ÷ 일수). 이탈 · 삭제는 늘어나면 빨강. 매년 1/1은 전년 신규가 기존으로 재분류되며 추가 · 이탈에 수만 명이 섞여 추가 · 이탈에서 뺀다. 원천 오류일 — 2025-04-18(수신동의 회원 0 · 전원 이탈)은 회원 수와 흐름을 모두 빼고, 2025-04-19 · 2026-04-24(증감 칸에 재고 값)와 2026-04-25(흐름 모두 0)는 흐름만 뺐다. 2026-06-15 이후엔 수신동의 회원이 전날 + 증감과 하루 수십 명씩 어긋난다(원천 그대로 표시).</li>
       <li><b>앱 설치 상세</b>(APP설치데이터, 2026-03~): 전체 설치 = 신규 설치 + 재설치 · 순증 설치 = 전체 설치 − 삭제 · 스토어 방문 · Push 활성 기기(기간 말 값). 원천에 같은 날짜가 두 번 나오면 뒤 행을 쓴다(7/17 · 7/18은 값이 다름). 2025년 raw가 없어 전년비는 비어 있다.</li>
@@ -722,11 +722,11 @@ function isoWeek(s) {  // → {y, w, m(목요일 월), n(목요일이 그 달 �
 const isoMonday = (y, w) => { const jan4 = Date.UTC(y, 0, 4); return ymd(jan4 - ((new Date(jan4).getUTCDay() + 6) % 7) * DAY + (w - 1) * 7 * DAY); };
 
 /* ---------- 데이터 ---------- */
-// 일자 raw가 기본. 주별 raw는 ① 일자 raw가 없는 날짜를 채우는 보조값(합산 가능한 시리즈만) ② 주별 보기의 주간 트래픽(tru·fpnu)
+// 일자 raw가 기본. 주별 raw는 일자 raw가 없는 날짜를 채우는 보조값(합산 가능한 시리즈만)으로만 쓴다.
 const DAILY = {s: D.daily.s, dates: D.daily.p, idx: new Map(D.daily.p.map((d, i) => [d, i]))};
 const WEEKLY = {s: D.weekly.s, p: D.weekly.p, byIso: new Map(D.weekly.p.map((p, i) => [`${p.y}-${p.w}`, i]))};
 const FALLBACK = new Set(['amt', 'cust', 'sg', 'crn']);
-const UNIQUE_TR = new Set(['tr', 'jr', 'fpr']);  // 트래픽 기반 지표 — 주별은 태블로 주간 트래픽 기준
+const UNIQUE_TR = new Set(['tr', 'jr', 'fpr']);  // 트래픽 기반 지표
 const wAmt = WEEKLY.s['amt|T|*TOTAL'] || [];
 const wCover = WEEKLY.p.filter((p, i) => wAmt[i] != null);
 const FIRST = [DAILY.dates[0], ...wCover.map(p => p.start)].filter(Boolean).sort()[0];
@@ -795,20 +795,10 @@ const dashSvg = sg => `<svg width="18" height="8" aria-hidden="true"><line x1="1
 
 // BPU · 카테고리 필터가 걸리면 거래액 · 주문고객수는 상품 데이터에서 뽑는다(그 외 지표는 전체 기준 그대로)
 const baseSum = (base, row, dates, allow) => (prodFiltOn() && (base === 'amt' || base === 'cust'))
-  ? (cubeOn() ? pCubeSum(base, row, dates) : pBaseSum(base, row.ch, dates, row.bpu)) : sumBase(base, keyOf(base, row), dates, allow);
+  ? (cubeOn() ? pCubeSum(base, row, dates) : pBaseSum(base, row.ch, dates, row.bpu, row.cat)) : sumBase(base, keyOf(base, row), dates, allow);
 function compute(m, row, dates, wi, mode = S.mode) {
   const M = MET[m];
   if (!dates || !dates.length) return {v: null, est: false};
-  if (wi != null && UNIQUE_TR.has(m)) {
-    // 주별 보기: 태블로 주간(중복 제거) 트래픽을 분모로 — 내부 대시보드와 같은 기준
-    if (wi < 0) return {v: null, est: false};
-    const g = k => { const a = WEEKLY.s[k]; return a ? a[wi] : null; };
-    const t = g(`tru|${row.ch}`);
-    if (!t) return {v: null, est: false};
-    if (m === 'tr') return {v: mode === 'avg' ? t / WEEKLY.p[wi].d : t, est: false};
-    const num = g(m === 'jr' ? `sg|${row.ch}` : `fpnu|${row.ch}`);
-    return num == null ? {v: null, est: false} : {v: num / t, est: false};
-  }
   // 요청 기간의 절반도 데이터가 없으면(예: 전년 12월 비교창에 1/1 하루만 걸림) 값을 내지 않는다
   const enough = n => n > 0 && n * 2 >= dates.length;
   if (M.type === 'flow') {
@@ -912,8 +902,9 @@ const seriesKeys = m => {
   const out = [];
   for (const ch of selChans()) {
     for (const seg of (segOn(m) ? selSegs() : ['T'])) {  // 채널 × 회원구분 × BPU
-      if (bpuSplit(m)) for (const b of bpuRows()) out.push({ch, seg, bpu: b});
-      else out.push({ch, seg});
+      const bs = bpuSplit(m) ? bpuRows() : [null];
+      const cats = prodFiltOn() && PROD_MET.has(m) && PD.cats.length ? PD.cats.slice() : [null];
+      for (const bpu of bs) for (const cat of cats) out.push({ch, seg, ...(bpu == null ? {} : {bpu}), ...(cat == null ? {} : {cat})});
     }
   }
   return out;
@@ -922,19 +913,24 @@ const questionRows = (m, channels, segments) => {
   const out = [], chosenChannels = CHS.filter(ch => channels.includes(ch)), chosenSegments = SEG_KEYS.filter(seg => segments.includes(seg));
   for (const ch of chosenChannels) {
     for (const seg of (segOn(m) ? chosenSegments : ['T'])) {
-      if (bpuSplit(m)) for (const bpu of bpuRows()) out.push({ch, seg, bpu});
-      else out.push({ch, seg});
+      const bs = bpuSplit(m) ? bpuRows() : [null];
+      const cats = prodFiltOn() && PROD_MET.has(m) && PD.cats.length ? PD.cats.slice() : [null];
+      for (const bpu of bs) for (const cat of cats) out.push({ch, seg, ...(bpu == null ? {} : {bpu}), ...(cat == null ? {} : {cat})});
     }
   }
   return out.map(row => ({...row, label: chLabel(row.ch)
     + (row.bpu != null && PRD ? ` · ${row.bpu < 0 ? 'BPU 전체' : PRD.bpu[row.bpu]}` : '')
+    + (row.cat != null && PRD ? ` · ${PRD.cat[row.cat]}` : '')
     + (segOn(m) && (chosenSegments.length > 1 || row.seg !== 'T') ? ` · ${segLabel(row.seg)}` : '')}));
 };
 const multiSeg = m => segOn(m) && selSegs().length > 1;
 const rowLabel = (m, r) => chLabel(r.ch)
   + (r.bpu != null && PRD ? ` · ${r.bpu < 0 ? 'BPU 전체' : PRD.bpu[r.bpu]}` : '')
+  + (r.cat != null && PRD ? ` · ${PRD.cat[r.cat]}` : '')
   + (segOn(m) && (selSegs().length > 1 || r.seg !== 'T') ? ` · ${segLabel(r.seg)}` : '');
-const rowDash = (m, r) => multiSeg(m) ? DASH[r.seg] : (r.bpu != null && bpuRows() ? BPU_DASH[Math.max(0, bpuRows().indexOf(r.bpu)) % BPU_DASH.length] : '');
+const rowDash = (m, r) => multiSeg(m) ? DASH[r.seg]
+  : r.cat != null ? BPU_DASH[Math.max(0, PD.cats.indexOf(r.cat)) % BPU_DASH.length]
+  : (r.bpu != null && bpuRows() ? BPU_DASH[Math.max(0, bpuRows().indexOf(r.bpu)) % BPU_DASH.length] : '');
 const modeName = () => S.grain === 'day' ? '일평균 = 누계' : S.mode === 'avg' ? '일평균' : {month: '월 합계', week: '주 합계'}[S.grain];
 const PROD_MET = new Set(['amt', 'cust', 'aov']);  // 상품 데이터로 다시 계산할 수 있는 지표
 const filtBase = () => (cubeOn() ? '상품관점 기준' : '상품 기준');
@@ -997,7 +993,7 @@ function weekCols(y) {
     if (!cur.length) continue;
     const w = isoWeek(mon), pv = back(cur), pw = isoWeek(pv[0]), pp = cur.map(d => addDays(d, -7)), qw = isoWeek(pp[0]), partial = cur.length < 7;
     cols.push(pickCmp({id: `${w.y}-W${pad(w.w)}`, label: `${w.m}월 ${w.n}주`, sub: `${md(mon)}~`, partial, cur, prevY: pv, prevP: pp,
-      wk: partial ? null : {cur: WEEKLY.byIso.get(`${w.y}-${w.w}`)}, wkY: partial ? null : WEEKLY.byIso.get(`${pw.y}-${pw.w}`), wkP: partial ? null : WEEKLY.byIso.get(`${qw.y}-${qw.w}`),
+      wk: null, wkY: null, wkP: null,
       opt: `${w.m}월 ${w.n}주차 (${md(cur[0])}~${md(cur.at(-1))})`,
       tip: `${w.y}년 ${w.m}월 ${w.n}주차 (${md(cur[0])}~${md(cur.at(-1))})`,
       ptipY: `${pw.y}년 ${pw.m}월 ${pw.n}주차 (${md(pv[0])}~${md(pv.at(-1))})`,
@@ -1102,7 +1098,9 @@ function syncFiltSummary() {  // 접힌 버튼에 지금 고른 조건 요약 ·
 }
 $('#btnFilt').addEventListener('click', () => { FILT_OPEN = !FILT_OPEN; syncFiltSummary(); queueFloat(); });
 function syncProdFilterBar() {  // BPU · 카테고리 칩 — 상품 데이터가 있을 때만 보인다
-  const on = !!PRD, filt = prodFiltOn();
+  const on = !!PRD;
+  if (on && PD.catNone) { PD.catNone = false; PD.cats = []; }  // 예전 저장 상태의 0개 선택은 전체로 복구
+  const filt = prodFiltOn();
   $('#bpuBar').hidden = !on;
   $('#pdCatBar').hidden = !on;
   if (!on) syncFiltSummary();
@@ -1122,19 +1120,21 @@ function syncProdFilterBar() {  // BPU · 카테고리 칩 — 상품 데이터�
     : `상품 기준 — ${prodFiltTxt()} · 거래액·고객수·객단가에만 적용 (조직 카테고리 원천 · 결제 완료분만 · 고객수 = 상품별 주문고객수 합${catFiltOn() ? '' : ' · 이 백업엔 회원구분별 상품관점 값이 없음'})`;
   const cats = catOrder(), catAll = !PD.cats.length && !PD.catNone, catOn = k => catAll || PD.cats.includes(k);
   const catList = PD.catOpen ? [...cats, ...PD.cats.filter(k => !cats.includes(k))] : PD.cats.slice();  // 기본은 접어 둔다
-  $('#pdCatChips').innerHTML = `<button type="button" class="chip all${!catAll && !PD.catNone ? ' part' : ''}" data-pcat="-1" aria-pressed="${catAll}" title="${catAll ? '누르면 모두 해제' : '누르면 모두 선택'}">전체</button>`
+  $('#pdCatChips').innerHTML = `<button type="button" class="chip all${!catAll && !PD.catNone ? ' part' : ''}" data-pcat="-1" aria-pressed="${catAll}" title="모든 카테고리 선택">전체</button>`
     + catList.map(k => `<button type="button" class="chip" data-pcat="${k}" aria-pressed="${catOn(k)}">${esc(PRD.cat[k])}</button>`).join('')
     + `<button type="button" class="chip more" data-pcatopen="1" aria-expanded="${PD.catOpen}">${PD.catOpen ? '접기' : `카테고리 고르기 (${cats.length}개)`}</button>`;
   $('#pdCatN').textContent = `${catAll ? cats.length : PD.catNone ? 0 : PD.cats.length}/${cats.length}개 선택`;
   syncFiltSummary();
 }
 const toggle = (list, v) => list.includes(v) ? (list.length > 1 ? list.filter(x => x !== v) : list) : [...list, v];  // 최소 하나는 남긴다
-function catToggle(k) {  // 카테고리 칩 — 전체 = 모두 선택 ↔ 모두 해제 · 개별 = 빼기/넣기
+function catToggle(k) {  // 카테고리 칩 — 전체 = 모두 선택 · 개별은 각각 나눠 표시(최소 1개 유지)
   const all = catOrder();
-  if (k < 0) { const wasAll = !PD.cats.length && !PD.catNone; PD.cats = []; PD.catNone = wasAll; return; }
-  const cur = PD.catNone ? [] : PD.cats.length ? PD.cats.slice() : all.slice();
-  const next = cur.includes(k) ? cur.filter(x => x !== k) : [...cur, k];
-  PD.catNone = !next.length;
+  if (k < 0) { PD.cats = []; PD.catNone = false; return; }
+  const wasAll = !PD.cats.length && !PD.catNone;
+  const cur = wasAll || PD.catNone ? [] : PD.cats.slice();
+  const next = wasAll ? [k] : cur.includes(k) ? cur.filter(x => x !== k) : [...cur, k];
+  if (!next.length) return;
+  PD.catNone = false;
   PD.cats = all.every(x => next.includes(x)) ? [] : next.sort((a, b) => a - b);  // 모두 고르면 필터 없음과 같다
 }
 $('header.top').addEventListener('click', e => {  // BPU · 카테고리 필터 — 화면 전체에 적용
@@ -1183,8 +1183,8 @@ $('#btnKpi').addEventListener('click', () => {  // KPI 는 기본 접힘
 /* ---------- 요약 ---------- */
 let LAST_SUM = null;  // 엑셀 다운로드용 — 마지막으로 그린 요약
 function renderSummary(cols) {
-  const k = focusIdx(cols), ch0 = selChans()[0], seg0 = selSegs()[0], bpu0 = (bpuRows() || [])[0];
-  const rowFor = m => (bpuSplit(m) ? {ch: ch0, seg: segOn(m) ? seg0 : 'T', bpu: bpu0} : {ch: ch0, seg: SEG_METRICS.has(m) ? seg0 : 'T'});
+  const k = focusIdx(cols), ch0 = selChans()[0], seg0 = selSegs()[0], bpu0 = (bpuRows() || [])[0], cat0 = PD.cats[0];
+  const rowFor = m => ({ch: ch0, seg: segOn(m) ? seg0 : 'T', ...(bpuSplit(m) ? {bpu: bpu0} : {}), ...(PROD_MET.has(m) && cat0 != null ? {cat: cat0} : {})});
   if (k < 0) {
     $('#tiles').innerHTML = METRICS.map(m => `<div class="tile"><div class="t-l">${esc(MET[m].name)}</div><div class="t-v">–</div></div>`).join('');
     $('#sumDesc').textContent = '선택한 연도의 데이터가 없습니다';
@@ -1193,8 +1193,8 @@ function renderSummary(cols) {
   const col = cols[k], pop = cmpPop();
   // 둘째 줄 = 선택하지 않은 쪽 비교 (전년비 ↔ 전월·전주·전일비)
   const oPrev = pop ? col.prevY : col.prevP, oWk = col.wk ? ((pop ? col.wkY : col.wkP) ?? -1) : null;
-  const multi = selChans().length > 1 || selSegs().length > 1 || !!bpuRows();
-  const who = chLabel(ch0) + (bpu0 != null ? ` · ${bpu0 < 0 ? 'BPU 전체' : PRD.bpu[bpu0]}` : '') + (seg0 !== 'T' ? ` · ${segLabel(seg0)}` : '') + (multi ? ' (선택 중 첫 번째)' : '');
+  const multi = selChans().length > 1 || selSegs().length > 1 || !!bpuRows() || PD.cats.length > 1;
+  const who = chLabel(ch0) + (bpu0 != null ? ` · ${bpu0 < 0 ? 'BPU 전체' : PRD.bpu[bpu0]}` : '') + (cat0 != null ? ` · ${PRD.cat[cat0]}` : '') + (seg0 !== 'T' ? ` · ${segLabel(seg0)}` : '') + (multi ? ' (선택 중 첫 번째)' : '');
   $('#sumDesc').textContent = `${col.tip} · ${modeName()} · ${who} · ${cmpLbl()}: ${col.ptip || '비교 기간 없음'}${pop ? '' : '(동요일)'} 대비`
     + (prodFiltOn() ? ` · ${filtBase()} ${prodFiltTxt()} — 거래액·고객수·객단가만 적용` : '')
     + (prodFiltOn() && !cubeOn() && thinText(col.cur) ? ` · ⚠ 조직 카테고리 원천이 덜 채워진 날짜 ${thinText(col.cur)} — 상품 기준 값이 작게 나옴` : '')
@@ -1411,7 +1411,7 @@ function renderTable(cols) {
     const sub = [unitOf(m), trNote(m)].filter(Boolean).join(' · ');
     h += `<tr class="grp"><th class="stick s1" colspan="${sticky}">${esc(MET[m].name)}<small>${esc(sub)}</small></th><td colspan="${rest}"></td></tr>`;
     for (const r of MODEL[m]) {
-      const vals = r.vals, cls = r.ch === '*TOTAL' && r.seg === 'T' && r.bpu == null ? 'top' : 'ch';
+      const vals = r.vals, cls = r.ch === '*TOTAL' && r.seg === 'T' && r.bpu == null && r.cat == null ? 'top' : 'ch';
       if (vals.some(v => v.pe && ok(v.p))) anyEst = true;
       const dsh = rowDash(m, r);  // 차트와 같은 선 모양을 표 앞 표식에도
       const lab = (dsh ? `<svg class="sw ln" width="14" height="8" aria-hidden="true"><line x1="1" y1="4" x2="13" y2="4" stroke="${chColor(r.ch)}" stroke-width="2" stroke-linecap="round" stroke-dasharray="${dsh}"/></svg>` : `<i class="sw" style="background:${chColor(r.ch)}"></i>`) + esc(r.label);
@@ -1783,7 +1783,24 @@ function pFilt() {  // 지금 필터로 만든 일자별 거래액 · 주문고�
   PFILT_KEY = key;
   return (PFILT = {all, by, nch});
 }
-function pBaseSum(base, ch, dates, bpu) {  // 상품 데이터가 있는 날만 센다(없는 날은 '값 없음') · bpu 를 주면 그 BPU 만
+function pBaseSum(base, ch, dates, bpu, cat) {  // 상품 데이터가 있는 날만 센다 · 선택 카테고리는 행별로 따로 합산
+  if (cat != null) {
+    const channel = ch === '*TOTAL' ? -1 : PRD.ch.indexOf(ch), bm = pBpuMask();
+    let v = 0, n = 0;
+    for (const date of dates) {
+      const d = pDay(date);
+      if (d < 0 || d >= PRD.meta.days) continue;
+      n++;
+      for (let i = PF.off[d], end = PF.off[d + 1]; i < end; i++) {
+        if (channel >= 0 && PF.c[i] !== channel) continue;
+        const path = PF.p[i] * 3, rowBpu = PRD.paths[path], rowCat = PRD.paths[path + 1];
+        if (rowCat !== cat) continue;
+        if (bpu != null && bpu >= 0 ? rowBpu !== bpu : bm && !bm[rowBpu]) continue;
+        v += base === 'amt' ? PF.a[i] : PF.u[i];
+      }
+    }
+    return {v, n, est: false};
+  }
   const F = pFilt(), set = (bpu != null && F.by.has(bpu)) ? F.by.get(bpu) : F.all;
   const k = ch === '*TOTAL' ? F.nch : PRD.ch.indexOf(ch), arr = k >= 0 ? (base === 'amt' ? set.a : set.u)[k] : null;
   if (!arr) return {v: 0, n: 0, est: false};

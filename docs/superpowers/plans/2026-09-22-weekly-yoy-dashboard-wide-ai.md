@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- Preserve existing metric definitions, units, 364-day same-weekday YoY, and completed-week weekly-dedup behavior.
+- Preserve existing metric definitions, units, and 364-day same-weekday YoY. Weekly traffic uses the displayed daily raw sum divided by the actual data-day count in average mode.
 - A partial week uses only the current dates and their matching prior dates on both sides.
 - No generated-AI API, network request, or browser persistence is introduced.
 - Unspecified question filters inherit the current UI state; explicit question filters take precedence.
@@ -27,7 +27,7 @@
 
 **Interfaces:**
 - Consumes: `weekCols(year)`, `compute(metric,row,dates,weekIndex,mode)`
-- Produces: partial columns with `wk`, `wkY`, and `wkP` set to `null`; full weeks retain weekly indices
+- Produces: weekly columns that calculate traffic metrics from their displayed daily date lists; weekly raw remains only a missing-day fallback for additive series
 
 - [ ] **Step 1: Write a real-backup failing test**
 
@@ -41,11 +41,11 @@ Expected before fix: weekly prior traffic differs from daily prior traffic.
 
 - [ ] **Step 3: Implement the minimal period fix**
 
-In `weekCols`, compute `partial = cur.length < 7` and use weekly dedup references only when `partial` is false.
+In `weekCols`, compute `partial = cur.length < 7` and use `cur`/`prev` daily lists for traffic metrics in both partial and complete weeks.
 
 - [ ] **Step 4: Verify partial and complete weeks**
 
-Assert a complete week's weekly reference remains non-null and a partial week's is null, then rerun the numeric parity assertions.
+Assert the 2026-09-14~20 traffic average is `1,027,192 / 7 = 146,741.714...`, and rerun partial-week parity assertions.
 
 - [ ] **Step 5: Commit**
 
@@ -207,4 +207,3 @@ Commit message: `docs: update dashboard AI query handoff`
 - [ ] **Step 5: Push and verify GitHub Pages**
 
 Push `main`, wait for deployment, then confirm `dashboard.html` and `ai_question.js` return 200 and the deployed revision contains the new functionality.
-

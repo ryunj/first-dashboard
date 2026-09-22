@@ -86,17 +86,43 @@ assert.equal(await page.evaluate(() => JSON.stringify(window.__dash.state)), sta
 
 const labelCheck = await page.evaluate(() => {
   const q = window.__dash.queryProducts({dates:['2026-09-21'],dimensions:['category']});
-  const outdoor = q.groups.category.all.find(row => row.name === '아웃도어');
-  if (!outdoor) return {found:false};
+  const byName = name => q.groups.category.all.find(row => row.name === name);
+  const outdoor = byName('아웃도어'), golf = byName('골프'), shoes = byName('슈즈');
+  if (!outdoor || !golf || !shoes) return {found:false};
   window.__dash.prodState.cats = [outdoor.key];
   window.__dash.prodState.catNone = false;
   window.__dash.render();
   const groups = [...document.querySelectorAll('#tblWrap tr.grp')].map(row => row.innerText.replace(/\s+/g, ' '));
-  return {found:true, amount:groups.find(x => x.startsWith('첫구매 거래액')), traffic:groups.find(x => x.startsWith('비회원 트래픽'))};
+  const singleRows = window.__dash.MODEL.amt.map(row => row.label);
+
+  Object.assign(window.__dash.state, {grain:'week', year:2026, mode:'avg', cmp:'yoy', cmpY:1, chans:['*TOTAL'], segs:['T']});
+  window.__dash.state.at.week = '2026-W38';
+  window.__dash.prodState.cats = [golf.key, shoes.key];
+  window.__dash.prodState.catNone = false;
+  window.__dash.prodState.bpus = [];
+  window.__dash.prodState.bpuAll = true;
+  window.__dash.render();
+  const cols = window.__dash.lastCols, colIndex = cols.findIndex(col => col.id === '2026-W38'), dates = cols[colIndex].cur;
+  const splitRows = window.__dash.MODEL.amt.map(row => ({label:row.label, value:row.vals[colIndex].c}));
+  const expected = Object.fromEntries(['골프','슈즈'].map(name => [name, window.__dash.queryProducts({dates,categories:[name]}).total.a / dates.length]));
+
+  window.__dash.prodState.cats = [];
+  window.__dash.prodState.catNone = true;
+  window.__dash.render();
+  const recovered = {catNone:window.__dash.prodState.catNone, cats:window.__dash.prodState.cats.slice(), value:window.__dash.MODEL.amt[0].vals[colIndex].c};
+  return {found:true, amount:groups.find(x => x.startsWith('첫구매 거래액')), traffic:groups.find(x => x.startsWith('비회원 트래픽')), singleRows, splitRows, expected, recovered};
 });
 assert.equal(labelCheck.found, true, 'real backup must include 아웃도어 category');
 assert.match(labelCheck.amount, /카테고리 아웃도어/);
 assert.match(labelCheck.traffic, /카테고리 아웃도어 필터 미적용/);
+assert.deepEqual(labelCheck.singleRows, ['전체 · 아웃도어']);
+assert.deepEqual(labelCheck.splitRows.map(row => row.label).sort(), ['전체 · 골프', '전체 · 슈즈']);
+for (const row of labelCheck.splitRows) {
+  const name = row.label.split(' · ').at(-1);
+  assert.ok(Math.abs(row.value - labelCheck.expected[name]) < 0.001, `${name} row must equal its own category total, not a combined total`);
+}
+assert.equal(labelCheck.recovered.catNone, false, 'legacy zero-category state must recover to all categories');
+assert.ok(labelCheck.recovered.value > 0, 'recovered all-category state must not display zero');
 assert.equal(errors.length, 0, `page errors after all queries: ${errors.join(' | ')}`);
 
 await browser.close();
