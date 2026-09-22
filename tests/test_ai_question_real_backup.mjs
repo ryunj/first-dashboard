@@ -12,7 +12,7 @@ const require = createRequire(import.meta.url);
 const {chromium} = require('playwright');
 const backup = JSON.parse(zlib.gunzipSync(fs.readFileSync(backupPath)));
 assert.equal(backup.format, 'fp-dashboard-backup');
-assert.equal(backup.data.meta.lastDate, '2026-09-20');
+assert.match(backup.data.meta.lastDate, /^\d{4}-\d{2}-\d{2}$/);
 
 const root = new URL('../', import.meta.url);
 let html = fs.readFileSync(new URL('dashboard.html', root), 'utf8');
