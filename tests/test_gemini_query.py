@@ -5,6 +5,7 @@ import unittest
 from gemini_query import (
     GeminiQueryError,
     connection_test,
+    generate_insight,
     generate_query,
     load_gemini_config,
     normalize_query,
@@ -133,11 +134,54 @@ class ApiTests(unittest.TestCase):
             self.assertEqual(headers["x-goog-api-key"], "secret-value")
             self.assertEqual(request_payload["generationConfig"]["response_mime_type"], "application/json")
             self.assertIn("response_schema", request_payload["generationConfig"])
+            self.assertIn("2주 전", request_payload["system_instruction"]["parts"][0]["text"])
+            self.assertIn("preDays=14", request_payload["system_instruction"]["parts"][0]["text"])
             return {"candidates": [{"content": {"parts": [{"text": json.dumps(payload, ensure_ascii=False)}]}}]}
 
         result = generate_query("8월 광고 실적", CONTEXT, "secret-value", model="gemini-test", transport=transport)
         self.assertEqual(result["action"], "query")
         self.assertEqual(result["events"][0]["end"], "2026-08-31")
+
+    def test_generate_insight_uses_only_bounded_aggregate_evidence(self):
+        captured = {}
+        response = {
+            "headline": "8월 거래액은 늘었지만 가입 전환은 약해졌습니다.",
+            "summary": "거래액 증가보다 트래픽 증가가 더 컸습니다.",
+            "findings": ["첫구매 거래액은 전년 동기간 대비 18.6% 증가했습니다."],
+            "action": "예상 상승 시점 2주 전부터 가입 전환을 점검하세요.",
+            "caveat": "원인으로 단정할 수 없습니다.",
+        }
+        evidence = {
+            "conditions": ["2026년 8월", "전년 동기간·동요일", "채널 전체"],
+            "sections": [{
+                "title": "핵심 실적",
+                "columns": ["지표", "2025", "2026", "증감"],
+                "rows": [["첫구매 거래액", "98백만원", "116백만원", "+18.6%"]],
+            }],
+            "actionBasis": "권장 액션 시작은 예상 상승 시점 14일 전",
+            "dataAsOf": "2026-09-21",
+            "rawBackup": {"daily": [100000000, 200000000]},
+        }
+
+        def transport(url, headers, request_payload, timeout):
+            captured["prompt"] = request_payload["contents"][0]["parts"][0]["text"]
+            captured["schema"] = request_payload["generationConfig"]["response_schema"]
+            return {"candidates": [{"content": {"parts": [{"text": json.dumps(response, ensure_ascii=False)}]}}]}
+
+        result = generate_insight("8월 전년비를 알려줘", evidence, "secret-value", model="gemini-test", transport=transport)
+        self.assertEqual(result["headline"], response["headline"])
+        self.assertIn("+18.6%", captured["prompt"])
+        self.assertNotIn("rawBackup", captured["prompt"])
+        self.assertNotIn("100000000", captured["prompt"])
+        self.assertEqual(captured["schema"]["required"], ["headline", "summary", "findings", "action", "caveat"])
+
+    def test_generate_insight_rejects_unusable_response(self):
+        def transport(*_args):
+            payload = {"headline": "", "summary": "", "findings": [], "action": "", "caveat": ""}
+            return {"candidates": [{"content": {"parts": [{"text": json.dumps(payload)}]}}]}
+
+        with self.assertRaisesRegex(GeminiQueryError, "인사이트"):
+            generate_insight("질문", {"conditions": [], "sections": []}, "secret-value", transport=transport)
 
     def test_prompt_context_drops_raw_or_unknown_client_fields(self):
         payload = valid_payload()

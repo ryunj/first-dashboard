@@ -14,7 +14,7 @@
 - 실제 대시보드 코드는 예시 화면 승인 전에는 변경하지 않는다.
 - 근거 데이터는 기본 접힘 상태로 둔다.
 - 저장하지 않은 일반 질문·답변은 새로고침과 백업 복원 대상에서 제외한다.
-- 저장 목록은 최신순으로 20건을 먼저 표시한다.
+- 저장 목록은 최신순으로 한 페이지에 5건씩 표시한다.
 
 ---
 
@@ -25,7 +25,7 @@
 
 **Interfaces:**
 - Consumes: 기존 `#question`, `#askButton`, `#thread` 요소
-- Produces: `#savedToggle`, `#savedCount`, `#savedPanel`, `#savedList`, `#savedMore` 요소
+- Produces: `#savedToggle`, `#savedCount`, `#savedPanel`, `#savedList`, `#savedPagination` 요소
 
 - [ ] **Step 1: 실패 조건 확인**
 
@@ -66,9 +66,9 @@ Expected: 결과가 없다.
 
 키 `firstDashboard.savedAiInsights.example.v1`에 배열을 저장한다. JSON 읽기 실패 시 빈 배열을 사용하고, 같은 ID는 중복 저장하지 않으며 삭제 후 즉시 목록과 건수를 갱신한다.
 
-- [ ] **Step 4: 접힌 저장 목록과 더 보기 구현**
+- [ ] **Step 4: 접힌 저장 목록과 페이지 이동 구현**
 
-목록은 최신순으로 20건만 먼저 렌더링하고, 남은 항목이 있으면 `더 보기`를 표시한다. 각 항목의 본문과 근거 데이터는 `<details>`로 기본 접힘 처리한다.
+목록은 최신순으로 페이지당 5건만 렌더링하고 `이전 · 페이지 번호 · 다음`을 표시한다. 페이지가 많으면 현재 페이지 주변 번호만 남기고 말줄임표로 줄인다. 각 항목의 본문과 근거 데이터는 `<details>`로 기본 접힘 처리한다.
 
 - [ ] **Step 5: JavaScript 문법 검증**
 

@@ -11,6 +11,8 @@ assert.match(app, /ai_question = \(ROOT \/ 'ai_question\.js'\)\.read_text/, 'Str
 assert.match(app, /\{ai_question\}/, 'Streamlit must inject AI module');
 assert.match(app, /'export\.js', 'ai_question\.js'/, 'Streamlit cache stamp must include AI module');
 assert.match(app, /declare_component/, 'Streamlit must use a bidirectional component for server-side Gemini');
+assert.match(app, /request\.get\("type"\).*gemini_insight/, 'Streamlit must route aggregate evidence to Gemini insight generation');
+assert.match(app, /generate_insight/, 'Streamlit must call the Gemini insight generator');
 assert.match(geminiServer, /GEMINI_API_KEY/, 'Streamlit server module must read the Gemini secret');
 
 const component = fs.readFileSync(new URL('../streamlit_component/index.html', import.meta.url), 'utf8');

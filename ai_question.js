@@ -174,8 +174,10 @@ function parseQuestion(input, defaults) {
   let preDays = 7, postDays = 7;
   const both = normalized.match(/전후\s*(\d{1,3})\s*일/);
   const asymmetric = normalized.match(/전\s*(\d{1,3})\s*일\s*후\s*(\d{1,3})\s*일/);
+  const weeksBefore = normalized.match(/(\d{1,2})\s*주\s*전/);
   if (both) preDays = postDays = +both[1];
   if (asymmetric) { preDays = +asymmetric[1]; postDays = +asymmetric[2]; }
+  else if (!both && weeksBefore) preDays = +weeksBefore[1] * 7;
   if (preDays < 1 || postDays < 1 || preDays > 90 || postDays > 90) throw new Error('전·후 기간은 각각 1~90일로 적어 주세요.');
 
   const metrics = findAliases(normalized, METRIC_ALIASES);
@@ -308,10 +310,13 @@ function analyze(parsed, dash) {
   const appResults = parsed.families.includes('app') && typeof dash.queryApp === 'function' ? parsed.events.map(event => ({
     event, rows: dash.queryApp(span(event.start, event.end), appIds, 'sum'),
   })) : [];
-  const productResults = parsed.families.includes('product') && typeof dash.queryProducts === 'function' ? parsed.events.map(event => ({
-    event, result: dash.queryProducts({dates: span(event.start, event.end), dimensions: parsed.dimensions.length ? parsed.dimensions : ['category'], channels: parsed.channels,
-      ...(parsed.explicit.bpus ? {bpus: parsed.bpus} : {}), ...(parsed.explicit.categories ? {categories: parsed.categories} : {}), limit: 10}),
-  })) : [];
+  const productResults = parsed.families.includes('product') && typeof dash.queryProducts === 'function' ? parsed.events.map(event => {
+    if (event.start > dash.dataLast) return {event, result: {available: false, reason: `요청 기간(${event.start}~${event.end})은 데이터 기준일(${dash.dataLast}) 이후입니다.`}};
+    const dates = span(event.start, event.end).filter(day => day >= dash.dataFirst && day <= dash.dataLast);
+    if (!dates.length) return {event, result: {available: false, reason: `요청 기간에 사용할 수 있는 상품 데이터가 없습니다. 데이터 범위: ${dash.dataFirst}~${dash.dataLast}`}};
+    return {event, result: dash.queryProducts({dates, dimensions: parsed.dimensions.length ? parsed.dimensions : ['category'], channels: parsed.channels,
+      ...(parsed.explicit.bpus ? {bpus: parsed.bpus} : {}), ...(parsed.explicit.categories ? {categories: parsed.categories} : {}), limit: 10})};
+  }) : [];
   const kpi = parsed.families.includes('kpi') && typeof dash.queryKpi === 'function' ? dash.queryKpi() : null;
 
   const primaryMetric = parsed.families.includes('core') ? parsed.metrics[0] : null;
@@ -410,6 +415,137 @@ function renderAnalysis(result, dash) {
   return `<div class="aiq-conditions"><b>해석한 조건</b> · ${esc(p.events.map(e => `${e.name} ${e.start}~${e.end}`).join(' · '))} · ${esc(filters)}</div>${events}${app}${kpi}${products}${action ? `<div class="aiq-action">${action}</div>` : ''}<div class="aiq-summary"><b>자동 요약</b><ul>${result.summary.map(line => `<li>${esc(line)}</li>`).join('')}</ul></div><div class="aiq-cap">기존 대시보드 공식 산식으로 브라우저 안에서 계산했습니다. 원인을 단정하지 않으며, 예측은 과거 패턴을 이어 본 참고값입니다.</div>`;
 }
 
+const AI_STORE_KEY = 'fp-dashboard-ai-insights';
+const AI_PAGE_SIZE = 5;
+let AI_STORE_MEM = null, AI_PAGE = 1;
+const AI_LIVE = new Map();
+const cleanText = (value, limit = 2000) => String(value == null ? '' : value).trim().slice(0, limit);
+function cleanInsight(value) {
+  const source = value && typeof value === 'object' ? value : {};
+  return {
+    headline: cleanText(source.headline, 160), summary: cleanText(source.summary, 1000),
+    findings: Array.isArray(source.findings) ? source.findings.filter(x => typeof x === 'string').slice(0, 5).map(x => cleanText(x, 300)).filter(Boolean) : [],
+    action: cleanText(source.action, 500), caveat: cleanText(source.caveat, 300),
+  };
+}
+function cleanEvidence(value) {
+  const source = value && typeof value === 'object' ? value : {};
+  const sections = Array.isArray(source.sections) ? source.sections.slice(0, 12).filter(x => x && typeof x === 'object').map(section => ({
+    title: cleanText(section.title, 120),
+    columns: Array.isArray(section.columns) ? section.columns.slice(0, 10).map(x => cleanText(x, 100)) : [],
+    rows: Array.isArray(section.rows) ? section.rows.slice(0, 50).filter(Array.isArray).map(row => row.slice(0, 10).map(x => cleanText(x, 200))) : [],
+  })) : [];
+  return {
+    conditions: Array.isArray(source.conditions) ? source.conditions.slice(0, 30).map(x => cleanText(x, 200)).filter(Boolean) : [],
+    sections, actionBasis: cleanText(source.actionBasis, 500), dataAsOf: cleanText(source.dataAsOf, 20),
+  };
+}
+function cleanSnapshot(value) {
+  if (!value || typeof value !== 'object' || typeof value.id !== 'string' || typeof value.question !== 'string') return null;
+  const insight = cleanInsight(value.insight), evidence = cleanEvidence(value.evidence);
+  if (!insight.headline || !insight.summary) return null;
+  return {id: value.id.slice(0, 100), created: cleanText(value.created, 40), question: cleanText(value.question, 1000), provider: value.provider === 'gemini' ? 'gemini' : 'local', insight, evidence};
+}
+function aiStoreRead() {
+  if (AI_STORE_MEM) return AI_STORE_MEM;
+  try {
+    const value = JSON.parse(root.localStorage.getItem(AI_STORE_KEY) || '[]');
+    AI_STORE_MEM = Array.isArray(value) ? value.map(cleanSnapshot).filter(Boolean) : [];
+  } catch (error) { AI_STORE_MEM = []; }
+  return AI_STORE_MEM;
+}
+function aiStoreWrite(list) {
+  AI_STORE_MEM = list.map(cleanSnapshot).filter(Boolean);
+  try { root.localStorage.setItem(AI_STORE_KEY, JSON.stringify(AI_STORE_MEM)); } catch (error) { /* 현재 창 메모리에는 유지 */ }
+}
+root.FP_AI_INSIGHTS = {
+  all: () => aiStoreRead().map(item => JSON.parse(JSON.stringify(item))),
+  add: item => { const clean = cleanSnapshot(item); if (!clean) return false; const list = aiStoreRead(); if (list.some(old => old.id === clean.id)) return false; aiStoreWrite([clean, ...list]); return true; },
+  remove: id => aiStoreWrite(aiStoreRead().filter(item => item.id !== id)),
+  mergeIn: list => {
+    if (!Array.isArray(list)) return 0;
+    const current = new Map(aiStoreRead().map(item => [item.id, item])); let count = 0;
+    for (const raw of list) { const item = cleanSnapshot(raw); if (!item) continue; const old = current.get(item.id); if (!old || item.created > old.created) { current.set(item.id, item); count++; } }
+    if (count) aiStoreWrite([...current.values()].sort((a, b) => b.created.localeCompare(a.created)));
+    return count;
+  },
+};
+
+function buildEvidence(result, dash) {
+  const parsed = result.parsed;
+  const conditions = [
+    ...parsed.events.map(event => `${event.name} ${event.start}~${event.end}`),
+    `채널 ${parsed.channels.map(dash.chLabel).join('·')}`, `회원구분 ${parsed.segments.map(dash.segLabel).join('·')}`,
+  ];
+  const sections = [];
+  for (const eventResult of result.eventResults) {
+    if (!eventResult.items.length) continue;
+    sections.push({
+      title: `${eventResult.event.name} · 핵심 실적`,
+      columns: ['지표', `전 ${parsed.preDays}일`, '행사 중', `후 ${parsed.postDays}일`, '전→중', '중→후'],
+      rows: eventResult.items.map(item => [
+        `${dash.MET[item.metric].name}${item.row.label ? ` · ${item.row.label}` : ''}`,
+        formatValue(dash, item.metric, item.values.pre.avg), formatValue(dash, item.metric, item.values.during.avg),
+        formatValue(dash, item.metric, item.values.post.avg), signed(item.preToDuring), signed(item.duringToPost),
+      ]),
+    });
+  }
+  for (const eventResult of result.appResults) sections.push({
+    title: `${eventResult.event.name} · 앱·푸시·회원 실적`, columns: ['지표', '값'],
+    rows: eventResult.rows.map(row => [row.name, row.value == null ? '데이터 부족' : row.pct ? `${(row.value * 100).toFixed(2)}%` : `${Math.round(row.value).toLocaleString('ko-KR')} ${row.unit}`]),
+  });
+  if (result.kpi) sections.push({
+    title: `${result.kpi.y}년 KPI`, columns: ['지표', '실적', '목표', '달성률', '남은 기간 일평균 필요'],
+    rows: Object.entries(result.kpi.rows).map(([id, row]) => [dash.MET[id].name, dash.fmt(id, row.act), row.target == null ? '데이터 없음' : dash.fmt(id, row.target), row.ach == null ? '–' : `${(row.ach * 100).toFixed(1)}%`, row.need == null ? '–' : dash.fmt(id, row.need)]),
+  });
+  for (const eventResult of result.productResults) {
+    const query = eventResult.result;
+    if (!query.available) { sections.push({title: `${eventResult.event.name} · 상품 실적`, columns: ['안내'], rows: [[query.reason]]}); continue; }
+    sections.push({title: `${eventResult.event.name} · 상품 실적 합계`, columns: ['거래액', '주문고객수'], rows: [[`${(query.total.a / 1e6).toLocaleString('ko-KR', {maximumFractionDigits: 1})} 백만원`, `${Math.round(query.total.u).toLocaleString('ko-KR')} 명`]]});
+    const dimensionLabels = {channel: '채널', bpu: 'BPU', category: '카테고리', brand: '브랜드', product: '상품'};
+    for (const [dimension, group] of Object.entries(query.groups)) sections.push({title: `${eventResult.event.name} · ${dimensionLabels[dimension] || dimension}별 상위 실적`, columns: ['구분', '거래액', '주문고객수', '객단가'], rows: group.rows.slice(0, 10).map(row => [row.name, `${(row.a / 1e6).toLocaleString('ko-KR', {maximumFractionDigits: 1})} 백만원`, `${Math.round(row.u).toLocaleString('ko-KR')} 명`, row.aov == null ? '–' : `${Math.round(row.aov).toLocaleString('ko-KR')} 원`])});
+  }
+  const actionBasis = !result.primaryMetric ? '' : result.action.insufficient
+    ? `계산 가능한 과거 행사 ${result.action.evidenceCount}개로 상승 시점 예측 근거가 부족합니다.`
+    : `예상 상승 ${offsetText(result.action.onsetOffset)} · 권장 액션 시작 ${result.action.actionDate || offsetText(result.action.actionOffset)}(14일 전)`;
+  return cleanEvidence({conditions, sections, actionBasis, dataAsOf: dash.dataLast});
+}
+
+function fallbackInsight(result) {
+  const action = !result.primaryMetric ? '' : result.action.insufficient ? '과거 행사 근거가 더 쌓인 뒤 실행 시점을 판단하세요.' : `권장 액션은 예상 상승 시점보다 14일 전인 ${result.action.actionDate || offsetText(result.action.actionOffset)}부터 시작하세요.`;
+  const headline = result.summary[0] || '질문 조건에 맞는 실적을 조회했습니다.';
+  const details = result.summary.slice(1);
+  return cleanInsight({
+    headline,
+    summary: details.join(' ') || '질문에서 지정한 기간과 필터를 기존 대시보드 산식에 적용했습니다.', findings: details.slice(0, 5), action,
+    caveat: '기존 대시보드 공식 산식으로 계산한 참고 분석이며 원인을 단정하지 않습니다.',
+  });
+}
+
+function renderEvidence(evidence) {
+  const conditions = evidence.conditions.map(item => `<span class="condition">${esc(item)}</span>`).join('');
+  const sections = evidence.sections.map(section => `<section class="aiq-result"><h4>${esc(section.title)}</h4><div class="aiq-table-wrap"><table class="aiq-table"><thead><tr>${section.columns.map(column => `<th>${esc(column)}</th>`).join('')}</tr></thead><tbody>${section.rows.map(row => `<tr>${row.map((cell, index) => `${index ? '<td>' : '<th>'}${esc(cell)}${index ? '</td>' : '</th>'}`).join('')}</tr>`).join('')}</tbody></table></div></section>`).join('');
+  return `<div class="aiq-conditions">${conditions}</div>${sections}${evidence.actionBasis ? `<div class="aiq-action">${esc(evidence.actionBasis)}</div>` : ''}<div class="aiq-cap">기존 대시보드 공식 산식으로 브라우저에서 계산 · 데이터 기준일 ${esc(evidence.dataAsOf)}</div>`;
+}
+
+function renderSnapshot(snapshot, saveable) {
+  const insight = snapshot.insight, findings = insight.findings.map(item => `<li>${esc(item)}</li>`).join('');
+  const label = snapshot.provider === 'gemini' ? 'Gemini AI 인사이트' : '기존 산식 인사이트';
+  return `<div class="aiq-answer-head"><span class="aiq-ai-label">${label}</span>${saveable ? `<button class="aiq-save" type="button" data-ai-save="${esc(snapshot.id)}">저장</button>` : ''}</div><div class="aiq-insight"><h3>${esc(insight.headline)}</h3><p>${esc(insight.summary)}</p>${findings ? `<ul>${findings}</ul>` : ''}${insight.action ? `<div class="aiq-action"><b>권장 액션</b> · ${esc(insight.action)}</div>` : ''}${insight.caveat ? `<div class="aiq-caveat">${esc(insight.caveat)}</div>` : ''}</div><details class="aiq-evidence"><summary>근거 데이터 보기</summary><div class="aiq-evidence-body">${renderEvidence(snapshot.evidence)}</div></details>`;
+}
+
+function makeSnapshot(question, insight, evidence, provider) {
+  return cleanSnapshot({id: `ai${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`, created: new Date().toISOString(), question, provider, insight, evidence});
+}
+
+function finishAnswer(answer, question, result, dash, insight, provider, fallbackMessage = '') {
+  const snapshot = makeSnapshot(question, insight, buildEvidence(result, dash), provider);
+  AI_LIVE.set(snapshot.id, snapshot);
+  answer.className = 'aiq-answer';
+  answer.innerHTML = `${fallbackMessage ? `<div class="aiq-fallback">${esc(fallbackMessage)}</div>` : ''}${renderSnapshot(snapshot, true)}`;
+  return snapshot;
+}
+
 const REMOTE_PENDING = new Map();
 const REMOTE_HISTORY = [];
 
@@ -428,8 +564,7 @@ function appendLocalAnswer(answer, text, dash, defaults, fallbackMessage) {
   try {
     const parsed = parseQuestion(text, defaults);
     const result = analyze(parsed, dash);
-    answer.className = 'aiq-answer';
-    answer.innerHTML = `${fallbackMessage ? `<div class="aiq-fallback">${esc(fallbackMessage)}</div>` : ''}${renderAnalysis(result, dash)}`;
+    finishAnswer(answer, text, result, dash, fallbackInsight(result), 'local', fallbackMessage);
     return parsed;
   } catch (error) {
     answer.className = 'aiq-answer aiq-error';
@@ -444,6 +579,15 @@ function receiveRemote(response) {
   if (!pending) return;
   REMOTE_PENDING.delete(response.id);
   const {answer, text, dash, defaults, thread} = pending;
+  if (pending.phase === 'insight') {
+    if (response.ok) {
+      const insight = cleanInsight(response.insight);
+      if (insight.headline && insight.summary) finishAnswer(answer, text, pending.result, dash, insight, 'gemini');
+      else finishAnswer(answer, text, pending.result, dash, fallbackInsight(pending.result), 'local', 'Gemini 인사이트 응답이 비어 기존 산식 요약을 표시합니다.');
+    } else finishAnswer(answer, text, pending.result, dash, fallbackInsight(pending.result), 'local', response.message || 'Gemini 인사이트 연결이 원활하지 않아 기존 산식 요약을 표시합니다.');
+    thread.scrollTop = thread.scrollHeight;
+    return;
+  }
   if (!response.ok) {
     appendLocalAnswer(answer, text, dash, defaults, response.message || 'Gemini 연결이 원활하지 않아 기존 질문 해석으로 처리했습니다.');
   } else {
@@ -454,16 +598,47 @@ function receiveRemote(response) {
         answer.innerHTML = `<div class="aiq-clarify"><b>조건 확인</b><p>${esc(parsed.clarification)}</p></div>`;
       } else {
         const result = analyze(parsed, dash);
-        answer.className = 'aiq-answer';
-        answer.innerHTML = renderAnalysis(result, dash);
         REMOTE_HISTORY.push({question: text, query: {events: parsed.events, metrics: parsed.metrics, families: parsed.families, channels: parsed.channels, segments: parsed.segments, bpus: parsed.bpus, categories: parsed.categories}});
         if (REMOTE_HISTORY.length > 3) REMOTE_HISTORY.shift();
+        const bridge = root.FP_GEMINI_BRIDGE;
+        if (!bridge || typeof bridge.request !== 'function') finishAnswer(answer, text, result, dash, fallbackInsight(result), 'local', 'Gemini 인사이트 연결이 없어 기존 산식 요약을 표시합니다.');
+        else {
+          const id = `gemini-insight-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+          answer.className = 'aiq-answer aiq-pending';
+          answer.textContent = 'Gemini가 계산 근거를 바탕으로 인사이트를 작성하고 있습니다…';
+          REMOTE_PENDING.set(id, {phase: 'insight', answer, text, dash, defaults, thread, result});
+          try { bridge.request({id, type: 'gemini_insight', question: text, evidence: buildEvidence(result, dash)}); }
+          catch (error) { REMOTE_PENDING.delete(id); finishAnswer(answer, text, result, dash, fallbackInsight(result), 'local', 'Gemini 인사이트 연결이 원활하지 않아 기존 산식 요약을 표시합니다.'); }
+        }
       }
     } catch (error) {
       appendLocalAnswer(answer, text, dash, defaults, 'Gemini 조건 검증에 실패해 기존 질문 해석으로 처리했습니다.');
     }
   }
   thread.scrollTop = thread.scrollHeight;
+}
+
+function pageItems(total) {
+  const pages = Math.max(1, Math.ceil(total / AI_PAGE_SIZE));
+  if (pages <= 7) return Array.from({length: pages}, (_, index) => index + 1);
+  const selected = [...new Set([1, pages, AI_PAGE - 1, AI_PAGE, AI_PAGE + 1])].filter(page => page >= 1 && page <= pages).sort((a, b) => a - b);
+  const out = [];
+  selected.forEach((page, index) => { if (index && page - selected[index - 1] > 1) out.push('gap'); out.push(page); });
+  return out;
+}
+
+function renderSaved() {
+  if (typeof document === 'undefined') return;
+  const count = document.getElementById('aiSavedCount'), list = document.getElementById('aiSavedList'), pagesEl = document.getElementById('aiSavedPages');
+  if (!count || !list || !pagesEl) return;
+  const all = root.FP_AI_INSIGHTS.all().sort((a, b) => String(b.created).localeCompare(String(a.created)));
+  const pages = Math.max(1, Math.ceil(all.length / AI_PAGE_SIZE)); AI_PAGE = Math.min(Math.max(1, AI_PAGE), pages);
+  count.textContent = String(all.length);
+  const visible = all.slice((AI_PAGE - 1) * AI_PAGE_SIZE, AI_PAGE * AI_PAGE_SIZE);
+  const dateText = value => { const d = new Date(value); return Number.isNaN(d.getTime()) ? '' : d.toLocaleString('ko-KR', {dateStyle: 'short', timeStyle: 'short'}); };
+  list.innerHTML = visible.length ? visible.map(item => `<details class="aiq-saved-item"><summary><span class="aiq-saved-q">${esc(item.question)}</span><span class="aiq-saved-t">${esc(item.insight.headline)}</span><span class="aiq-saved-d">${esc(dateText(item.created))}</span></summary><div class="aiq-saved-body"><div class="aiq-saved-tools"><button class="aiq-delete" type="button" data-ai-delete="${esc(item.id)}">삭제</button></div>${renderSnapshot(item, false)}</div></details>`).join('') : '<div class="memo-empty">저장한 인사이트가 없습니다.</div>';
+  pagesEl.hidden = all.length <= AI_PAGE_SIZE;
+  pagesEl.innerHTML = pagesEl.hidden ? '' : `<button class="aiq-page" type="button" data-ai-page="prev"${AI_PAGE === 1 ? ' disabled' : ''}>이전</button>${pageItems(all.length).map(page => page === 'gap' ? '<span class="aiq-page-gap">…</span>' : `<button class="aiq-page" type="button" data-ai-page="${page}"${page === AI_PAGE ? ' aria-current="page"' : ''}>${page}</button>`).join('')}<button class="aiq-page" type="button" data-ai-page="next"${AI_PAGE === pages ? ' disabled' : ''}>다음</button>`;
 }
 
 function setConnectionStatus(status) {
@@ -473,7 +648,7 @@ function setConnectionStatus(status) {
   const message = status && status.message ? status.message : 'Gemini 상태 확인 중';
   if (label) label.textContent = message;
   if (hint) hint.textContent = status && status.ok
-    ? 'Enter 전송 · Shift+Enter 줄바꿈 · 실적 원본은 외부로 전송하지 않음'
+    ? 'Enter 전송 · Shift+Enter 줄바꿈 · 질문과 계산 근거 요약만 Gemini 전송 · 실적 원본 미전송'
     : 'Enter 전송 · Shift+Enter 줄바꿈 · Gemini 장애 시 기존 해석으로 자동 전환';
 }
 
@@ -482,9 +657,9 @@ function mount(dash) {
   const section = document.getElementById('aiQuestionSec');
   const input = document.getElementById('aiQuestionInput');
   const send = document.getElementById('aiQuestionSend');
-  const example = document.getElementById('aiQuestionExample');
   const thread = document.getElementById('aiQuestionThread');
-  if (!section || !input || !send || !example || !thread || section.dataset.mounted) return;
+  const savedToggle = document.getElementById('aiSavedToggle'), savedPanel = document.getElementById('aiSavedPanel'), savedList = document.getElementById('aiSavedList'), savedPages = document.getElementById('aiSavedPages');
+  if (!section || !input || !send || !thread || !savedToggle || !savedPanel || !savedList || !savedPages || section.dataset.mounted) return;
   section.dataset.mounted = 'true';
   section.hidden = false;
   if (!root.FP_GEMINI_BRIDGE || !root.FP_GEMINI_BRIDGE.ready) {
@@ -503,7 +678,7 @@ function mount(dash) {
       const id = `gemini-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
       answer.className = 'aiq-answer aiq-pending';
       answer.textContent = 'Gemini가 질문을 대시보드 조회조건으로 해석하고 있습니다…';
-      REMOTE_PENDING.set(id, {answer, text, dash, defaults, thread});
+      REMOTE_PENDING.set(id, {phase: 'query', answer, text, dash, defaults, thread});
       try {
         bridge.request({
           id, type: 'gemini_query', question: text,
@@ -519,15 +694,25 @@ function mount(dash) {
     input.value = '';
     thread.scrollTop = thread.scrollHeight;
   };
-  example.addEventListener('click', () => {
-    input.value = '24년 추석 9월 14-18, 25년 추석 10월 3-9, 첫구매 거래액 전후 영향 알려줘';
-    input.focus();
-  });
   send.addEventListener('click', submit);
   input.addEventListener('keydown', event => {
     if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); submit(); }
   });
+  thread.addEventListener('click', event => {
+    const button = event.target.closest('[data-ai-save]'); if (!button) return;
+    const snapshot = AI_LIVE.get(button.dataset.aiSave); if (!snapshot) return;
+    root.FP_AI_INSIGHTS.add(snapshot); button.textContent = '저장됨'; button.disabled = true; AI_PAGE = 1; renderSaved();
+  });
+  savedToggle.addEventListener('click', () => { const open = savedPanel.hidden; savedPanel.hidden = !open; savedToggle.setAttribute('aria-expanded', String(open)); if (open) { AI_PAGE = 1; renderSaved(); } });
+  savedList.addEventListener('click', event => { const button = event.target.closest('[data-ai-delete]'); if (!button) return; root.FP_AI_INSIGHTS.remove(button.dataset.aiDelete); renderSaved(); });
+  savedPages.addEventListener('click', event => {
+    const button = event.target.closest('[data-ai-page]'); if (!button || button.disabled) return;
+    const total = Math.max(1, Math.ceil(root.FP_AI_INSIGHTS.all().length / AI_PAGE_SIZE));
+    AI_PAGE = button.dataset.aiPage === 'prev' ? Math.max(1, AI_PAGE - 1) : button.dataset.aiPage === 'next' ? Math.min(total, AI_PAGE + 1) : Number(button.dataset.aiPage) || 1;
+    renderSaved();
+  });
+  renderSaved();
 }
 
-root.FP_AI_QUESTION = {parseQuestion, normalizeRemoteQuery, weekPeriod, buildPeriods, estimateAction, analyze, receiveRemote, setConnectionStatus, mount};
+root.FP_AI_QUESTION = {parseQuestion, normalizeRemoteQuery, weekPeriod, buildPeriods, estimateAction, analyze, receiveRemote, setConnectionStatus, mount, renderSaved, buildEvidence};
 })(typeof window !== 'undefined' ? window : globalThis);

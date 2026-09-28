@@ -358,6 +358,10 @@ details.notes li{margin:3px 0}
 .aiq-user{align-self:flex-end;max-width:min(82%,680px);padding:8px 11px;border-radius:10px 10px 2px 10px;background:var(--ink);color:var(--surface);font-size:12.5px;line-height:1.55;white-space:pre-wrap}
 .aiq-answer{align-self:stretch;padding:11px 12px;border:1px solid var(--grid);border-radius:2px 10px 10px;background:var(--surface-2);font-size:12px;color:var(--ink-2)}
 .aiq-error{color:var(--neg);border-left:3px solid var(--neg)}
+.aiq-answer-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:-2px 0 10px}.aiq-ai-label{font-weight:700;color:var(--ink)}
+.aiq-save{border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--ink-2);padding:4px 9px;font-size:11px;cursor:pointer}.aiq-save:hover{background:var(--wash);color:var(--ink)}.aiq-save:disabled{color:var(--pos);cursor:default}
+.aiq-insight h3{margin:0 0 6px;color:var(--ink);font-size:15px}.aiq-insight p{margin:0;line-height:1.65}.aiq-insight ul{margin:8px 0 0;padding-left:18px}.aiq-insight li{margin:3px 0;line-height:1.55}.aiq-caveat{margin-top:9px;color:var(--muted);font-size:11px}
+.aiq-evidence{margin:12px -12px -11px;border-top:1px solid var(--grid)}.aiq-evidence>summary{padding:10px 12px;font-weight:650;color:var(--ink);cursor:pointer}.aiq-evidence-body{padding:0 12px 12px}
 .aiq-compose{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:9px;align-items:end}
 .aiq-compose textarea{width:100%;min-height:58px;max-height:150px;resize:vertical;box-sizing:border-box;border:1px solid var(--border);border-radius:7px;padding:8px 10px;background:var(--surface);color:var(--ink);font:inherit;line-height:1.5}
 .aiq-compose textarea:focus{outline:2px solid color-mix(in srgb,var(--c1) 45%,transparent);outline-offset:1px}
@@ -374,6 +378,9 @@ details.notes li{margin:3px 0}
 .aiq-clarify p{margin:5px 0 0;color:var(--ink-2)}
 .aiq-summary{margin-top:10px}.aiq-summary>b{color:var(--ink)}.aiq-summary ul{margin:5px 0 0;padding-left:18px}.aiq-summary li{margin:3px 0;line-height:1.55}
 .aiq-cap{margin-top:9px;padding-top:8px;border-top:1px solid var(--grid);font-size:11px;color:var(--muted)}
+.aiq-saved{margin-top:9px;padding:11px;border:1px solid var(--grid);border-radius:8px;background:var(--surface-2)}.aiq-saved[hidden]{display:none}.aiq-saved-head{margin-bottom:8px}.aiq-saved-head b{color:var(--ink)}.aiq-saved-head span{display:block;margin-top:3px;color:var(--muted);font-size:11px}
+.aiq-saved-list{display:flex;flex-direction:column;gap:6px}.aiq-saved-item{border:1px solid var(--grid);border-radius:7px;background:var(--surface);overflow:hidden}.aiq-saved-item>summary{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 10px;padding:9px 10px;cursor:pointer}.aiq-saved-q{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:650;color:var(--ink)}.aiq-saved-t{grid-column:1;color:var(--muted);font-size:10.5px}.aiq-saved-d{grid-column:2;grid-row:1/3;align-self:center;color:var(--muted);font-size:10.5px}.aiq-saved-body{padding:10px;border-top:1px solid var(--grid)}.aiq-saved-tools{display:flex;justify-content:flex-end;margin-bottom:7px}.aiq-delete{border:0;background:none;color:var(--muted);font-size:11px;cursor:pointer}.aiq-delete:hover{color:var(--neg)}
+.aiq-pages{display:flex;align-items:center;justify-content:center;gap:4px;margin-top:9px}.aiq-pages[hidden]{display:none}.aiq-page{min-width:31px;min-height:31px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--ink-2);font-size:11px;cursor:pointer}.aiq-page[aria-current="page"]{background:var(--ink);border-color:var(--ink);color:var(--surface)}.aiq-page:disabled{opacity:.35;cursor:default}.aiq-page-gap{padding:0 3px;color:var(--muted)}
 @media screen and (max-width:600px){.aiq-compose{grid-template-columns:1fr}.aiq-compose .btn{justify-self:end}.aiq-user{max-width:92%}.aiq-action span{display:block;margin:3px 0 0}}
 /* 메모 편집기 */
 .memo-tb{display:flex;flex-wrap:wrap;gap:3px;align-items:center;margin-bottom:6px}
@@ -564,13 +571,14 @@ body.pdfcap .pgrid{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr)!important
     <details class="insight" id="aiQuestionBox">
       <summary>AI 실적 질문<span class="ins-sub" id="aiQuestionStatus">연결 상태 확인 중</span></summary>
       <div class="ins-body">
-        <p class="aiq-lead">채팅하듯 질문하면 Gemini가 조회조건을 해석하고, 실제 실적은 기존 대시보드 공식으로 이 브라우저에서 계산합니다.</p>
-        <div class="aiq-thread" id="aiQuestionThread" role="log" aria-live="polite"></div>
+        <p class="aiq-lead">질문하면 Gemini가 조건을 해석하고, 기존 대시보드 공식으로 계산한 근거를 바탕으로 인사이트를 답합니다.</p>
         <div class="aiq-compose">
-          <textarea id="aiQuestionInput" aria-label="실적 질문" placeholder="예: 24년 추석 9월 14-18, 25년 추석 10월 3-9, 전후 영향 알려줘"></textarea>
+          <textarea id="aiQuestionInput" aria-label="실적 질문"></textarea>
           <button class="btn primary" type="button" id="aiQuestionSend">질문하기</button>
         </div>
-        <div class="aiq-tools"><button class="btn" type="button" id="aiQuestionExample">추석 비교 예시</button><span class="hint" id="aiQuestionHint">Enter 전송 · Shift+Enter 줄바꿈 · 실적 원본은 외부로 전송하지 않음</span></div>
+        <div class="aiq-tools"><button class="btn" type="button" id="aiSavedToggle" aria-expanded="false" aria-controls="aiSavedPanel">저장한 인사이트 <b id="aiSavedCount">0</b></button><span class="hint" id="aiQuestionHint">Enter 전송 · Shift+Enter 줄바꿈 · 실적 원본은 외부로 전송하지 않음</span></div>
+        <section class="aiq-saved" id="aiSavedPanel" hidden><div class="aiq-saved-head"><b>저장한 인사이트</b><span>저장한 답변만 남고 백업 다운로드 시 파일에 포함됩니다.</span></div><div class="aiq-saved-list" id="aiSavedList"></div><nav class="aiq-pages" id="aiSavedPages" aria-label="저장한 인사이트 페이지" hidden></nav></section>
+        <div class="aiq-thread" id="aiQuestionThread" role="log" aria-live="polite"></div>
       </div>
     </details>
   </section>
@@ -657,9 +665,9 @@ body.pdfcap .pgrid{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr)!important
       <li><b>비교 연도</b>(비교 옆)로 몇 년 전과 비교할지 고른다 — 기본 전년, 2년 전이면 728일 전 동기간 · 동요일('2024년비'). 요약 · 차트 · 표 · 인사이트 · 상품 구성 · 앱 설치 영역과 엑셀 · PDF 가 모두 따른다(KPI 는 연간 목표 기준이라 전년 그대로). 전년이 아닌 해와 비교하면 날짜가 달력보다 며칠씩 앞당겨진다(요일을 맞추려고 364일 단위로 옮김). <b>전년비</b> = 364일 전 <b>동기간 · 동요일</b>. 예) 2026-09-01~13 ↔ 2025-09-02~14. 증가는 <span class="pos">+초록</span>, 감소는 <span class="neg">△빨강</span>.</li>
       <li><b>기준 기간</b>(상단 '기준') — 월별은 월, 주별은 주차, 일별은 날짜를 고른다. 요약 타일 · 표 강조 열 · 차트 음영 · 상품 구성 기본 기간 · 앱 섹션이 모두 그 기간 기준이고, 주별 · 일별 표와 차트는 그 기간에서 끝나는 범위(8주 · 13주 …)를 보여 준다. '최근 · …'(기본)은 데이터가 있는 가장 최근 기간.</li>
       <li><b>비교</b> — 기본 <b>전년 동기간</b>(전년비). <b>전월 · 전주 · 전일</b>로 바꾸면 표 · 차트 툴팁 · 요약 · 상품 구성 · 앱 섹션의 비교가 모두 직전 기간 대비(전월비 · 전주비 · 전일비)로 바뀐다. 전월은 진행 중인 달이면 같은 일수끼리(예: 9/1~13 ↔ 8/1~13), 끝난 달은 전월 전체. 전주 = 7일 전 같은 요일들, 전일 = 하루 전. 직전 기간 모드에선 차트의 전년선을 숨긴다(값은 툴팁). 요약 타일은 두 비교를 함께 보여 준다. KPI는 항상 전년 동기 누적.</li>
-      <li><b>AI 실적 질문</b> — 자연어 질문은 Streamlit 서버의 Gemini가 날짜·지표·필터 조회조건으로만 변환하고, 실제 실적은 현재 필터와 기존 공식 산식으로 이 브라우저에서 계산한다. 실적 원본은 Gemini로 보내지 않으며, 연결 실패 시 기존 브라우저 해석으로 전환한다. 상승 예상은 계산 가능한 과거 행사 2개 이상이 필요하고, 권장 액션 시작은 예상 상승 시점보다 14일 전이다.</li>
+      <li><b>AI 실적 질문</b> — 자연어 질문은 Streamlit 서버의 Gemini가 날짜·지표·필터 조회조건으로 변환하고, 실제 실적은 현재 필터와 기존 공식 산식으로 이 브라우저에서 계산한다. Gemini에는 실적 원본이 아니라 공식 산식으로 만든 제한된 집계 근거만 보내 인사이트를 작성하며, 연결 실패 시 기존 브라우저 해석으로 전환한다. 상승 예상은 계산 가능한 과거 행사 2개 이상이 필요하고, 권장 액션 시작은 예상 상승 시점보다 14일 전이다.</li>
       <li><b>상단 필터</b>(회원구분 · 채널 · BPU · 카테고리)는 기본으로 접혀 있고, <b>필터</b> 버튼 옆에 지금 고른 조건이 한 줄로 보인다(기본값이 아닌 필터 수는 파란 숫자). 버튼을 누르면 펼쳐진다. <b>채널 · 회원구분</b>은 여러 개를 고를 수 있다. 차트 선 하나(채널 1개 × 구분 1개)면 당해 vs 전년, 여러 개면 비교선 — 색 = 채널, 선 모양 = 회원구분. 요약 타일은 선택 중 첫 번째 기준.</li>
-      <li><b>BPU · 카테고리</b>(상단 필터, 상품 데이터가 있을 때만) — <b>BPU</b>만 고르면 거래액 · 고객수 · 객단가를 <b>상품관점</b>(회원구분 × 채널 × BPU, 실적과 같은 기준)에서 다시 계산하고 <b>회원구분 · 채널과 함께</b> 줄을 나눈다('상품관점 기준' 꼬리표). <b>카테고리</b>를 거르면 조직 카테고리 원천(결제 완료분만)으로 계산하며 이 원천엔 회원구분이 없어 회원구분은 전체로 고정된다. 선택한 카테고리는 합산하지 않고 카테고리별 행으로 나눠 표시한다('상품 기준' 꼬리표). <b>트래픽 · 가입자수 · 가입률 · 당일가입 CR · 첫구매율</b>과 앱 설치 · 수신동의는 그대로 <b>전체 기준</b>이다('전체 기준' 꼬리표). 상품 기준 거래액은 <b>결제 완료(양수)</b> 건만 더한 값이라 전체 첫구매 거래액보다 작고(취소 · 환불 · 상품 미매칭 제외), 고객수는 상품별 <b>주문고객수의 합</b>이라 한 사람이 여러 상품을 사면 여러 번 센다. BPU 칩은 채널 칩과 같다 — <b>전체</b>(모든 BPU 합)와 개별 BPU를 따로 켜고 끄며, 켠 것마다 <b>줄을 나눠</b> 보여 준다(4개를 모두 눌러도 합치지 않는다 · 차트는 색 = 채널, 선 모양 = BPU). <b>전체만</b> = 합계 한 줄, <b>BPU 모두</b> = BPU마다 한 줄. 전체를 켠 채 BPU를 고르면 '전체' 줄은 모든 BPU의 상품 기준 합이다. 상단 채널 · BPU · 카테고리는 <b>상품 구성</b> 영역에도 그대로 적용된다(드릴다운 · 기간별 표 · 상품군 표). 카테고리를 거르면 커버리지 · 상품UV · CR은 숨긴다. BPU <b>전체</b>와 개별 BPU를 함께 켜면 상품 구성의 BPU 목록은 모두 보이되 고른 BPU를 <b>강조</b>한다. 조직 카테고리 원천이 <b>덜 채워진 날짜</b>(양수 결제 거래액이 상품관점 · 실적의 30% 미만 — 평소 90% 이상)가 기간에 섞이면 상품 구성 위와 요약 설명에 ⚠ 경고를 띄우고, 새 데이터 추가 결과표에도 날짜 · 행 수 · 합계를 알린다.</li>
+      <li><b>BPU · 카테고리</b>(상단 필터, 상품 데이터가 있을 때만) — <b>BPU</b>만 고르면 거래액 · 고객수 · 객단가를 <b>상품관점</b>(회원구분 × 채널 × BPU, 실적과 같은 기준)에서 다시 계산하고 <b>회원구분 · 채널과 함께</b> 줄을 나눈다('상품관점 기준' 꼬리표). <b>2023·2024년 대체 원천인 신규회원실적에는 BPU 구분이 없고 채널까지만 있으므로, 개별 BPU를 선택하면 해당 연도의 과거값과 전년비는 표시하지 않는다. BPU를 전체로 선택하면 채널 기준 대체값과 전년비를 볼 수 있다.</b> <b>카테고리</b>를 거르면 조직 카테고리 원천(결제 완료분만)으로 계산하며 이 원천엔 회원구분이 없어 회원구분은 전체로 고정된다. 선택한 카테고리는 합산하지 않고 카테고리별 행으로 나눠 표시한다('상품 기준' 꼬리표). <b>트래픽 · 가입자수 · 가입률 · 당일가입 CR · 첫구매율</b>과 앱 설치 · 수신동의는 그대로 <b>전체 기준</b>이다('전체 기준' 꼬리표). 상품 기준 거래액은 <b>결제 완료(양수)</b> 건만 더한 값이라 전체 첫구매 거래액보다 작고(취소 · 환불 · 상품 미매칭 제외), 고객수는 상품별 <b>주문고객수의 합</b>이라 한 사람이 여러 상품을 사면 여러 번 센다. BPU 칩은 채널 칩과 같다 — <b>전체</b>(모든 BPU 합)와 개별 BPU를 따로 켜고 끄며, 켠 것마다 <b>줄을 나눠</b> 보여 준다(4개를 모두 눌러도 합치지 않는다 · 차트는 색 = 채널, 선 모양 = BPU). <b>전체만</b> = 합계 한 줄, <b>BPU 모두</b> = BPU마다 한 줄. 전체를 켠 채 BPU를 고르면 '전체' 줄은 모든 BPU의 상품 기준 합이다. 상단 채널 · BPU · 카테고리는 <b>상품 구성</b> 영역에도 그대로 적용된다(드릴다운 · 기간별 표 · 상품군 표). 카테고리를 거르면 커버리지 · 상품UV · CR은 숨긴다. BPU <b>전체</b>와 개별 BPU를 함께 켜면 상품 구성의 BPU 목록은 모두 보이되 고른 BPU를 <b>강조</b>한다. 조직 카테고리 원천이 <b>덜 채워진 날짜</b>(양수 결제 거래액이 상품관점 · 실적의 30% 미만 — 평소 90% 이상)가 기간에 섞이면 상품 구성 위와 요약 설명에 ⚠ 경고를 띄우고, 새 데이터 추가 결과표에도 날짜 · 행 수 · 합계를 알린다.</li>
       <li><b>*(기울임)</b> = 전년 일자 raw가 없어 전년 주별 raw를 날짜별로 나눠 채운 추정값.</li>
       <li><b>KPI 목표</b>(맨 아래)는 <code>kpi.js</code> 의 연간 누적 목표 기준 · 필터와 무관하게 전체 채널. 첫구매 거래액 · 고객수 실적은 <b>신규회원실적대시보드의 총)첫구매 거래액 · 고객수 (당년신규)</b>. 전체관점 당월신규+기가입신규와 비슷하지만 집계 기준이 달라 조금 다르다. 목표 일평균 = 연간 목표 ÷ 연간 일수, 남은 기간 필요 일평균 = (목표 − 누적) ÷ 남은 일수. 트래픽 · 가입자 목표를 넣으면 목표 가입률도 환산된다.</li>
       <li><b>상품 구성</b>(KPI 위) — <code>조직 카테고리별 첫구매 실적</code>의 상품 단위 첫구매 실적. <b>기본 = 사업부 기준</b>: 사업부(BPU) → 카테고리 → 브랜드 → 상품을 <b>전 채널 합산</b>으로 드릴다운한다. 채널 칩으로 거르고(여러 개 선택), <b>카테고리 칩</b>은 모두 펼쳐 기본 모두 선택 — 전체 상태에서 개별 카테고리를 누르면 그 카테고리만 선택되고 이후 여러 개를 추가할 수 있다. 최소 1개를 유지하며 '전체'는 모든 카테고리를 다시 선택한다. 행마다 위쪽에서 고른 기준(<b>거래액 또는 주문고객수</b>) 하나와 비교 기간 값 · 비교(전년비 등)를 보여 준다. 맨 위 <b>합계</b> 행 = 지금 범위 전체. 위쪽 거래액/주문고객수 버튼은 숫자 열 · 막대 · 정렬 · 구성비 · 채널 구성 띠의 기준(엑셀 다운로드에는 둘 다). <b>주 채널</b> = 가장 많이 판 채널 · 비중 · 판매 채널 수, 카테고리 · 브랜드 · 상품 단계에서 <b>판매 채널 많은 순</b>으로 정렬 가능. <b>상품UV · 상품CR</b>(상품관점 실측, CR = 상품관점 고객수 ÷ 상품UV)은 채널 · 사업부 단계 행에서만 보인다. 카테고리 단계는 <b>상품관점 상품군별 보조표</b>(드릴다운 아래 · 기본 접힘)로 따로 본다 — 상품관점의 상품군(골프 · 남성 · 슈즈 …)은 조직 대카테고리와 다른 분류라 드릴다운 행에 섞지 않는다(조직 카테고리와 상품관점 상품군은 분류가 달라 카테고리 단계 · 카테고리 필터 중에는 없음 · 채널을 여러 개 고르면 채널별 UV 합). <b>상품은 모두 개별로 보관</b>하고 각 단계(카테고리 · 브랜드 · 상품)에서 고른 기준 <b>상위 30개</b>를 보여 준다(나머지는 '그 외' 합계). 드릴다운 숫자는 <b>양수만</b> 담는다 — 원천의 취소 · 반품(음수 행)과 0원 행은 빼고 쌓는다(총결제 기준에 가깝다). 그래서 상단 실적(총결제)과는 상품 매칭 누락만큼 차이가 남는다. 2026-09-15 이전 형식의 백업(브랜드별 연간 상위 20개만 개별 · 나머지 '기타 상품', 상품UV 없음)을 열면 섹션 위에 안내가 뜨며, 최신 백업으로 다시 열어야 모두 보인다. 이 원천은 첫구매 거래액의 일부만 담고 있어 캡션에 <b>상품 원천 커버리지</b>(같은 채널 · BPU의 상품관점 실측 거래액 대비)를 표시한다. 주문고객수는 상품별 합이라 한 주문에 여러 상품이면 중복된다. <b>기간별 표</b>(기본 접힘)는 합계와 지금 단계 상위 항목의 기간별 값 · 비교. 기간은 상단 월별 · 주별 · 일별과 일평균/누계를 따르고(추이 막대를 누르면 그 기간 선택), 상품코드를 누르면 LF몰 상품 페이지가 새 탭으로 열린다. 사업부는 e-영업1 → 4 순서 고정.</li>
@@ -669,7 +677,7 @@ body.pdfcap .pgrid{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr)!important
       <li><b>앱 설치 무관 기준(회원현황)</b> — 수신동의 수치는 <b>앱 설치자(PUSH)</b>에만 있고, 회원현황은 <b>앱 설치 여부와 무관한 회원 모수</b>다. 두 기준을 나란히 두고 본다: 파일명이 <code>회원현황_앱설치무관기준</code>으로 바뀌어 기준이 분명해져 지표에 넣었다: 유효회원수 · 누적회원수(기간 말) · 신규회원수(기간 합), <b>유효회원 대비 수신동의율</b>(수신동의 회원 ÷ 유효회원수, 분자는 앱 설치자 기준 · 분모는 앱 무관이라 '앱을 안 깐 회원까지 포함한 모수'로 읽는다), <b>신규 수신동의율(앱 무관 모수)</b>(앱푸시 수신동의(신규) ÷ 회원현황 신규회원수). 회원현황 신규회원수와 가입자수 raw 는 사실상 같다(256일 중 146일 완전 일치 · 평균 비 1.0003). <b>앱 미설치자의 수신동의 자체는 어느 원천에도 없다</b> — PUSH 는 앱 설치자 기준만 담는다.</li>
       <li><b>인사이트 자동 요약</b>(흐름 차트 아래 · 기본 접힘) — 화면의 기준 기간 · 필터 · 비교 기준으로 계산한 <b>규칙 기반</b> 요약이다. 거래액 변화를 고객수 효과 · 객단가 효과로 나누고, 트래픽↔첫구매율 · 가입자↔당일가입 CR 같은 퍼널 신호, 채널별 증감 1위 · 꼴찌, 지금 드릴 단계의 상품 증감, 앱푸시 수신동의율 변화를 문구로 만든다. 원인은 가설로만 적고 값은 화면 지표와 같다.</li>
       <li><b>표시하지 않는 것</b> — 기존 대시보드의 '앱푸시(앱보유무관)/신규회원' · 앱 설치 유무별 수신동의는 원천에 앱 미설치자 수신동의 항목이 없어 아직 표시할 수 없다(PUSH 원천은 앱 설치자 기준만). <b>가입자 대비 앱 신규 설치율</b>(앱 신규 설치 ÷ 가입자수)은 앱 설치에 비회원 설치가 섞여 100%를 넘는 달이 있는 등 데이터 검증이 되지 않아 2026-09-15 대시보드에서 뺐다(앱 신규 설치 수 · 앱 신규 설치 대비 수신동의율은 유지).</li>
-      <li><b>백업</b> — 상단 <b>백업 다운로드</b>는 지금 보고 있는 데이터(실적 data.js · KPI kpi.js · 상품 products.js)를 한 파일(.json.gz)로 저장한다. <b>백업 불러오기</b>로 그 파일을 올리면 이 브라우저에 저장해 그 데이터로 다시 연다(새로고침해도 유지). 위 안내줄의 '원래 데이터로 돌아가기'를 누르면 해제. <code>build_data.py</code> 도 빌드할 때마다 <code>backup/</code> 에 같은 형식의 백업을 쓴다. 백업 파일에는 실적 원본이 담기니 사내 보안 기준에 맞게 보관할 것.</li>
+      <li><b>백업</b> — 상단 <b>백업 다운로드</b>는 지금 보고 있는 데이터(실적 data.js · KPI kpi.js · 상품 products.js)와 메모·직접 저장한 AI 인사이트를 한 파일(.json.gz)로 저장한다. 저장하지 않은 AI 대화는 포함하지 않는다. <b>백업 불러오기</b>로 그 파일을 올리면 이 브라우저에 저장해 그 데이터로 다시 연다(새로고침해도 유지). 위 안내줄의 '원래 데이터로 돌아가기'를 누르면 해제. <code>build_data.py</code> 도 빌드할 때마다 <code>backup/</code> 에 같은 형식의 백업을 쓴다. 백업 파일에는 실적 원본이 담기니 사내 보안 기준에 맞게 보관할 것.</li>
       <li><b>새 데이터 추가</b>(일자별 갱신) — 백업(또는 data.js) + 그날 내보낸 raw 폴더(예: <code>2026년/0914</code>)를 올리면 <code>build_data.py</code> 와 같은 규칙으로 합친다: 같은 날짜 · 주차는 새 값으로 바꾸고 빈 칸은 기존 값을 유지, 회원현황이 모두 0인 날(미갱신)은 건너뜀, 상품 표는 그 날짜 행을 통째로 교체. 결과표에서 파일별 읽음 · 건너뜀 · 오류와 새 날짜 · 기존 값과 달라진 칸 수를 확인한 뒤 적용한다. 상품은 모두 개별로 보관한다(예전 백업처럼 상위 N만 개별이던 이력은 '기타 상품' 그대로). APP설치데이터 · 조직 카테고리별 실적은 <b>xlsx 그대로</b> 올려도 된다 — 엑셀이 저장해 둔 값을 읽는다(수식 칸은 마지막으로 계산된 결과 · <code>build_data.py</code> 와 같은 방식). 수식이 한 번도 계산되지 않은 파일이면 결과표에 칸 수를 알리니 엑셀에서 열어 저장한 뒤 다시 올린다. DRM 암호화 파일은 CSV로 저장해 올린다.</li>
       <li><b>차트 끝값</b> — 마지막 기간의 당해 값과 함께 비교(전년 동기간) 값을 회색으로 표시한다(차트 선이 하나일 때). <b>지표 순서</b>: 거래액 → 고객수 → 객단가 → 트래픽 → 가입자수 → 가입률 → 당일가입 CR → 첫구매율.</li>
       <li><b>다운로드</b>(맨 아래) — 형식(엑셀 · PDF)과 영역(전체 · 실적 요약 · 흐름 차트 · 실적 표 · 상품 구성 · 앱 설치 · 수신동의 · KPI)을 골라 받는다. <b>엑셀</b>은 영역마다 시트 하나로, 화면과 같은 기간 · 필터 · 비교 기준의 값을 숫자 셀 + 서식(단위 · 비율 · 증감 색)으로 쓴다(차트는 표 데이터와 같아 제외). <b>PDF</b>는 인쇄 창 없이 <b>파일로 바로</b> 받는다 — 고른 영역을 데스크톱 폭으로 그려 찍고(html-to-image) A4 가로에 이어 붙이며(jsPDF) 표 행 · 카드 경계에서 쪽을 나눈다. 두 라이브러리는 받을 때 CDN(cdnjs · jsDelivr)에서 불러오고, 못 불러오면(사내망 차단 등) 인쇄 창을 연다(대상 'PDF로 저장'). 표는 3단 비교 모양, 첫 쪽 위에 기준 기간 · 필터 · 출력 시각. KPI 영역은 기본 접힘(제목 앞 ▶ 를 누르면 펼침).</li>
@@ -3095,6 +3103,7 @@ function validate(o) {
   if (o.prod != null && (!o.prod.meta || !Array.isArray(o.prod.f) || !Array.isArray(o.prod.ch) || !Array.isArray(o.prod.cov))) fail('상품 데이터');
   if (o.kpi != null && (typeof o.kpi !== 'object' || !o.kpi.targets)) fail('KPI');
   if (o.memos != null && !Array.isArray(o.memos)) fail('메모');
+  if (o.insights != null && !Array.isArray(o.insights)) fail('저장한 AI 인사이트');
   return o;
 }
 async function blobOf(payload) {  // 백업 payload → .json.gz (압축을 못 쓰는 브라우저면 .json)
@@ -3103,13 +3112,15 @@ async function blobOf(payload) {  // 백업 payload → .json.gz (압축을 못 
   const gz = await new Response(json.stream().pipeThrough(new CompressionStream('gzip'))).blob();
   return {blob: new Blob([gz], {type: 'application/gzip'}), ext: 'json.gz'};
 }
-async function makeBlob() {
+async function makePayload() {
   if (!window.DASH_DATA) throw new Error('지금 열린 데이터가 없습니다');
   const prod = await ensureProducts(), d = window.DASH_DATA;
-  return blobOf({format: FORMAT, version: 1, created: new Date().toISOString(),
-                 source: window.DASH_BACKUP ? window.DASH_BACKUP.name : 'data/data.js',
-                 lastDate: d.meta.lastDate, built: d.meta.built, data: d, kpi: window.DASH_KPI || null, prod, memos: window.FP_MEMOS.all()});
+  return validate({format: FORMAT, version: 1, created: new Date().toISOString(),
+                   source: window.DASH_BACKUP ? window.DASH_BACKUP.name : 'data/data.js',
+                   lastDate: d.meta.lastDate, built: d.meta.built, data: d, kpi: window.DASH_KPI || null, prod,
+                   memos: window.FP_MEMOS.all(), insights: window.FP_AI_INSIGHTS ? window.FP_AI_INSIGHTS.all() : []});
 }
+async function makeBlob() { return blobOf(await makePayload()); }
 const backupName = (lastDate, ext) => `첫구매대시보드_백업_데이터${String(lastDate || '').replace(/-/g, '')}_${stamp(new Date())}.${ext}`;
 function saveBlob(blob, name) {
   // Streamlit 처럼 iframe 안이면(내려받기가 막힌 sandbox일 수 있음) 같은 출처의 바깥 문서에서 링크를 누른다
@@ -3146,6 +3157,7 @@ async function download() {
 async function restore(file, opts = {}) {
   const o = await parseFile(file);
   window.FP_MEMOS.mergeIn(o.memos);  // 백업에 담긴 메모를 이 브라우저 메모에 합친다
+  if (window.FP_AI_INSIGHTS) window.FP_AI_INSIGHTS.mergeIn(o.insights);  // 저장한 인사이트만 합친다(일반 대화 제외)
   const info = {name: file.name || '백업 파일', loaded: new Date().toISOString(), created: o.created || '', hasProd: !!o.prod,
                 lastDate: o.lastDate || o.data.meta.lastDate || '', built: o.built || o.data.meta.built || ''};
   await idb('readwrite', st => st.put({info, data: o.data, kpi: o.kpi || null, prod: o.prod || null}, KEY));
@@ -3165,7 +3177,8 @@ async function mergeFiles(files) {
 }
 async function applyMerged(res, opts = {}) {  // 합친 결과를 브라우저에 저장(백업 불러오기와 같은 자리) · 원하면 백업 파일도 내려받기
   const payload = validate({format: FORMAT, version: 1, created: new Date().toISOString(), source: '새 데이터 추가',
-    lastDate: res.data.meta.lastDate, built: res.data.meta.built, data: res.data, kpi: res.kpi || null, prod: res.prod || null, memos: window.FP_MEMOS.all()});
+    lastDate: res.data.meta.lastDate, built: res.data.meta.built, data: res.data, kpi: res.kpi || null, prod: res.prod || null, memos: window.FP_MEMOS.all(),
+    insights: window.FP_AI_INSIGHTS ? window.FP_AI_INSIGHTS.all() : []});
   if (opts.download) { const {blob, ext} = await blobOf(payload); saveBlob(blob, backupName(payload.lastDate, ext)); }
   const info = {name: `새 데이터 반영 (~${payload.lastDate})`, loaded: new Date().toISOString(), created: payload.created,
                 hasProd: !!payload.prod, lastDate: payload.lastDate, built: payload.built};
@@ -3198,7 +3211,7 @@ async function runMerge(files) {
   try { MERGED = await mergeFiles(files); showMerge(MERGED); }
   catch (err) { $id('mergeOut').innerHTML = `<div class="merr">합치지 못했습니다: ${escHtml(err.message)}</div>`; }
 }
-window.FP_BACKUP = {makeBlob, blobOf, saveBlob, parseFile, restore, clear, read, validate, loadMerge, mergeFiles, applyMerged};
+window.FP_BACKUP = {makePayload, makeBlob, blobOf, saveBlob, parseFile, restore, clear, read, validate, loadMerge, mergeFiles, applyMerged};
 
 const dlg = $id('mergeDlg');
 $id('btnMerge').addEventListener('click', () => {

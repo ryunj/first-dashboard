@@ -41,9 +41,11 @@ await page.locator('#aiQuestionBox summary').click();
 await page.locator('#aiQuestionInput').fill(question);
 await page.locator('#aiQuestionSend').click();
 const answer = await page.locator('.aiq-answer').last().innerText();
-assert.match(answer, /2024-09-14/);
-assert.match(answer, /2025-10-09/);
 assert.doesNotMatch(answer, /대시보드 계산 기능을 불러오지 못했습니다/);
+await page.locator('details.aiq-evidence').last().locator('summary').click();
+const evidence = await page.locator('details.aiq-evidence').last().innerText();
+assert.match(evidence, /2024-09-14/);
+assert.match(evidence, /2025-10-09/);
 
 const dates = backup.data.daily.p;
 const values = backup.data.daily.s['amt|T|*TOTAL'];
@@ -62,11 +64,12 @@ const independentAverage = available.reduce((sum, value) => sum + value, 0) / av
 const dashboardAverage = await page.evaluate(eventDates => window.__dash.compute('amt', {ch:'*TOTAL',seg:'T'}, eventDates, null, 'avg').v, eventDates);
 assert.ok(Math.abs(dashboardAverage - independentAverage) < 0.001, 'dashboard average must match independent raw calculation');
 const formatted = await page.evaluate(value => window.__dash.fmt('amt', value), dashboardAverage);
-assert.ok(answer.includes(formatted), `answer must show independently verified value ${formatted}`);
+assert.ok(evidence.includes(formatted), `evidence must show independently verified value ${formatted}`);
 
 await page.locator('#aiQuestionInput').fill('24년 9월 3주차, 25년 9월3주차, 26년 9월 3주차 비교 및 인사이트');
 await page.locator('#aiQuestionSend').click();
-const weekAnswer = await page.locator('.aiq-answer').last().innerText();
+await page.locator('details.aiq-evidence').last().locator('summary').click();
+const weekAnswer = await page.locator('details.aiq-evidence').last().innerText();
 assert.match(weekAnswer, /2024-09-16~2024-09-22/);
 assert.match(weekAnswer, /2025-09-15~2025-09-21/);
 assert.match(weekAnswer, /2026-09-14~2026-09-20/);
@@ -74,7 +77,8 @@ assert.match(weekAnswer, /2026-09-14~2026-09-20/);
 const stateBeforeAll = await page.evaluate(() => JSON.stringify(window.__dash.state));
 await page.locator('#aiQuestionInput').fill('2026년 9월 모든 실적 채널별 BPU별 카테고리별 보여줘');
 await page.locator('#aiQuestionSend').click();
-const allAnswer = await page.locator('.aiq-answer').last().innerText();
+await page.locator('details.aiq-evidence').last().locator('summary').click();
+const allAnswer = await page.locator('details.aiq-evidence').last().innerText();
 assert.match(allAnswer, /앱·푸시·회원 실적/);
 assert.match(allAnswer, /KPI/);
 assert.match(allAnswer, /상품 실적/);

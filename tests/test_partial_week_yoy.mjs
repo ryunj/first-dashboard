@@ -24,7 +24,7 @@ const page = await browser.newPage();
 await page.setContent(html,{waitUntil:'networkidle',timeout:60000});
 await page.waitForFunction(() => window.__dash);
 
-const values = await page.evaluate(() => {
+const values = await page.evaluate(lastDate => {
   const dash = window.__dash, state = dash.state, row = {ch:'*TOTAL',seg:'T'};
   const read = (grain, at) => {
     state.grain = grain; state.year = 2026; state.mode = 'avg'; state.cmp = 'yoy'; state.cmpY = 1;
@@ -33,19 +33,25 @@ const values = await page.evaluate(() => {
     if (!col) throw new Error(`missing ${grain} column ${at}`);
     return Object.fromEntries(['tr','jr','fpr'].map(metric => [metric, dash.evalCol(metric,row,col)]));
   };
-  state.grain = 'week'; state.year = 2026; state.mode = 'avg'; state.cmp = 'yoy'; state.cmpY = 1;
+  state.grain = 'week'; state.year = +lastDate.slice(0,4); state.mode = 'avg'; state.cmp = 'yoy'; state.cmpY = 1;
+  const latestCol = dash.getCols(true).find(value => value.cur.includes(lastDate));
+  const latest = Object.fromEntries(['tr','jr','fpr'].map(metric => [metric, dash.evalCol(metric,row,latestCol)]));
+  const latestDaily = Object.fromEntries(['tr','jr','fpr'].map(metric => [metric, {
+    c: dash.compute(metric,row,latestCol.cur,null,'avg').v,
+    p: dash.compute(metric,row,latestCol.prev,null,'avg').v,
+  }]));
   const completeCol = dash.getCols(true).find(value => value.id === '2026-W38');
   const complete = Object.fromEntries(['tr','jr','fpr'].map(metric => [metric, dash.evalCol(metric,row,completeCol)]));
   const completeDaily = Object.fromEntries(['tr','jr','fpr'].map(metric => [metric, {
     c: dash.compute(metric,row,completeCol.cur,null,'avg').v,
     p: dash.compute(metric,row,completeCol.prev,null,'avg').v,
   }]));
-  return {week:read('week','2026-W39'),day:read('day','2026-09-21'), complete, completeDaily};
-});
+  return {latest, latestDaily, latestDays:latestCol.cur.length, complete, completeDaily};
+}, backup.data.meta.lastDate);
 
 for (const metric of ['tr','jr','fpr']) {
-  assert.equal(values.week[metric].c, values.day[metric].c, `${metric}: one-day partial-week current must equal daily current`);
-  assert.equal(values.week[metric].p, values.day[metric].p, `${metric}: one-day partial-week YoY must use the same prior weekday`);
+  assert.equal(values.latest[metric].c, values.latestDaily[metric].c, `${metric}: latest week must equal the average of its available daily rows`);
+  assert.equal(values.latest[metric].p, values.latestDaily[metric].p, `${metric}: latest-week YoY must use the matching prior weekdays`);
 }
 for (const metric of ['tr','jr','fpr']) {
   assert.equal(values.complete[metric].c, values.completeDaily[metric].c, `${metric}: complete week must use the sum of the same daily rows`);
@@ -54,4 +60,4 @@ for (const metric of ['tr','jr','fpr']) {
 assert.ok(Math.abs(values.complete.tr.c - 146741.7142857143) < 0.001, '9/14~9/20 weekly traffic average must equal 1,027,192 / 7');
 
 await browser.close();
-console.log('OK: partial and complete weeks use same-period daily traffic sums and same-weekday YoY');
+console.log(`OK: latest (${values.latestDays} days) and complete weeks use same-period daily traffic sums and same-weekday YoY`);

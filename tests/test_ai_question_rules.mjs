@@ -23,6 +23,13 @@ assert.equal(basic.preDays, 7);
 assert.equal(basic.postDays, 7);
 assert.deepEqual(plain(basic.metrics), ['amt']);
 
+const twoWeeksBefore = ai.parseQuestion(
+  '26년 추석 9월 24-27 추석 2주전 흐름을 알려줘',
+  {metrics: ['amt'], channels: ['*TOTAL'], segments: ['T']},
+);
+assert.equal(twoWeeksBefore.preDays, 14);
+assert.equal(twoWeeksBefore.postDays, 7);
+
 const custom = ai.parseQuestion(
   '2025년 연말 12월 30-31 전 3일 후 10일 첫구매 거래액 직접 당월신규',
   {metrics: ['cust'], channels: ['*TOTAL'], segments: ['T']},
@@ -95,5 +102,23 @@ const overlappingChannel = ai.parseQuestion(
   {channels: ['*TOTAL'], availableChannels: ['*TOTAL', '광고', '브랜드광고']},
 );
 assert.deepEqual(plain(overlappingChannel.channels), ['브랜드광고']);
+
+let futureProductCalls = 0;
+const futureProduct = ai.parseQuestion(
+  '26년 추석 9월 24-27 BPU와 카테고리 실적 알려줘',
+  {metrics: ['amt'], channels: ['*TOTAL'], segments: ['T']},
+);
+const futureDash = {
+  dataFirst: '2023-01-01', dataLast: '2026-09-21', CHS: ['*TOTAL'], SEGS: [['T', '전체']], MET: {amt: {name: '첫구매 거래액', type: 'flow', unit: '백만원'}},
+  chLabel: value => value === '*TOTAL' ? '전체' : value, segLabel: () => '전체', questionRows: () => [], compute: () => ({v: null}), delta: () => null,
+  queryProducts: () => { futureProductCalls += 1; return {available: true, total: {a: 0, u: 0}, groups: {}}; }, fmt: () => '–',
+};
+const futureResult = ai.analyze(futureProduct, futureDash);
+assert.equal(futureProductCalls, 0, 'future product periods must not be queried as zero-valued actuals');
+assert.equal(futureResult.productResults[0].result.available, false);
+assert.match(futureResult.productResults[0].result.reason, /데이터 기준일.*이후/);
+const futureEvidence = ai.buildEvidence(futureResult, futureDash);
+assert.ok(!futureEvidence.sections.some(section => section.title.includes('핵심 실적')), 'product-only questions must not emit empty core sections');
+assert.ok(!JSON.stringify(futureEvidence).includes('0 백만원'), 'future product periods must not be rendered as zero sales');
 
 console.log('OK: AI question parsing, periods and 14-day action timing');

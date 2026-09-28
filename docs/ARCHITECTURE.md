@@ -15,7 +15,8 @@ dashboard.html + export.js ── app.py/Streamlit component
 
 자연어 질문 ── streamlit_component ──> gemini_query.py ──> Gemini API
      ^                                      │
-     └──── 검증된 조회조건 JSON만 반환 ─────┘
+     ├──── 검증된 조회조건 JSON 반환 ───────┤
+     └─ 공식 산식 집계 근거 → 인사이트 반환 ┘
 ```
 
 두 가지 데이터 갱신 경로가 있다. 로컬에서는 Python이 전체 raw를 빌드하고, 브라우저에서는 JavaScript가 기존 백업에 일자별 raw를 합친다. 최종 백업 형식은 동일하다.
@@ -42,16 +43,17 @@ dashboard.html + export.js ── app.py/Streamlit component
 
 상품 데이터는 사전 배열과 정수 인덱스로 압축한다. `f`는 날짜·채널·경로·상품·거래액·고객수, `cov`와 `cov2`는 커버리지 및 상품UV/CR 계산용 집계다.
 
-백업 payload는 `format`, `version`, `created`, `source`, `lastDate`, `built`, `data`, `kpi`, `prod`, 선택적으로 `memos`를 가진다.
+백업 payload는 `format`, `version`, `created`, `source`, `lastDate`, `built`, `data`, `kpi`, `prod`, 선택적으로 `memos`와 사용자가 직접 저장한 `insights`를 가진다.
 
 ## 브라우저 저장
 
 - 보기 설정: localStorage `fp-dashboard-v4`
 - 메모: localStorage `fp-dashboard-memos`
+- 직접 저장한 AI 인사이트: localStorage `fp-dashboard-ai-insights`
 - 활성 백업: IndexedDB `fp-dashboard-backup`, object store `kv`, key `active`
 - 주소 해시: 보기와 상품 드릴다운 상태를 공유/복원
 
-Streamlit 컴포넌트 안의 대시보드 iframe은 `DASH_EMBED='streamlit'`로 동작하며 저장소의 `data/*.js`를 직접 찾지 않고 사용자가 연 백업을 기준으로 실행한다. Gemini에는 질문·허용 지표/필터 목록·최근 구조화 문맥만 전달하고 백업 원본이나 실적 값은 전달하지 않는다.
+Streamlit 컴포넌트 안의 대시보드 iframe은 `DASH_EMBED='streamlit'`로 동작하며 저장소의 `data/*.js`를 직접 찾지 않고 사용자가 연 백업을 기준으로 실행한다. Gemini에는 질문·허용 지표/필터 목록·최근 구조화 문맥과 화면 공식 산식으로 만든 제한된 집계 근거만 전달하며 백업 원본은 전달하지 않는다.
 
 ## 호환성 경계
 

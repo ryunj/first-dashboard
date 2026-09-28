@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI 실적 질문 · Gemini 인사이트 예시</title>
+  <style>
+    :root{
+      --page:#f7f7f5;
+      --surface:#fff;
+      --surface-2:#f4f4f1;
+      --ink:#171715;
+      --ink-2:#4b4b47;
+      --muted:#777772;
+      --border:#d8d8d2;
+      --grid:#e8e8e3;
+      --blue:#2878d5;
+      --blue-soft:#eef5fc;
+      --green:#18794e;
+      --green-soft:#edf8f2;
+      --red:#cf3c3c;
+      --shadow:0 10px 28px rgba(23,23,21,.06);
+    }
+    *{box-sizing:border-box}
+    html{background:var(--page);color:var(--ink);font-family:Inter,"Pretendard Variable",Pretendard,"Noto Sans KR",Arial,sans-serif}
+    body{margin:0;min-width:320px}
+    button,textarea{font:inherit}
+    button,summary{cursor:pointer}
+    button:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid rgba(40,120,213,.28);outline-offset:2px}
+    .page{width:min(1180px,calc(100% - 40px));margin:0 auto;padding:24px 0 56px}
+    .context{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:14px}
+    .context h1{margin:0;font-size:20px;line-height:1.35;letter-spacing:-.02em}
+    .context p{margin:5px 0 0;color:var(--muted);font-size:13px;line-height:1.55}
+    .demo-badge{flex:none;display:inline-flex;align-items:center;gap:6px;border:1px solid #dccca6;border-radius:999px;background:#fff9e9;color:#755613;padding:6px 10px;font-size:11.5px;font-weight:650}
+    .demo-badge svg{width:14px;height:14px}
+    .card{overflow:hidden;border:1px solid var(--border);border-radius:12px;background:var(--surface);box-shadow:var(--shadow)}
+    .card-head{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:13px 16px;border-bottom:1px solid var(--grid)}
+    .card-title{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:750}
+    .card-title svg{width:18px;height:18px;color:var(--ink-2)}
+    .head-actions{display:flex;align-items:center;gap:12px}
+    .status{display:inline-flex;align-items:center;gap:6px;color:var(--ink-2);font-size:11.5px}
+    .status::before{content:"";width:7px;height:7px;border-radius:50%;background:#28a66a;box-shadow:0 0 0 3px var(--green-soft)}
+    .saved-toggle{display:inline-flex;align-items:center;gap:6px;min-height:36px;border:1px solid var(--border);border-radius:7px;background:#fff;color:var(--ink-2);padding:6px 10px;font-size:11.5px;font-weight:650;transition:border-color .18s,background .18s,color .18s}
+    .saved-toggle:hover,.saved-toggle[aria-expanded="true"]{border-color:#aaa9a2;background:var(--surface-2);color:var(--ink)}
+    .saved-toggle svg{width:15px;height:15px}
+    .compose{padding:16px;background:var(--surface)}
+    .compose label{display:block;margin-bottom:7px;color:var(--ink);font-size:12.5px;font-weight:700}
+    .input-wrap{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:9px}
+    textarea{display:block;width:100%;min-height:72px;max-height:180px;resize:vertical;border:1px solid var(--border);border-radius:9px;background:#fff;color:var(--ink);padding:11px 12px;font-size:14px;line-height:1.55;transition:border-color .18s,box-shadow .18s}
+    textarea:hover{border-color:#aaa9a2}
+    textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(40,120,213,.10);outline:none}
+    .ask{min-width:94px;min-height:46px;border:1px solid var(--ink);border-radius:8px;background:var(--ink);color:#fff;padding:0 16px;font-size:13px;font-weight:700;transition:background .18s,border-color .18s}
+    .ask:hover{background:#353531;border-color:#353531}
+    .ask:disabled{cursor:wait;opacity:.55}
+    .compose-foot{display:flex;justify-content:flex-end;margin-top:8px}
+    .key-help{color:var(--muted);font-size:11px}
+    .saved-panel{border-top:1px solid var(--grid);background:#fafaf8;padding:14px 16px 16px}
+    .saved-panel[hidden],.thread[hidden]{display:none}
+    .saved-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}
+    .saved-panel-head h2{margin:0;font-size:13px}.saved-panel-head p{margin:4px 0 0;color:var(--muted);font-size:11px}
+    .saved-list{display:flex;flex-direction:column;gap:7px}
+    .saved-empty{border:1px dashed var(--border);border-radius:8px;background:#fff;padding:18px;text-align:center;color:var(--muted);font-size:12px}
+    .saved-item{border:1px solid var(--grid);border-radius:8px;background:#fff;overflow:hidden}
+    .saved-item>summary{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 14px;min-height:48px;padding:10px 12px;list-style:none;transition:background .18s}
+    .saved-item>summary::-webkit-details-marker{display:none}.saved-item>summary:hover{background:var(--surface-2)}
+    .saved-question{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:700}.saved-date{grid-column:2;grid-row:1/3;color:var(--muted);font-size:10.5px;align-self:center}.saved-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink-2);font-size:11px}
+    .saved-body{padding:12px;border-top:1px solid var(--grid)}
+    .saved-body .insight{padding:0}.saved-body .insight h2{font-size:14px}.saved-body .insight-grid{margin-top:10px}
+    .saved-tools{display:flex;justify-content:flex-end;margin-bottom:9px}
+    .delete-saved,.save-answer{min-height:32px;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--ink-2);padding:4px 9px;font-size:11px;font-weight:650;transition:border-color .18s,background .18s,color .18s}
+    .delete-saved:hover{border-color:#e3a2a2;background:#fff5f5;color:var(--red)}
+    .save-answer:hover{border-color:#98b7d8;background:var(--blue-soft);color:#1f4e82}.save-answer:disabled{cursor:default;border-color:#b9dec9;background:var(--green-soft);color:var(--green)}
+    .pagination{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:5px;margin-top:12px}
+    .pagination[hidden]{display:none}
+    .page-btn{min-width:34px;min-height:34px;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--ink-2);padding:4px 8px;font-size:11.5px;transition:border-color .18s,background .18s,color .18s}
+    .page-btn:hover:not(:disabled){border-color:#aaa9a2;background:var(--surface-2);color:var(--ink)}
+    .page-btn[aria-current="page"]{border-color:var(--ink);background:var(--ink);color:#fff;font-weight:700}
+    .page-btn:disabled{cursor:default;opacity:.38}.page-ellipsis{display:grid;place-items:center;min-width:24px;color:var(--muted);font-size:12px}
+    .storage-note{min-height:16px;margin:8px 0 0;color:var(--muted);font-size:10.5px;text-align:right}.storage-note.error{color:var(--red)}
+    .thread{display:flex;flex-direction:column;gap:18px;padding:20px 16px 22px;border-top:1px solid var(--grid);background:#fbfbf9}
+    .turn{display:flex;flex-direction:column;gap:10px}
+    .user-question{align-self:flex-end;max-width:min(82%,760px);border-radius:12px 12px 3px 12px;background:var(--ink);color:#fff;padding:9px 12px;font-size:13px;line-height:1.6;white-space:pre-wrap}
+    .answer{border:1px solid var(--grid);border-radius:4px 11px 11px;background:var(--surface);overflow:hidden}
+    .answer-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 14px;border-bottom:1px solid var(--grid)}
+    .answer-actions{display:flex;align-items:center;gap:8px}
+    .ai-label{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:750}
+    .gemini-mark{display:grid;place-items:center;width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,#3769d3,#8b5bd8);color:#fff}
+    .gemini-mark svg{width:13px;height:13px}
+    .answer-time{color:var(--muted);font-size:10.5px}
+    .insight{padding:15px 14px}
+    .insight h2{margin:0 0 7px;font-size:16px;line-height:1.45;letter-spacing:-.015em}
+    .insight>.lead{margin:0;color:var(--ink-2);font-size:13px;line-height:1.7}
+    .insight-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:13px}
+    .signal{border:1px solid var(--grid);border-radius:8px;background:var(--surface-2);padding:10px}
+    .signal span{display:block;margin-bottom:5px;color:var(--muted);font-size:10.5px}
+    .signal strong{font-size:15px;font-variant-numeric:tabular-nums}
+    .signal small{display:block;margin-top:3px;color:var(--ink-2);font-size:10.5px}
+    .positive{color:var(--green)}
+    .negative{color:var(--red)}
+    .findings{margin:14px 0 0;padding:0;list-style:none}
+    .findings li{position:relative;margin:7px 0;padding-left:15px;color:var(--ink-2);font-size:12.5px;line-height:1.65}
+    .findings li::before{content:"";position:absolute;left:1px;top:.68em;width:5px;height:5px;border-radius:50%;background:#777772}
+    .findings b{color:var(--ink)}
+    .action{display:grid;grid-template-columns:auto 1fr;gap:9px;margin-top:14px;border-radius:8px;background:var(--blue-soft);padding:11px 12px;color:#1f4e82;font-size:12px;line-height:1.6}
+    .action svg{width:17px;height:17px;margin-top:1px}
+    .evidence{border-top:1px solid var(--grid)}
+    .evidence>summary{display:flex;align-items:center;gap:8px;min-height:48px;padding:10px 14px;list-style:none;color:var(--ink);font-size:12.5px;font-weight:700;transition:background .18s}
+    .evidence>summary::-webkit-details-marker{display:none}
+    .evidence>summary:hover{background:var(--surface-2)}
+    .evidence>summary svg{width:16px;height:16px;color:var(--ink-2)}
+    .evidence>summary .chevron{margin-left:auto;transition:transform .2s}
+    .evidence[open]>summary .chevron{transform:rotate(180deg)}
+    .evidence-note{margin-left:2px;color:var(--muted);font-weight:400}
+    .evidence-body{padding:0 14px 15px}
+    .conditions{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+    .condition{border:1px solid #d8e4f2;border-radius:999px;background:#f4f8fd;color:#345f8e;padding:4px 8px;font-size:10.5px}
+    .table-wrap{overflow:auto;border:1px solid var(--grid);border-radius:8px;background:#fff}
+    table{width:100%;min-width:680px;border-collapse:collapse;font-size:11.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
+    th,td{padding:8px 10px;border-bottom:1px solid var(--grid);text-align:right}
+    th:first-child,td:first-child{text-align:left}
+    thead th{background:var(--surface-2);color:var(--muted);font-weight:650}
+    tbody tr:last-child td{border-bottom:0}
+    tbody tr:hover{background:#fafaf7}
+    .source{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;margin-top:9px;color:var(--muted);font-size:10.5px;line-height:1.5}
+    .loading{display:flex;align-items:center;gap:9px;border:1px solid var(--grid);border-radius:4px 11px 11px;background:#fff;padding:13px;color:var(--ink-2);font-size:12.5px}
+    .spinner{width:16px;height:16px;border:2px solid #d7e3f2;border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @media (max-width:760px){
+      .page{width:min(100% - 24px,1180px);padding-top:14px}
+      .context{display:block}.demo-badge{margin-top:10px}
+      .card-head{align-items:flex-start}.head-actions{align-items:flex-end;flex-direction:column;gap:8px}.status{display:none}
+      .input-wrap{grid-template-columns:1fr}.ask{width:100%}
+      .key-help{display:none}
+      .insight-grid{grid-template-columns:1fr}.user-question{max-width:92%}
+      .evidence-note{display:none}
+      .saved-item>summary{grid-template-columns:minmax(0,1fr)}.saved-date{grid-column:1;grid-row:auto}.saved-title{display:none}
+    }
+    @media (prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="context">
+      <div>
+        <h1>AI 실적 질문 구성 예시</h1>
+        <p>기존 대시보드 안에서 질문하고, Gemini 인사이트와 계산 근거를 이어서 확인하는 화면입니다.</p>
+      </div>
+      <span class="demo-badge">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 8v5m0 3h.01M10.3 3.8 2.6 17.1A2 2 0 0 0 4.3 20h15.4a2 2 0 0 0 1.7-2.9L13.7 3.8a2 2 0 0 0-3.4 0Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        UI 예시 · 실제 API 호출 없음
+      </span>
+    </div>
+
+    <section class="card" aria-labelledby="aiQuestionTitle">
+      <header class="card-head">
+        <div class="card-title" id="aiQuestionTitle">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 10h8M8 14h5m7-2a8 8 0 0 1-8 8 8.8 8.8 0 0 1-3.6-.8L4 20l.8-4.4A8 8 0 1 1 20 12Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          AI 실적 질문
+        </div>
+        <div class="head-actions">
+          <span class="status">Gemini 연결 가능</span>
+          <button class="saved-toggle" id="savedToggle" type="button" aria-expanded="false" aria-controls="savedPanel">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 4h12a1 1 0 0 1 1 1v16l-7-4-7 4V5a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+            저장한 인사이트 <span id="savedCount">0</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="compose">
+        <label for="question">실적에 대해 질문해 주세요</label>
+        <div class="input-wrap">
+          <textarea id="question" aria-describedby="questionHelp"></textarea>
+          <button class="ask" id="askButton" type="button">질문하기</button>
+        </div>
+        <div class="compose-foot"><span class="key-help" id="questionHelp">Enter 전송 · Shift+Enter 줄바꿈</span></div>
+        <p class="storage-note" id="storageNote" role="status" aria-live="polite"></p>
+      </div>
+
+      <section class="saved-panel" id="savedPanel" aria-labelledby="savedPanelTitle" hidden>
+        <div class="saved-panel-head"><div><h2 id="savedPanelTitle">저장한 인사이트</h2><p>저장한 답변만 남습니다. 일반 채팅은 새로고침하거나 백업을 불러오면 복원되지 않습니다.</p></div></div>
+        <div class="saved-list" id="savedList"></div>
+        <nav class="pagination" id="savedPagination" aria-label="저장한 인사이트 페이지" hidden></nav>
+      </section>
+
+      <div class="thread" id="thread" role="log" aria-live="polite" hidden>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const input = document.getElementById('question');
+    const button = document.getElementById('askButton');
+    const thread = document.getElementById('thread');
+    const savedToggle = document.getElementById('savedToggle');
+    const savedPanel = document.getElementById('savedPanel');
+    const savedCount = document.getElementById('savedCount');
+    const savedList = document.getElementById('savedList');
+    const savedPagination = document.getElementById('savedPagination');
+    const storageNote = document.getElementById('storageNote');
+    const STORAGE_KEY = 'firstDashboard.savedAiInsights.example.v1';
+    const PAGE_SIZE = 5;
+    let currentPage = 1;
+    const answerSnapshots = new Map();
+
+    const escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
+
+    const answers = {
+      festival:{
+        title:'추석 기간 거래액은 늘었지만, 객단가보다 고객수 증가가 성장을 이끌었습니다.',
+        lead:'2025년 추석 기간의 첫구매 거래액은 행사 전 7일 대비 27.2% 증가했습니다. 고객수 증가폭이 더 커 유입 확대 효과가 핵심으로 보이며, 행사 종료 후에는 8.4% 감소했습니다.',
+        metrics:[['첫구매 거래액','+27.2%','행사 전 7일 대비','positive'],['첫구매 고객수','+31.5%','행사 전 7일 대비','positive'],['첫구매 객단가','-3.3%','행사 전 7일 대비','negative']],
+        findings:['광고 채널의 고객수 증가가 전체 상승분에서 가장 큰 비중을 차지했습니다.','객단가는 하락했으므로 할인 폭과 저가 상품 비중을 함께 확인하는 것이 좋습니다.'],
+        action:'예상 상승 시점 2주 전부터 광고 유입 확대와 재방문 메시지를 준비하고, 행사 중에는 고객수·객단가를 함께 모니터링하세요.',
+        conditions:['행사: 2025-10-03~10-09','행사 전: 2025-09-26~10-02','행사 후: 2025-10-10~10-16','채널: 전체','회원구분: 전체','집계: 일평균'],
+        headers:['지표','행사 전 7일','추석 기간','행사 후 7일','행사 중 증감','행사 후 증감'],
+        evidenceRows:[['첫구매 거래액','2.73억원','3.47억원','3.18억원','+27.2%','-8.4%'],['첫구매 고객수','15,200명','19,988명','18,144명','+31.5%','-9.2%'],['첫구매 객단가','89,200원','86,300원','87,640원','-3.3%','+1.6%']],
+        dataAsOf:'2026-09-21'
+      },
+      august:{
+        title:'8월 첫구매 거래액은 전년 동기간보다 증가했지만 가입 전환은 약해졌습니다.',
+        lead:'2026년 8월 일평균 첫구매 거래액은 전년 동기간 대비 18.6% 증가했습니다. 비회원 트래픽 증가가 외형 성장을 도왔지만 가입률은 0.41%p 낮아져 유입 이후 전환 개선이 필요합니다.',
+        metrics:[['첫구매 거래액','+18.6%','전년 동기간 대비','positive'],['비회원 트래픽','+22.4%','전년 동기간 대비','positive'],['가입률','-0.41%p','전년 동기간 대비','negative']],
+        findings:['트래픽 증가율이 거래액 증가율보다 높아 유입 이후 첫구매 전환을 함께 봐야 합니다.','가입률 하락이 지속되는 날짜와 유입 채널을 나눠 확인하는 것이 좋습니다.'],
+        action:'9월 프로모션 예상 상승 시점 2주 전부터 가입 전환 구간을 점검하고, 트래픽이 큰 채널의 첫구매율을 일별로 확인하세요.',
+        conditions:['조회: 2026년 8월','비교: 2025년 전년 동기간·동요일','채널: 전체','회원구분: 전체','집계: 일평균'],
+        headers:['지표','2025년 동기간','2026년 8월','증감'],
+        evidenceRows:[['첫구매 거래액','98백만원','116백만원','+18.6%'],['비회원 트래픽','91,240','111,678','+22.4%'],['가입률','1.35%','0.94%','-0.41%p']],
+        dataAsOf:'2026-09-21'
+      },
+      ads:{
+        title:'광고 채널 감소는 고객수 하락의 영향이 가장 컸습니다.',
+        lead:'선택 기간 광고 채널 첫구매 거래액은 비교 기간 대비 11.8% 감소했습니다. 객단가 변화보다 고객수 감소의 기여도가 커 소재·랜딩·유입 품질을 우선 점검하는 편이 좋습니다.',
+        metrics:[['첫구매 거래액','-11.8%','비교 기간 대비','negative'],['첫구매 고객수','-9.6%','비교 기간 대비','negative'],['첫구매 객단가','-2.4%','비교 기간 대비','negative']],
+        findings:['고객수 감소 기여도가 객단가 감소 기여도보다 큽니다.','광고 유입량, 랜딩 이탈, 첫구매율 순서로 구간별 하락 지점을 확인해야 합니다.'],
+        action:'다음 캠페인 시작 2주 전부터 소재별 유입 품질과 랜딩 전환을 분리 점검하고, 하락 폭이 큰 소재의 예산을 조정하세요.',
+        conditions:['기간: 현재 대시보드 선택 기간','비교: 화면 비교 기준','채널: 광고','회원구분: 전체','집계: 화면 설정'],
+        headers:['지표','비교 기간','선택 기간','증감'],
+        evidenceRows:[['첫구매 거래액','132백만원','116백만원','-11.8%'],['첫구매 고객수','782명','707명','-9.6%'],['첫구매 객단가','168,798원','164,747원','-2.4%']],
+        dataAsOf:'2026-09-21'
+      },
+      general:{
+        title:'질문 조건에 맞춰 핵심 변화와 확인 순서를 정리했습니다.',
+        lead:'이 예시 화면에서는 질문이 어떻게 표시되고, Gemini 인사이트와 근거 데이터가 어떤 순서로 제공되는지 확인할 수 있습니다. 실제 적용 시에는 대시보드 공식 산식으로 계산한 결과만 근거 데이터에 표시합니다.',
+        metrics:[['첫구매 거래액','+8.7%','비교 기간 대비','positive'],['첫구매 고객수','+6.1%','비교 기간 대비','positive'],['첫구매 객단가','+2.5%','비교 기간 대비','positive']],
+        findings:['거래액 변화는 고객수 효과와 객단가 효과로 나눠 확인합니다.','실제 연동본에서는 질문에서 해석한 모든 필터를 근거 데이터에 표시합니다.'],
+        action:'예상 상승 시점 2주 전부터 주요 유입과 전환 지표를 함께 점검하세요.',
+        conditions:['기간: 질문에서 해석','비교: 질문 또는 화면 기준','필터: 현재 대시보드 조건','집계: 화면 설정'],
+        headers:['지표','비교 기간','조회 기간','증감'],
+        evidenceRows:[['첫구매 거래액','106백만원','115백만원','+8.7%'],['첫구매 고객수','665명','706명','+6.1%'],['첫구매 객단가','159,398원','163,383원','+2.5%']],
+        dataAsOf:'2026-09-21'
+      }
+    };
+
+    function selectAnswer(question){
+      if(/추석|명절|행사/.test(question)) return answers.festival;
+      if(/8월|팔월/.test(question)) return answers.august;
+      if(/광고|채널/.test(question)) return answers.ads;
+      return answers.general;
+    }
+
+    function uniqueId(){
+      return globalThis.crypto?.randomUUID?.() || `ins-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    }
+
+    function buildSnapshot(question,data){
+      return {id:uniqueId(),createdAt:new Date().toISOString(),question,...JSON.parse(JSON.stringify(data))};
+    }
+
+    function metricsMarkup(metrics){
+      return metrics.map(m=>`<div class="signal"><span>${escapeHtml(m[0])}</span><strong class="${m[3]==='negative'?'negative':'positive'}">${escapeHtml(m[1])}</strong><small>${escapeHtml(m[2])}</small></div>`).join('');
+    }
+
+    function insightMarkup(data){
+      const findings=(data.findings||[]).map(item=>`<li>${escapeHtml(item)}</li>`).join('');
+      return `<div class="insight"><h2>${escapeHtml(data.title)}</h2><p class="lead">${escapeHtml(data.lead)}</p><div class="insight-grid">${metricsMarkup(data.metrics||[])}</div><ul class="findings">${findings}</ul><div class="action"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9 18 6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><div><b>권장 액션</b><br>${escapeHtml(data.action)}</div></div></div>`;
+    }
+
+    function evidenceMarkup(data){
+      const conditions=(data.conditions||[]).map(item=>`<span class="condition">${escapeHtml(item)}</span>`).join('');
+      const headers=(data.headers||[]).map(item=>`<th>${escapeHtml(item)}</th>`).join('');
+      const rows=(data.evidenceRows||[]).map(row=>`<tr>${row.map((cell,index)=>`<td${index===row.length-1&&String(cell).startsWith('-')?' class="negative"':index===row.length-1&&String(cell).startsWith('+')?' class="positive"':''}>${escapeHtml(cell)}</td>`).join('')}</tr>`).join('');
+      return `<details class="evidence"><summary><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>근거 데이터 보기<span class="evidence-note">답변에 사용한 조건과 실적</span><svg class="chevron" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></summary><div class="evidence-body"><div class="conditions">${conditions}</div><div class="table-wrap"><table><thead><tr>${headers}</tr></thead><tbody>${rows}</tbody></table></div><div class="source"><span>계산 기준: 기존 대시보드 공식 산식 · 반올림 전 원본값으로 증감 계산</span><span>데이터 기준일: ${escapeHtml(data.dataAsOf)}</span></div></div></details>`;
+    }
+
+    function answerMarkup(snapshot){
+      return `<div class="answer">
+        <header class="answer-head"><div class="ai-label"><span class="gemini-mark"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3c.7 4.8 3.2 7.3 8 8-4.8.7-7.3 3.2-8 8-.7-4.8-3.2-7.3-8-8 4.8-.7 7.3-3.2 8-8Z" fill="currentColor"/></svg></span>Gemini AI 인사이트</div><div class="answer-actions"><span class="answer-time">방금</span><button class="save-answer" type="button" data-save-id="${escapeHtml(snapshot.id)}">저장</button></div></header>
+        ${insightMarkup(snapshot)}
+        ${evidenceMarkup(snapshot)}
+      </div>`;
+    }
+
+    function loadSaved(){
+      try{
+        const parsed=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
+        return Array.isArray(parsed)?parsed.filter(item=>item&&item.id&&item.question&&item.title).sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt))):[];
+      }catch(error){
+        setStorageNote('저장 데이터를 읽지 못해 빈 목록으로 시작합니다.',true);
+        return [];
+      }
+    }
+
+    function writeSaved(items){
+      localStorage.setItem(STORAGE_KEY,JSON.stringify(items));
+    }
+
+    function setStorageNote(message,isError=false){
+      storageNote.textContent=message;
+      storageNote.classList.toggle('error',isError);
+    }
+
+    function formatDate(value){
+      const date=new Date(value);
+      return Number.isNaN(date.getTime())?'저장 시각 없음':new Intl.DateTimeFormat('ko-KR',{dateStyle:'medium',timeStyle:'short'}).format(date);
+    }
+
+    function savedItemMarkup(item){
+      return `<details class="saved-item"><summary><span class="saved-question">${escapeHtml(item.question)}</span><span class="saved-date">${escapeHtml(formatDate(item.createdAt))}</span><span class="saved-title">${escapeHtml(item.title)}</span></summary><div class="saved-body"><div class="saved-tools"><button class="delete-saved" type="button" data-delete-id="${escapeHtml(item.id)}">삭제</button></div>${insightMarkup(item)}${evidenceMarkup(item)}</div></details>`;
+    }
+
+    function renderSaved(){
+      const items=loadSaved();
+      savedCount.textContent=String(items.length);
+      const totalPages=Math.max(1,Math.ceil(items.length/PAGE_SIZE));
+      currentPage=Math.min(Math.max(1,currentPage),totalPages);
+      const start=(currentPage-1)*PAGE_SIZE;
+      const visible=items.slice(start,start+PAGE_SIZE);
+      savedList.innerHTML=visible.length?visible.map(savedItemMarkup).join(''):'<div class="saved-empty">저장한 인사이트가 없습니다.</div>';
+      renderPagination(totalPages,items.length);
+    }
+
+    function pageNumbers(totalPages){
+      if(totalPages<=7)return Array.from({length:totalPages},(_,index)=>index+1);
+      const pages=new Set([1,totalPages,currentPage-1,currentPage,currentPage+1]);
+      const sorted=[...pages].filter(page=>page>=1&&page<=totalPages).sort((a,b)=>a-b);
+      const result=[];
+      sorted.forEach((page,index)=>{
+        if(index&&page-sorted[index-1]>1)result.push('ellipsis');
+        result.push(page);
+      });
+      return result;
+    }
+
+    function renderPagination(totalPages,totalItems){
+      savedPagination.hidden=totalItems<=PAGE_SIZE;
+      if(savedPagination.hidden){savedPagination.innerHTML='';return;}
+      const pages=pageNumbers(totalPages).map(page=>page==='ellipsis'?'<span class="page-ellipsis" aria-hidden="true">…</span>':`<button class="page-btn" type="button" data-page="${page}"${page===currentPage?' aria-current="page"':''}>${page}</button>`).join('');
+      savedPagination.innerHTML=`<button class="page-btn" type="button" data-page="prev" aria-label="이전 페이지"${currentPage===1?' disabled':''}>이전</button>${pages}<button class="page-btn" type="button" data-page="next" aria-label="다음 페이지"${currentPage===totalPages?' disabled':''}>다음</button>`;
+    }
+
+    function saveInsight(snapshot,control){
+      try{
+        const items=loadSaved();
+        if(!items.some(item=>item.id===snapshot.id)){
+          items.unshift(snapshot);
+          writeSaved(items);
+        }
+        currentPage=1;
+        control.textContent='저장됨';
+        control.disabled=true;
+        setStorageNote('질문·인사이트·근거 데이터를 함께 저장했습니다.');
+        renderSaved();
+      }catch(error){
+        setStorageNote('브라우저 저장 공간을 사용할 수 없어 저장하지 못했습니다.',true);
+      }
+    }
+
+    function deleteInsight(id){
+      try{
+        writeSaved(loadSaved().filter(item=>item.id!==id));
+        setStorageNote('저장한 인사이트를 삭제했습니다.');
+        renderSaved();
+      }catch(error){
+        setStorageNote('저장한 인사이트를 삭제하지 못했습니다.',true);
+      }
+    }
+
+    function submitQuestion(){
+      const question=input.value.trim();
+      if(!question){input.focus();return;}
+      button.disabled=true;
+      setStorageNote('');
+      thread.hidden=false;
+      const turn=document.createElement('article');
+      turn.className='turn';
+      turn.innerHTML=`<div class="user-question">${escapeHtml(question)}</div><div class="loading"><span class="spinner" aria-hidden="true"></span>Gemini가 질문과 실적 조건을 분석하고 있습니다.</div>`;
+      thread.appendChild(turn);
+      input.value='';
+      turn.scrollIntoView({behavior:'smooth',block:'end'});
+      window.setTimeout(()=>{
+        const snapshot=buildSnapshot(question,selectAnswer(question));
+        answerSnapshots.set(snapshot.id,snapshot);
+        turn.querySelector('.loading').outerHTML=answerMarkup(snapshot);
+        button.disabled=false;
+        turn.scrollIntoView({behavior:'smooth',block:'start'});
+        input.focus();
+      },650);
+    }
+
+    button.addEventListener('click',submitQuestion);
+    input.addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();submitQuestion();}});
+    savedToggle.addEventListener('click',()=>{
+      const willOpen=savedPanel.hidden;
+      savedPanel.hidden=!willOpen;
+      savedToggle.setAttribute('aria-expanded',String(willOpen));
+      if(willOpen){currentPage=1;renderSaved();}
+    });
+    savedPagination.addEventListener('click',event=>{
+      const control=event.target.closest('[data-page]');
+      if(!control||control.disabled)return;
+      const totalPages=Math.max(1,Math.ceil(loadSaved().length/PAGE_SIZE));
+      if(control.dataset.page==='prev')currentPage=Math.max(1,currentPage-1);
+      else if(control.dataset.page==='next')currentPage=Math.min(totalPages,currentPage+1);
+      else currentPage=Number(control.dataset.page)||1;
+      renderSaved();
+    });
+    thread.addEventListener('click',event=>{
+      const control=event.target.closest('[data-save-id]');
+      if(!control)return;
+      const snapshot=answerSnapshots.get(control.dataset.saveId);
+      if(snapshot)saveInsight(snapshot,control);
+    });
+    savedList.addEventListener('click',event=>{
+      const control=event.target.closest('[data-delete-id]');
+      if(!control)return;
+      event.preventDefault();
+      deleteInsight(control.dataset.deleteId);
+    });
+    renderSaved();
+  </script>
+</body>
+</html>

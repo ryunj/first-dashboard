@@ -3,7 +3,7 @@
 
 dashboard.html 을 그대로 화면 가득 띄운다. 데이터는 저장소에도 서버에도 없다:
 화면에 백업 파일(.json.gz)을 끌어다 놓거나 '백업 파일 열기'로 고르면, 보는 사람의 브라우저(IndexedDB)에만 저장해 조회한다.
-Gemini 는 서버에서 자연어를 조회조건으로만 바꾸며 실제 실적 계산은 브라우저의 기존 공식이 담당한다.
+Gemini 는 서버에서 자연어를 조회조건으로 바꾸고, 브라우저가 공식 산식으로 만든 제한된 집계 근거를 인사이트로 정리한다.
 """
 from pathlib import Path
 
@@ -13,6 +13,7 @@ import streamlit.components.v1 as components
 from gemini_query import (
     GeminiQueryError,
     connection_test,
+    generate_insight,
     generate_query,
     load_gemini_config,
     public_connection_status,
@@ -82,16 +83,21 @@ request = DASHBOARD_COMPONENT(
     default=None,
 )
 
-if isinstance(request, dict) and request.get("type") == "gemini_query" and request.get("id"):
+if isinstance(request, dict) and request.get("type") in ("gemini_query", "gemini_insight") and request.get("id"):
     request_id = str(request["id"])[:100]
     if request_id != st.session_state.get("gemini_last_request_id"):
         question = request.get("question", "")
-        context = request.get("context") if isinstance(request.get("context"), dict) else {}
         try:
             if not config.api_key:
                 raise GeminiQueryError("Gemini 키가 설정되지 않아 기존 질문 해석을 사용합니다.")
-            query = generate_query(question, context, config.api_key, model=config.model)
-            result = {"id": request_id, "ok": True, "query": query}
+            if request.get("type") == "gemini_query":
+                context = request.get("context") if isinstance(request.get("context"), dict) else {}
+                query = generate_query(question, context, config.api_key, model=config.model)
+                result = {"id": request_id, "ok": True, "query": query}
+            else:
+                evidence = request.get("evidence") if isinstance(request.get("evidence"), dict) else {}
+                insight = generate_insight(question, evidence, config.api_key, model=config.model)
+                result = {"id": request_id, "ok": True, "insight": insight}
         except GeminiQueryError as error:
             result = {"id": request_id, "ok": False, "message": str(error)}
         st.session_state["gemini_last_request_id"] = request_id
