@@ -75,6 +75,7 @@ SEG_CODE = {'*TOTAL': 0, '1_당월신규': 1, '2_기가입신규': 2, '3_기존'
 THIN_RATIO = 0.3  # 조직 카테고리 원천(양수 결제)이 상품관점 합계의 이 비율보다 작으면 '덜 채워짐' 경고 (평소 90% 이상 · 2025-09~10 은 45% 안팎으로 꾸준히 낮아 제외)
 PRODUCT_COLS = {'date': '결제_일자', 'bpu': 'BPU', 'ch': 'AF대분류', 'cat': '대카테고리', 'brand': '브랜드',
                 'code': '상품코드', 'name': '상품명', 'amt': '거래액', 'cust': '주문고객수'}
+PRODUCT_MEMBER_COLS = {'month_new': '당월신규여부', 'year_new': '당년신규여부'}
 
 # 신규회원 실적 대시보드(첫구매) — '당년신규' 첫구매 실적 원천. 연령대 Total 행만 쓴다
 NEWMEMBER_KEY = '신규회원실적대시보드'
@@ -436,7 +437,7 @@ def load_file(path, series):
 
 
 def read_product_xlsx(path):
-    """조직 카테고리별 첫구매 실적 xlsx → [(YYYY-MM-DD, bpu, 채널, 카테고리, 브랜드, 상품코드, 상품명, 거래액, 주문고객수)]
+    """조직 카테고리별 첫구매 실적 xlsx → 상품 행(날짜·분류·상품·거래액·고객수·회원구분)
     xlsx 읽기가 느려(65만 행 ≈ 45초) 파일 크기·수정시각이 같으면 data/_cache 의 결과를 쓴다."""
     st = path.stat()
     sig = (st.st_size, int(st.st_mtime))
@@ -461,7 +462,7 @@ def read_product_xlsx(path):
 
 
 def _product_rows(header, it, where):
-    """상품 표(헤더 + 행) → [(YYYY-MM-DD, bpu, 채널, 카테고리, 브랜드, 상품코드, 상품명, 거래액, 주문고객수)]
+    """상품 표(헤더 + 행) → [(YYYY-MM-DD, bpu, 채널, 카테고리, 브랜드, 상품코드, 상품명, 거래액, 주문고객수, 회원구분)]
     열은 이름 일부로 찾는다(결제_일자(YYYYMMDD) · AF대분류명 · ADMIN브랜드명 …). xlsx 는 숫자, CSV 는 '1,234' 문자열."""
     header = [str(h or '').strip() for h in header]
     try:
@@ -469,6 +470,7 @@ def _product_rows(header, it, where):
     except StopIteration:
         print(f'  [경고] {where}: 필요한 열을 찾지 못해 건너뜀 {header}')
         return []
+    member_col = {k: next((i for i, h in enumerate(header) if kw in h), None) for k, kw in PRODUCT_MEMBER_COLS.items()}
     need = max(col.values())
 
     def num(v):
@@ -486,9 +488,13 @@ def _product_rows(header, it, where):
         def text(k, default):
             v = r[col[k]]
             return str(v).strip() if v not in (None, '') else default
+        month_new = str(r[member_col['month_new']] or '').strip().upper() if member_col['month_new'] is not None else ''
+        year_new = str(r[member_col['year_new']] or '').strip().upper() if member_col['year_new'] is not None else ''
+        # 당월신규 Y = 1 · 당년신규 Y & 당월신규 N = 2 · 당년신규 N = 3. 구형 원천은 0(미분류)으로 호환한다.
+        seg = 1 if month_new == 'Y' else 2 if month_new == 'N' and year_new == 'Y' else 3 if year_new == 'N' else 0
         out.append((f'{ds[:4]}-{ds[4:6]}-{ds[6:8]}', text('bpu', '(미지정)'), text('ch', '미분류'),
                     text('cat', '(미지정)'), text('brand', '(미지정)'), text('code', '(코드없음)'), text('name', ''),
-                    num(r[col['amt']]), num(r[col['cust']])))
+                    num(r[col['amt']]), num(r[col['cust']]), seg))
     return out
 
 
@@ -620,7 +626,7 @@ def build_products(dirs, last_date, verbose=True):
     for r in rows:
         p = path_idx[(bi[r[1]], ki[r[3]], ri[r[4]])]
         q = prod_idx[r[5]] if (r[0][:4], p, r[5]) in keep else -1
-        o = facts[(day_idx(r[0]), ci[r[2]], p, q)]
+        o = facts[(day_idx(r[0]), ci[r[2]], p, q, r[9])]
         o[0] += r[7]
         o[1] += r[8]
     covm = defaultdict(lambda: [0.0, 0.0, 0.0])   # 채널 × BPU 합계 — 커버리지용
@@ -663,10 +669,10 @@ def build_products(dirs, last_date, verbose=True):
 
     # 날짜순으로 정렬하고 날짜는 앞 행과의 차이만 저장(대부분 0) → 파일 크기 절약
     flat, prev_d = [], 0
-    for (d, c, p, q), (a, u) in sorted(facts.items()):
+    for (d, c, p, q, sg), (a, u) in sorted(facts.items()):
         if round(a) == 0 and round(u) == 0:
             continue
-        flat.extend([d - prev_d, c, p, q, round(a), round(u)])
+        flat.extend([d - prev_d, c, p, q, sg, round(a), round(u)])
         prev_d = d
     cov, prev_d = [], 0
     for (d, c, b), (a, u, uv) in sorted(covm.items()):
@@ -685,8 +691,8 @@ def build_products(dirs, last_date, verbose=True):
     days = max([k[0] for k in facts] + [k[0] for k in covm] + [k[0] for k in covg] + [k[0] for k in covs]) + 1
     return {
         'meta': {'built': dt.datetime.now().strftime('%Y-%m-%d %H:%M'), 'topN': PRODUCT_TOP_N, 'start': start.isoformat(),
-                 'days': days, 'lastDate': (start + dt.timedelta(days=days - 1)).isoformat(), 'rows': len(rows), 'dropped': dropped, 'products': len(names), 'covFields': 6, 'covFields2': 7, 'covFields3': 6, 'positiveOnly': True,
-                 'encoding': 'f=[날짜차분, 채널, 경로, 상품(-1=기타), 거래액, 주문고객수] · cov=[날짜차분, 채널(-1=전체), BPU(-1=전체), 거래액, 고객수, 상품UV] · cov2=[날짜차분, 채널, BPU, 상품군, 거래액, 고객수, 상품UV] · cov3=[날짜차분, 회원구분(0=전체 1 2 3), 채널(-1=전체), BPU(-1=전체), 거래액, 고객수]'},
+                 'days': days, 'lastDate': (start + dt.timedelta(days=days - 1)).isoformat(), 'rows': len(rows), 'dropped': dropped, 'products': len(names), 'factFields': 7, 'covFields': 6, 'covFields2': 7, 'covFields3': 6, 'positiveOnly': True,
+                 'encoding': 'f=[날짜차분, 채널, 경로, 상품(-1=기타), 회원구분(0=미분류 1 2 3), 거래액, 주문고객수] · cov=[날짜차분, 채널(-1=전체), BPU(-1=전체), 거래액, 고객수, 상품UV] · cov2=[날짜차분, 채널, BPU, 상품군, 거래액, 고객수, 상품UV] · cov3=[날짜차분, 회원구분(0=전체 1 2 3), 채널(-1=전체), BPU(-1=전체), 거래액, 고객수]'},
         'ch': chs, 'bpu': bpus, 'cat': cats, 'brand': brands, 'grp': grps, 'paths': paths, 'prods': prods, 'f': flat, 'cov': cov, 'cov2': cov2, 'cov3': cov3,
     }
 

@@ -314,7 +314,7 @@ function analyze(parsed, dash) {
     if (event.start > dash.dataLast) return {event, result: {available: false, reason: `요청 기간(${event.start}~${event.end})은 데이터 기준일(${dash.dataLast}) 이후입니다.`}};
     const dates = span(event.start, event.end).filter(day => day >= dash.dataFirst && day <= dash.dataLast);
     if (!dates.length) return {event, result: {available: false, reason: `요청 기간에 사용할 수 있는 상품 데이터가 없습니다. 데이터 범위: ${dash.dataFirst}~${dash.dataLast}`}};
-    return {event, result: dash.queryProducts({dates, dimensions: parsed.dimensions.length ? parsed.dimensions : ['category'], channels: parsed.channels,
+    return {event, result: dash.queryProducts({dates, dimensions: parsed.dimensions.length ? parsed.dimensions : ['category'], channels: parsed.channels, segments: parsed.segments,
       ...(parsed.explicit.bpus ? {bpus: parsed.bpus} : {}), ...(parsed.explicit.categories ? {categories: parsed.categories} : {}), limit: 10})};
   }) : [];
   const kpi = parsed.families.includes('kpi') && typeof dash.queryKpi === 'function' ? dash.queryKpi() : null;

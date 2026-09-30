@@ -21,6 +21,7 @@ const SEG_CODE = {'*TOTAL': 0, '1_당월신규': 1, '2_기가입신규': 2, '3_�
 const THIN_RATIO = 0.3;  // 상품 원천이 실적의 이 비율보다 작으면 '덜 채워짐' (평소 90% 이상 · 2025-09~10 은 45% 안팎으로 꾸준히 낮음)
 const PRODUCT_COLS = [['date', '결제_일자'], ['bpu', 'BPU'], ['ch', 'AF대분류'], ['cat', '대카테고리'], ['brand', '브랜드'],
                       ['code', '상품코드'], ['name', '상품명'], ['amt', '거래액'], ['cust', '주문고객수']];
+const PRODUCT_MEMBER_COLS = [['monthNew', '당월신규여부'], ['yearNew', '당년신규여부']];
 const NEWMEMBER_KEY = '신규회원실적대시보드';
 const NEWMEMBER_METRICS = {'총)첫구매 거래액 (당년신규)': 'nya', '총)첫구매 고객수 (당년신규)': 'nyc',
                            '순)첫구매 거래액 (당년신규)': 'nyna', '순)첫구매 고객수 (당년신규)': 'nync',
@@ -446,14 +447,18 @@ function productRows(header, rows) {  // build_data._product_rows
     if (i < 0) throw new Error(`필요한 열을 찾지 못함: ${kw}`);
     col[k] = i;
   }
+  for (const [k, kw] of PRODUCT_MEMBER_COLS) col[k] = header.findIndex(h => h.includes(kw));
   const need = Math.max(...Object.values(col)), out = [];
   for (const r of rows) {
     if (r.length <= need) continue;
     const ds = String(r[col.date] || '').replace(/-/g, '').slice(0, 8);
     if (!/^\d+$/.test(ds)) continue;
     const text = (k, def) => (r[col[k]] !== '' && r[col[k]] != null ? String(r[col[k]]).trim() : def);
+    const monthNew = col.monthNew >= 0 ? String(r[col.monthNew] || '').trim().toUpperCase() : '';
+    const yearNew = col.yearNew >= 0 ? String(r[col.yearNew] || '').trim().toUpperCase() : '';
+    const seg = monthNew === 'Y' ? 1 : monthNew === 'N' && yearNew === 'Y' ? 2 : yearNew === 'N' ? 3 : 0;
     out.push([`${ds.slice(0, 4)}-${ds.slice(4, 6)}-${ds.slice(6, 8)}`, text('bpu', '(미지정)'), text('ch', '미분류'), text('cat', '(미지정)'),
-              text('brand', '(미지정)'), text('code', '(코드없음)'), text('name', ''), toNum(r[col.amt]) || 0, toNum(r[col.cust]) || 0]);
+              text('brand', '(미지정)'), text('code', '(코드없음)'), text('name', ''), toNum(r[col.amt]) || 0, toNum(r[col.cust]) || 0, seg]);
   }
   return out;
 }
@@ -563,7 +568,7 @@ function mergeSeries(base, S, sources) {
 }
 
 /* ---------- 합치기: 상품 구성 ---------- */
-const emptyProd = () => ({meta: {built: '', topN: null, covFields: 6, covFields2: 7, covFields3: 6, positiveOnly: true, start: null, days: 0, lastDate: null, rows: 0, products: 0}, ch: [], bpu: [], cat: [], brand: [], grp: [], paths: [], prods: [], f: [], cov: [], cov2: [], cov3: []});
+const emptyProd = () => ({meta: {built: '', topN: null, factFields: 7, covFields: 6, covFields2: 7, covFields3: 6, positiveOnly: true, start: null, days: 0, lastDate: null, rows: 0, products: 0}, ch: [], bpu: [], cat: [], brand: [], grp: [], paths: [], prods: [], f: [], cov: [], cov2: [], cov3: []});
 function mergeProducts(prod, byDay, cov, lastDate, covSeg = new Map()) {
   prod = prod || emptyProd();
   const stats = {days: [...byDay.keys()].sort(), rows: 0, newProducts: 0, covCells: cov.size, segCells: covSeg.size};
@@ -579,15 +584,16 @@ function mergeProducts(prod, byDay, cov, lastDate, covSeg = new Map()) {
   // 기존 사실 풀기 → 새 파일에 든 날짜는 통째로 뺀다
   const replace = new Set([...byDay.keys()].map(toUTC));
   const facts = [];
-  for (let j = 0, day = 0; j < prod.f.length; j += 6) {
+  const ff = prod.meta.factFields || 6;
+  for (let j = 0, day = 0; j < prod.f.length; j += ff) {
     day += prod.f[j];
     const t = start0 + day * DAY;
-    if (!replace.has(t)) facts.push([t, prod.f[j + 1], prod.f[j + 2], prod.f[j + 3], prod.f[j + 4], prod.f[j + 5]]);
+    if (!replace.has(t)) facts.push([t, prod.f[j + 1], prod.f[j + 2], prod.f[j + 3], ff >= 7 ? prod.f[j + 4] : 0, prod.f[j + ff - 2], prod.f[j + ff - 1]]);
   }
   // 연도 × 브랜드 경로별로 이미 개별 보관 중인 상품의 연간 거래액
   const yearOf = t => new Date(t).getUTCFullYear();
   const kept = new Map();
-  for (const [t, , p, q, a] of facts) {
+  for (const [t, , p, q, , a] of facts) {
     if (q < 0) continue;
     const yp = `${yearOf(t)}|${p}`;
     let m = kept.get(yp);
@@ -598,13 +604,13 @@ function mergeProducts(prod, byDay, cov, lastDate, covSeg = new Map()) {
   const incoming = [];
   const cand = new Map();  // 'year|path' → Map(code → 거래액)
   for (const rows of byDay.values()) for (const r of rows) {
-    const [day, bpu, ch, cat, brand, code, name, amt, cust] = r;
+    const [day, bpu, ch, cat, brand, code, name, amt, cust, seg] = r;
     if (!(amt > 0)) continue;  // 취소 · 반품(음수) · 0원 행 제외 — build_data.py 와 같게
     const bk = `${idxOf('bpu', bpu)}|${idxOf('cat', cat)}|${idxOf('brand', brand)}`;
     let p = pathIdx.get(bk);
     if (p === undefined) { p = paths.length / 3; paths.push(...bk.split('|').map(Number)); pathIdx.set(bk, p); }
     const t = toUTC(day), yp = `${yearOf(t)}|${p}`;
-    incoming.push([t, idxOf('ch', ch), p, code, name, amt, cust, yp]);
+    incoming.push([t, idxOf('ch', ch), p, code, name, amt, cust, seg, yp]);
     let m = cand.get(yp);
     if (!m) cand.set(yp, m = new Map());
     m.set(code, (m.get(code) || 0) + amt);
@@ -624,16 +630,16 @@ function mergeProducts(prod, byDay, cov, lastDate, covSeg = new Map()) {
     }
   }
   const agg = new Map();
-  for (const [t, c, p, code, name, amt, cust, yp] of incoming) {
+  for (const [t, c, p, code, name, amt, cust, seg, yp] of incoming) {
     let q = -1;
     if (keep.has(`${yp}|${code}`)) {
       q = prodIdx.get(code);
       if (q === undefined) { q = prods.length / 2; prods.push(code, name); prodIdx.set(code, q); stats.newProducts++; }
       else if (name) prods[q * 2 + 1] = name;  // 최신 상품명
     }
-    const k = `${t}|${c}|${p}|${q}`;
-    const o = agg.get(k) || [t, c, p, q, 0, 0];
-    o[4] += amt; o[5] += cust;
+    const k = `${t}|${c}|${p}|${q}|${seg}`;
+    const o = agg.get(k) || [t, c, p, q, seg, 0, 0];
+    o[5] += amt; o[6] += cust;
     agg.set(k, o);
   }
   for (const o of agg.values()) facts.push(o);  // 펼치기(...)는 행이 많으면 호출 스택을 넘는다
@@ -677,13 +683,13 @@ function mergeProducts(prod, byDay, cov, lastDate, covSeg = new Map()) {
   if (!facts.length) return {prod: prod.f.length ? prod : null, stats};
 
   // 다시 인코딩 (날짜 차분)
-  facts.sort((x, y) => x[0] - y[0] || x[1] - y[1] || x[2] - y[2] || x[3] - y[3]);
+  facts.sort((x, y) => x[0] - y[0] || x[1] - y[1] || x[2] - y[2] || x[3] - y[3] || x[4] - y[4]);
   const f = [];
   let prev = 0, maxDay = 0;
-  for (const [t, c, p, q, a, u] of facts) {
+  for (const [t, c, p, q, s, a, u] of facts) {
     if (roundTo(a, 0) === 0 && roundTo(u, 0) === 0) continue;
     const d = Math.round((t - startT) / DAY);
-    f.push(d - prev, c, p, q, roundTo(a, 0), roundTo(u, 0));
+    f.push(d - prev, c, p, q, s, roundTo(a, 0), roundTo(u, 0));
     prev = d;
     maxDay = Math.max(maxDay, d);
   }
@@ -714,7 +720,8 @@ function mergeProducts(prod, byDay, cov, lastDate, covSeg = new Map()) {
     maxDay = Math.max(maxDay, d);
   }
   const out = {
-    meta: {...prod.meta, built: nowText(), topN: null, legacyTopN: prod.meta.topN || prod.meta.legacyTopN || null, covFields: 6, covFields2: 7, covFields3: 6, positiveOnly: true, start: ymd(startT), days: maxDay + 1, lastDate: ymd(startT + maxDay * DAY),
+    meta: {...prod.meta, built: nowText(), topN: null, legacyTopN: prod.meta.topN || prod.meta.legacyTopN || null, factFields: 7, covFields: 6, covFields2: 7, covFields3: 6, positiveOnly: true, start: ymd(startT), days: maxDay + 1, lastDate: ymd(startT + maxDay * DAY),
+           encoding: 'f=[날짜차분, 채널, 경로, 상품(-1=기타), 회원구분(0=미분류 1 2 3), 거래액, 주문고객수] · cov=[날짜차분, 채널(-1=전체), BPU(-1=전체), 거래액, 고객수, 상품UV] · cov2=[날짜차분, 채널, BPU, 상품군, 거래액, 고객수, 상품UV] · cov3=[날짜차분, 회원구분(0=전체 1 2 3), 채널(-1=전체), BPU(-1=전체), 거래액, 고객수]',
            rows: (prod.meta.rows || 0) + stats.rows, products: (prod.meta.products || 0) + stats.newProducts},
     ch: lists.ch, bpu: lists.bpu, cat: lists.cat, brand: lists.brand, grp: lists.grp, paths, prods, f, cov: covOut, cov2: cov2Out, cov3: cov3Out,
   };

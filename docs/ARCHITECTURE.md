@@ -41,7 +41,7 @@ dashboard.html + export.js ── app.py/Streamlit component
 
 주요 시리즈 키는 `기본지표|회원구분|채널` 또는 `기본지표|채널` 형태다. 거래액·고객수만 회원구분을 가진다. 비율 원천은 재집계할 수 있도록 분자(`crn`, `fpn`/`fpnu`)와 분모를 저장한다.
 
-상품 데이터는 사전 배열과 정수 인덱스로 압축한다. `f`는 날짜·채널·경로·상품·거래액·고객수, `cov`와 `cov2`는 커버리지 및 상품UV/CR 계산용 집계다.
+상품 데이터는 사전 배열과 정수 인덱스로 압축한다. 새 형식의 `f`는 날짜·채널·경로·상품·회원구분·거래액·고객수이며 `meta.factFields=7`로 식별한다. 구형 6칸 `f`도 계속 읽는다. `cov`와 `cov2`는 커버리지 및 상품UV/CR 계산용 집계다.
 
 백업 payload는 `format`, `version`, `created`, `source`, `lastDate`, `built`, `data`, `kpi`, `prod`, 선택적으로 `memos`와 사용자가 직접 저장한 `insights`를 가진다.
 
