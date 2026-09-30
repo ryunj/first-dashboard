@@ -1138,6 +1138,11 @@ function syncProdFilterBar() {  // BPU · 카테고리 칩 — 상품 데이터�
   syncFiltSummary();
 }
 const toggle = (list, v) => list.includes(v) ? (list.length > 1 ? list.filter(x => x !== v) : list) : [...list, v];  // 최소 하나는 남긴다
+const toggleSeg = (list, v) => {  // 전체와 개별 회원구분은 동시에 켜지지 않게 — 개별끼리는 복수 선택
+  if (v === 'T') return ['T'];
+  const cur = SEG_KEYS.filter(k => k !== 'T' && list.includes(k));
+  return cur.includes(v) ? (cur.length > 1 ? cur.filter(k => k !== v) : cur) : [...cur, v];
+};
 function catToggle(k) {  // 카테고리 칩 — 전체 = 모두 선택 · 개별은 각각 나눠 표시(최소 1개 유지)
   const all = catOrder();
   if (k < 0) { PD.cats = []; PD.catNone = false; return; }
@@ -1171,7 +1176,7 @@ document.addEventListener('click', e => {
   if (!t) return;
   if (t.dataset.set) S[t.dataset.set] = t.dataset.v;
   else if (t.dataset.chan) S.chans = toggle(S.chans, t.dataset.chan);
-  else if (t.dataset.seg) S.segs = toggle(S.segs, t.dataset.seg);
+  else if (t.dataset.seg) S.segs = toggleSeg(S.segs, t.dataset.seg);
   else if (t.dataset.quick) S.chans = t.dataset.quick === 'total' ? ['*TOTAL'] : CHS.filter(x => x !== '*TOTAL');
   else if (t.dataset.quickseg) S.segs = t.dataset.quickseg === 'total' ? ['T'] : SEG_KEYS.filter(x => x !== 'T');
   render();

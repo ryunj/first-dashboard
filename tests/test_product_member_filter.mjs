@@ -35,19 +35,19 @@ const ai = fs.readFileSync(new URL('ai_question.js', root), 'utf8');
 const data = {
   meta: {built: 'test', sources: ['test'], lastDate: '2026-09-29', channels: ['*TOTAL', '광고']},
   daily: {p: ['2026-09-29'], s: {
-    'amt|T|*TOTAL': [600], 'cust|T|*TOTAL': [6],
-    'amt|1|*TOTAL': [100], 'cust|1|*TOTAL': [1],
+    'amt|T|*TOTAL': [1050], 'cust|T|*TOTAL': [11],
+    'amt|1|*TOTAL': [150], 'cust|1|*TOTAL': [2],
     'amt|2|*TOTAL': [200], 'cust|2|*TOTAL': [2],
-    'amt|3|*TOTAL': [300], 'cust|3|*TOTAL': [3],
+    'amt|3|*TOTAL': [700], 'cust|3|*TOTAL': [7],
   }},
   weekly: {p: [], s: {}},
 };
 const prod = {
-  meta: {built: 'test', start: '2026-09-29', days: 1, lastDate: '2026-09-29', rows: 3, products: 3,
+  meta: {built: 'test', start: '2026-09-29', days: 1, lastDate: '2026-09-29', rows: 5, products: 5,
     topN: null, factFields: 7, covFields: 6, covFields2: 7, covFields3: 6, positiveOnly: true},
-  ch: ['광고'], bpu: ['e-영업1'], cat: ['가방'], brand: ['브랜드'], grp: [], paths: [0, 0, 0],
-  prods: ['P1', '상품1', 'P2', '상품2', 'P3', '상품3'],
-  f: [0, 0, 0, 0, 1, 100, 1, 0, 0, 0, 1, 2, 200, 2, 0, 0, 0, 2, 3, 300, 3], cov: [], cov2: [], cov3: [],
+  ch: ['광고'], bpu: ['e-영업1'], cat: ['가방', '슈즈'], brand: ['브랜드'], grp: [], paths: [0, 0, 0, 0, 1, 0],
+  prods: ['P1', '상품1', 'P2', '상품2', 'P3', '상품3', 'P4', '상품4', 'P5', '상품5'],
+  f: [0, 0, 0, 0, 1, 100, 1, 0, 0, 0, 1, 2, 200, 2, 0, 0, 0, 2, 3, 300, 3, 0, 0, 1, 3, 3, 400, 4, 0, 0, 1, 4, 1, 50, 1], cov: [], cov2: [], cov3: [],
 };
 const marker = /<script>\r?\nwindow\.__dashMain = function \(\) \{/;
 const inject = `<script>window.DASH_EMBED='test';window.DASH_DATA=${JSON.stringify(data)};window.DASH_KPI=null;window.DASH_PROD=${JSON.stringify(prod)};</script><script>${ai}</script>`;
@@ -76,11 +76,35 @@ const values = await page.evaluate(() => {
 });
 
 assert.deepEqual(values, {
-  all: {section: 600, query: 600},
-  month: {section: 100, query: 100},
+  all: {section: 1050, query: 1050},
+  month: {section: 150, query: 150},
   prior: {section: 200, query: 200},
-  existing: {section: 300, query: 300},
+  existing: {section: 700, query: 700},
 });
+
+const clicked = await page.evaluate(() => {
+  const dash = window.__dash;
+  dash.state.segs = ['T'];
+  dash.prodState.cats = [];
+  dash.prodState.catNone = false;
+  dash.prodState.catOpen = false;
+  dash.render();
+  document.querySelector('[data-seg="1"]').click();
+  document.querySelector('[data-pcatopen]').click();
+  document.querySelector('[data-pcat="0"]').click();
+  return {
+    segments: dash.selSegs(),
+    categories: dash.prodState.cats.slice(),
+    section: dash.prodView().totalRow.a,
+    top: dash.MODEL.amt.map(row => ({label: row.label, value: row.vals.at(-1).c})),
+  };
+});
+assert.deepEqual(clicked, {
+  segments: ['1'],
+  categories: [0],
+  section: 100,
+  top: [{label: '전체 · 가방 · 당월신규', value: 100}],
+}, 'choosing a member segment must replace 전체 and intersect with the category filter');
 assert.equal(errors.length, 0, `page errors: ${errors.join(' | ')}`);
 await browser.close();
 console.log('OK: product parser and product section follow the selected member segment');
