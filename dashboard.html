@@ -401,17 +401,17 @@ details.notes li{margin:3px 0}
 .memo-t ul,.memo-in ul{margin:4px 0;padding-left:18px}
 .memo-t mark,.memo-in mark{background:#fff3a3;color:inherit}
 /* 상품 구성 카테고리 — 체크박스 태그 */
-#pdCatChips,#bpuChips{gap:5px}
-#pdCatChips .chip,#bpuChips .chip{gap:6px;padding:3px 10px 3px 7px;font-size:12px;font-weight:500;color:var(--muted);background:var(--surface);border:1px solid var(--grid);border-radius:7px;transition:background .12s,border-color .12s,color .12s}
-#pdCatChips .chip::before,#bpuChips .chip::before{content:"";flex:none;width:13px;height:13px;border-radius:4px;border:1.5px solid var(--axis);background:var(--surface);box-sizing:border-box}
-#pdCatChips .chip[aria-pressed="true"],#bpuChips .chip[aria-pressed="true"]{color:var(--ink);font-weight:500;background:color-mix(in srgb,var(--c1) 8%,var(--surface));border-color:color-mix(in srgb,var(--c1) 34%,var(--grid))}
-#pdCatChips .chip[aria-pressed="true"]::before,#bpuChips .chip[aria-pressed="true"]::before{border-color:var(--c1);background:var(--c1) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.2 5 8.6 9.6 3.6' fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/11px no-repeat}
-#pdCatChips .chip.all,#bpuChips .chip.all{font-weight:650;color:var(--ink)}
-#pdCatChips .chip.all.part::before,#bpuChips .chip.all.part::before{border-color:var(--c1);background:var(--c1) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 6h6' fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E") center/11px no-repeat}
-#pdCatChips .chip:hover,#bpuChips .chip:hover{border-color:var(--axis);color:var(--ink)}
+#pdGrpChips,#pdCatChips,#bpuChips{gap:5px}
+#pdGrpChips .chip,#pdCatChips .chip,#bpuChips .chip{gap:6px;padding:3px 10px 3px 7px;font-size:12px;font-weight:500;color:var(--muted);background:var(--surface);border:1px solid var(--grid);border-radius:7px;transition:background .12s,border-color .12s,color .12s}
+#pdGrpChips .chip::before,#pdCatChips .chip::before,#bpuChips .chip::before{content:"";flex:none;width:13px;height:13px;border-radius:4px;border:1.5px solid var(--axis);background:var(--surface);box-sizing:border-box}
+#pdGrpChips .chip[aria-pressed="true"],#pdCatChips .chip[aria-pressed="true"],#bpuChips .chip[aria-pressed="true"]{color:var(--ink);font-weight:500;background:color-mix(in srgb,var(--c1) 8%,var(--surface));border-color:color-mix(in srgb,var(--c1) 34%,var(--grid))}
+#pdGrpChips .chip[aria-pressed="true"]::before,#pdCatChips .chip[aria-pressed="true"]::before,#bpuChips .chip[aria-pressed="true"]::before{border-color:var(--c1);background:var(--c1) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.2 5 8.6 9.6 3.6' fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/11px no-repeat}
+#pdGrpChips .chip.all,#pdCatChips .chip.all,#bpuChips .chip.all{font-weight:650;color:var(--ink)}
+#pdGrpChips .chip.all.part::before,#pdCatChips .chip.all.part::before,#bpuChips .chip.all.part::before{border-color:var(--c1);background:var(--c1) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 6h6' fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E") center/11px no-repeat}
+#pdGrpChips .chip:hover,#pdCatChips .chip:hover,#bpuChips .chip:hover{border-color:var(--axis);color:var(--ink)}
 .pd-cat-n{font-size:11.5px;font-weight:600;color:var(--ink-2);white-space:nowrap;font-variant-numeric:tabular-nums}
-#pdCatBar{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 10px;align-items:start}
-#pdCatBar .flabel{padding-top:4px}
+#pdGrpBar,#pdCatBar{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 10px;align-items:start}
+#pdGrpBar .flabel,#pdCatBar .flabel{padding-top:4px}
 .pd-cat-meta{grid-column:2;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
 /* 메모 — 인사이트 박스 안의 문서형 목록(포스트잇 아님) */
 .memo-h{display:flex;align-items:center;flex-wrap:wrap;justify-content:flex-end;gap:8px;margin:10px 0}
@@ -542,10 +542,15 @@ body.pdfcap .pgrid{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr)!important
       <div class="chips" id="bpuChips" role="group" aria-label="BPU 선택 (여러 개 선택 가능)"></div>
       <span class="hint" id="bpuHint">고르면 거래액·고객수·객단가가 상품 기준으로 바뀜</span>
     </div>
-    <div class="bar2" id="pdCatBar" hidden>
+    <div class="bar2" id="pdGrpBar" hidden>
       <span class="flabel">상품군</span>
-      <div class="chips" id="pdCatChips" role="group" aria-label="상품관점 상품군 선택 (여러 개 선택 가능)"></div>
-      <div class="pd-cat-meta"><span class="pd-cat-n" id="pdCatN"></span><span class="hint">상품관점 기본 분류 · 복수 선택 시 상품군별로 각각 표시 · 하단 조직 카테고리 상세와는 별도</span></div>
+      <div class="chips" id="pdGrpChips" role="group" aria-label="상품관점 상품군 선택 (여러 개 선택 가능)"></div>
+      <div class="pd-cat-meta"><span class="pd-cat-n" id="pdGrpN"></span><span class="hint">상품관점 기본 분류 · 복수 선택 시 상품군별로 각각 표시</span></div>
+    </div>
+    <div class="bar2" id="pdCatBar" hidden>
+      <span class="flabel">조직 카테고리</span>
+      <div class="chips" id="pdCatChips" role="group" aria-label="상품 상세 조직 카테고리 선택 (여러 개 선택 가능)"></div>
+      <div class="pd-cat-meta"><span class="pd-cat-n" id="pdCatN"></span><span class="hint">하단 상품 구성 상세에 적용 · 상단 상품관점 상품군과 다른 분류</span></div>
     </div>
     </div>
   </div>
@@ -746,7 +751,7 @@ const wAmt = WEEKLY.s['amt|T|*TOTAL'] || [];
 const wCover = WEEKLY.p.filter((p, i) => wAmt[i] != null);
 const FIRST = [DAILY.dates[0], ...wCover.map(p => p.start)].filter(Boolean).sort()[0];
 const LAST = [DAILY.dates.at(-1), ...wCover.map(p => addDays(p.start, p.d - 1))].filter(Boolean).sort().at(-1);
-const YEARS = [...new Set([...DAILY.dates.map(d => +d.slice(0, 4)), ...wCover.map(p => p.y)])].sort((a, b) => b - a);
+const YEARS = [...new Set([...DAILY.dates.map(d => +d.slice(0, 4)), ...WEEKLY.p.map(p => p.y)])].sort((a, b) => b - a);
 
 // 전체관점 첫구매 원천이 시작되기 전(2024년 이전)은 신규회원대시보드 '총)첫구매 (전체)'로 대신한다 — 회원구분 '전체'만
 const AMT_FIRST = (() => { const a = DAILY.s['amt|T|*TOTAL']; if (a) for (let i = 0; i < a.length; i++) if (a[i] != null) return DAILY.dates[i]; return '9999'; })();
@@ -907,9 +912,10 @@ const save = () => {
     if (PD.view !== 'bpu') h.set('pv', PD.view);
     if (PD.path.length) h.set('pd', PD.path.join(','));
     if (PD.grps.length) h.set('pgrp', PD.grps.join(','));
+    if (PD.cats.length) h.set('pcat', PD.cats.join(','));
     if (PD.bpus.length) h.set('pbpu', PD.bpus.join(','));
     if (!PD.bpuAll) h.set('pball', '0');
-  } else for (const k of ['pv', 'pd', 'pgrp', 'pbpu', 'pball']) if (PD_HASH.get(k)) h.set(k, PD_HASH.get(k));  // 상품 데이터를 불러오기 전에는 받은 값을 유지
+  } else for (const k of ['pv', 'pd', 'pgrp', 'pcat', 'pbpu', 'pball']) if (PD_HASH.get(k)) h.set(k, PD_HASH.get(k));  // 상품 데이터를 불러오기 전에는 받은 값을 유지
   try { history.replaceState(null, '', '#' + h); } catch (e) { /* iframe(srcdoc) 처럼 주소를 바꿀 수 없는 곳 */ }
 };
 // 지표별 계열: 채널 × (회원구분 적용 지표면 선택 구분, 아니면 전체)
@@ -1106,6 +1112,7 @@ function syncFiltSummary() {  // 접힌 버튼에 지금 고른 조건 요약 ·
     const bs = [...(PD.bpuAll ? ['전체'] : []), ...selBpus().map(k => PRD.bpu[k])];
     parts.push(`BPU ${bs.join('·')}`); if (PD.bpus.length) changed.push(1);
     parts.push(`상품군 ${grpFiltOn() ? grpTxt() : '전체'}`); if (grpFiltOn()) changed.push(1);
+    parts.push(`조직 카테고리 ${PD.cats.length ? catTxt() : '전체'}`); if (PD.cats.length) changed.push(1);
   }
   $('#filtSum').textContent = parts.join(' · ');
   $('#btnFilt').title = parts.join('\n');
@@ -1115,11 +1122,11 @@ function syncFiltSummary() {  // 접힌 버튼에 지금 고른 조건 요약 ·
   $('#btnFilt').setAttribute('aria-expanded', String(FILT_OPEN));
 }
 $('#btnFilt').addEventListener('click', () => { FILT_OPEN = !FILT_OPEN; syncFiltSummary(); queueFloat(); });
-function syncProdFilterBar() {  // BPU · 상품군 칩 — 상품 데이터가 있을 때만 보인다
+function syncProdFilterBar() {  // BPU · 상품군 · 조직 카테고리 칩 — 상품 데이터가 있을 때만 보인다
   const on = !!PRD;
-  if (on) { PD.catNone = false; PD.cats = []; }  // 상단의 예전 조직 카테고리 선택은 상품관점 상품군으로 승계하지 않는다
   const filt = prodFiltOn();
   $('#bpuBar').hidden = !on;
+  $('#pdGrpBar').hidden = !on;
   $('#pdCatBar').hidden = !on;
   if (!on) syncFiltSummary();
   const segOff = filt && !cubeOn() && !prodMemberReady();
@@ -1137,9 +1144,15 @@ function syncProdFilterBar() {  // BPU · 상품군 칩 — 상품 데이터가 
     : cubeOn() ? `상품관점 기준 — ${prodFiltTxt()} · 거래액·고객수·객단가에 적용 (회원구분 × 채널 × BPU × 상품군)`
     : `이 백업에는 상품군 공식 실적이 없습니다 — 최신 원천으로 새 백업을 만든 뒤 선택할 수 있습니다`;
   const grps = grpOrder(), grpAll = !PD.grps.length, grpOn = k => grpAll || PD.grps.includes(k);
-  $('#pdCatChips').innerHTML = `<button type="button" class="chip all${grpAll ? '' : ' part'}" data-pgrp="-1" aria-pressed="${grpAll}" title="모든 상품군 합계">전체</button>`
+  $('#pdGrpChips').innerHTML = `<button type="button" class="chip all${grpAll ? '' : ' part'}" data-pgrp="-1" aria-pressed="${grpAll}" title="모든 상품군 합계">전체</button>`
     + grps.map(k => `<button type="button" class="chip" data-pgrp="${k}" aria-pressed="${grpOn(k)}"${PC4 && PC4.has ? '' : ' disabled'}>${esc(PRD.grp[k])}</button>`).join('');
-  $('#pdCatN').textContent = `${grpAll ? grps.length : PD.grps.length}/${grps.length}개 선택${PC4 && PC4.has ? '' : ' · 최신 백업 필요'}`;
+  $('#pdGrpN').textContent = `${grpAll ? grps.length : PD.grps.length}/${grps.length}개 선택${PC4 && PC4.has ? '' : ' · 최신 백업 필요'}`;
+  const cats = catOrder(), catAll = !PD.cats.length, catOn = k => catAll || PD.cats.includes(k);
+  const catList = PD.catOpen ? cats : PD.cats.slice();
+  $('#pdCatChips').innerHTML = `<button type="button" class="chip all${catAll ? '' : ' part'}" data-pcat="-1" aria-pressed="${catAll}" title="모든 조직 카테고리">전체</button>`
+    + catList.map(k => `<button type="button" class="chip" data-pcat="${k}" aria-pressed="${catOn(k)}">${esc(PRD.cat[k])}</button>`).join('')
+    + `<button type="button" class="chip more" data-pcatopen="1" aria-expanded="${PD.catOpen}">${PD.catOpen ? '접기' : `카테고리 고르기 (${cats.length}개)`}</button>`;
+  $('#pdCatN').textContent = `${catAll ? cats.length : PD.cats.length}/${cats.length}개 선택`;
   syncFiltSummary();
 }
 const toggle = (list, v) => list.includes(v) ? (list.length > 1 ? list.filter(x => x !== v) : list) : [...list, v];  // 최소 하나는 남긴다
@@ -1156,10 +1169,19 @@ function grpToggle(k) {  // 상품군 — 전체는 합계 한 줄, 개별 복�
   if (!next.length) return;
   PD.grps = all.every(x => next.includes(x)) ? [] : next.sort((a, b) => a - b);
 }
-$('header.top').addEventListener('click', e => {  // BPU · 상품군 필터 — 화면 전체에 적용
+function catToggle(k) {  // 조직 카테고리 — 하단 상품 구성 상세에만 적용
+  const all = catOrder();
+  if (k < 0) { PD.cats = []; PD.catNone = false; return; }
+  const cur = PD.cats.length ? PD.cats.slice() : [], next = !cur.length ? [k] : cur.includes(k) ? cur.filter(x => x !== k) : [...cur, k];
+  if (!next.length) return;
+  PD.cats = all.every(x => next.includes(x)) ? [] : next.sort((a, b) => a - b);
+  PD.catNone = false;
+}
+$('header.top').addEventListener('click', e => {  // BPU · 상품군 · 조직 카테고리 필터
   if (!PRD) return;
-  const bp = e.target.closest('[data-pbpu]'), bq = e.target.closest('[data-pbpuq]'), gp = e.target.closest('[data-pgrp]');
-  if (!bp && !bq && !gp) return;
+  const bp = e.target.closest('[data-pbpu]'), bq = e.target.closest('[data-pbpuq]'), gp = e.target.closest('[data-pgrp]'), ct = e.target.closest('[data-pcat]');
+  if (e.target.closest('[data-pcatopen]')) { PD.catOpen = !PD.catOpen; syncProdFilterBar(); save(); return; }
+  if (!bp && !bq && !gp && !ct) return;
   if (bq) {  // 전체만 = 합계 한 줄 · BPU 모두 = BPU 마다 한 줄(전체 줄 없이)
     if (bq.dataset.pbpuq === 'all') { PD.bpus = []; PD.bpuAll = true; } else { PD.bpus = bpuOrder().slice().sort((a, b) => a - b); PD.bpuAll = false; }
   } else if (bp) {  // 채널 칩과 같다 — 전체 · 개별을 따로 켜고 끄며, 최소 하나는 남긴다
@@ -1169,7 +1191,8 @@ $('header.top').addEventListener('click', e => {  // BPU · 상품군 필터 —
       PD.bpus = PD.bpus.includes(k) ? PD.bpus.filter(x => x !== k) : [...PD.bpus, k].sort((a, b) => a - b);
       if (!PD.bpus.length) PD.bpuAll = true;
     }
-  } else grpToggle(+gp.dataset.pgrp);
+  } else if (gp) grpToggle(+gp.dataset.pgrp);
+  else catToggle(+ct.dataset.pcat);
   PD.sel = null;
   render();
 });
@@ -1575,8 +1598,13 @@ function computeKpi() {
 }
 function renderKpi() {
   const K = computeKpi();
-  $('#kpiSec').hidden = !K;
-  if (!K) return;
+  $('#kpiSec').hidden = false;
+  if (!K) {
+    $('#kpiTitle').textContent = 'KPI 목표';
+    $('#kpiDesc').textContent = '이 테스트 데이터에는 KPI 목표 파일이 없습니다';
+    $('#kpis').innerHTML = '<div class="card nodata">kpi.js 또는 KPI가 포함된 백업을 불러오면 목표 · 달성률이 표시됩니다.</div>';
+    return;
+  }
   const NAME = {amt: '첫구매 거래액', cust: '첫구매 고객수', tr: '비회원 트래픽', sg: '가입자수'};
   const UNIT = {amt: '백만원', cust: '명', tr: '', sg: '명'};
   const num = (m, v) => {
@@ -1653,6 +1681,8 @@ function applyProdHash() {  // 주소 해시 pv=보기 · pd=드릴 위치 인�
   if (pch.length && pch.every(k => Number.isInteger(k) && k >= 0 && k < PRD.ch.length)) PD.chans = [...new Set(pch)].sort((a, b) => a - b);
   const pgrp = (h.get('pgrp') || '').split(',').filter(Boolean).map(Number);
   if (pgrp.length && pgrp.every(k => Number.isInteger(k) && k >= 0 && k < (PRD.grp || []).length)) PD.grps = [...new Set(pgrp)].sort((a, b) => a - b);
+  const pcat = (h.get('pcat') || '').split(',').filter(Boolean).map(Number);
+  if (pcat.length && pcat.every(k => Number.isInteger(k) && k >= 0 && k < PRD.cat.length)) PD.cats = [...new Set(pcat)].sort((a, b) => a - b);
   const pbpu = (h.get('pbpu') || '').split(',').filter(Boolean).map(Number);
   if (pbpu.length && pbpu.every(k => Number.isInteger(k) && k >= 0 && k < PRD.bpu.length)) PD.bpus = [...new Set(pbpu)].sort((a, b) => a - b);
   PD.bpuAll = !(h.get('pball') === '0' && PD.bpus.length);  // 개별 BPU 가 하나도 없으면 전체는 늘 켜 둔다
@@ -2111,6 +2141,7 @@ function renderProd() {
   const chDesc = PD.chans.length ? PD.chans.map(k => PRD.ch[k]).join('·') : '전 채널 합산';
   $('#pdDesc').textContent = (PD.view === 'bpu' ? 'BPU → 카테고리 → 브랜드 → 상품' : '채널 → BPU → 카테고리 → 브랜드 → 상품')
     + ` · ${chDesc} · 회원구분 ${selSegs().map(segLabel).join('·')}` + (prodFiltTxt() ? ` · ${prodFiltTxt()}` : '')
+    + (PD.cats.length ? ` · 조직 카테고리 ${catTxt()}` : '')
     + (prodMemberReady() ? ' · 상단 필터를 따름' : ' · 상품 회원구분 미지원 백업');
   const legacyTop = PRD.meta.topN || PRD.meta.legacyTopN;  // 예전 형식 백업 안내 — 기타 상품 묶음 · 상품UV 없음
   $('#pdOld').hidden = !legacyTop && PC.hasUv && prodMemberReady();

@@ -40,7 +40,10 @@ const data = {
     'amt|2|*TOTAL': [999], 'cust|2|*TOTAL': [9],
     'amt|3|*TOTAL': [999], 'cust|3|*TOTAL': [9],
   }},
-  weekly: {p: [], s: {}},
+  weekly: {p: [
+    {y: 2024, w: 1, m: 1, n: 1, start: '2024-01-01', d: 7},
+    {y: 2025, w: 1, m: 1, n: 1, start: '2024-12-30', d: 7},
+  ], s: {'tr|*TOTAL': [700, 800]}},
 };
 const prod = {
   meta: {built: 'test', start: '2026-09-29', days: 1, lastDate: '2026-09-29', rows: 5, products: 5,
@@ -92,19 +95,27 @@ const clicked = await page.evaluate(() => {
   dash.render();
   document.querySelector('[data-seg="1"]').click();
   document.querySelector('[data-pgrp="0"]').click();
+  document.querySelector('[data-pcatopen]').click();
+  document.querySelector('[data-pcat="0"]').click();
   return {
     segments: dash.selSegs(),
     productGroups: dash.prodState.grps.slice(),
+    categories: dash.prodState.cats.slice(),
     section: dash.prodView().totalRow.a,
     top: dash.MODEL.amt.map(row => ({label: row.label, value: row.vals.at(-1).c})),
+    compareYears: Array.from(document.querySelector('#selCmpY').options, o => o.textContent),
+    compareDisabled: document.querySelector('#selCmpY').disabled,
   };
 });
 assert.deepEqual(clicked, {
   segments: ['1'],
   productGroups: [0],
-  section: 150,
+  categories: [0],
+  section: 100,
   top: [{label: '전체 · 여성의류 · 당월신규', value: 100}],
-}, 'member and product-group filters must intersect in the headline source without changing the lower organization detail');
+  compareYears: ['전년 (2025)', '2024년'],
+  compareDisabled: false,
+}, 'member and product-group filters must intersect in the headline source, organization categories must filter the lower detail, and 2024 must remain selectable');
 assert.equal(errors.length, 0, `page errors: ${errors.join(' | ')}`);
 await browser.close();
 console.log('OK: product parser and product section follow the selected member segment');
