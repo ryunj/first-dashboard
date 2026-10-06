@@ -1,5 +1,6 @@
 import unittest
 import sys
+import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -34,6 +35,39 @@ class ProductMemberParserTest(unittest.TestCase):
         parsed = build_data._product_rows(header, rows, 'legacy.csv')
 
         self.assertEqual(parsed[0][9], 0)
+
+    def test_product_view_daily_rows_keep_member_bpu_and_product_group(self):
+        rows = [
+            ['지표', '회원구분', '채널', 'BPU', '상품군', '2026'],
+            ['', '', '', '', '', '9/29'],
+            ['일평균거래액', '*TOTAL', '*TOTAL', '*TOTAL', '*TOTAL', '1000'],
+            ['일평균거래액', '3_기존', '*TOTAL', '*TOTAL', '*TOTAL', '100'],
+            ['일평균거래액', '1_당월신규', '광고', 'e-영업1', '여성', '8934746'],
+            ['일평균고객수', '1_당월신규', '광고', 'e-영업1', '여성', '48'],
+        ]
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / '상품관점 - 일자별 실적(기본).csv'
+            path.write_text('\n'.join(','.join(row) for row in rows), encoding='utf-8-sig')
+            daily, weekly = {}, {}
+
+            build_data.read_product_csv(path, source_daily=daily, source_weekly=weekly)
+
+        self.assertEqual(daily[('2026-09-29', '1_당월신규', '광고', 'e-영업1', '여성')], [8934746.0, 48.0])
+        self.assertEqual(weekly, {})
+
+    def test_weekly_product_view_fills_missing_dates_but_daily_wins(self):
+        weekly = {
+            (2026, 10, 1, '1_당월신규', '광고', 'e-영업1', '여성'): [700.0, 7.0],
+        }
+        daily = {
+            ('2026-09-29', '1_당월신규', '광고', 'e-영업1', '여성'): [900.0, 9.0],
+        }
+
+        result = build_data._expand_product_source(daily, weekly, '2026-09-29')
+
+        self.assertEqual(result[('2026-09-28', '1_당월신규', '광고', 'e-영업1', '여성')], [700.0, 7.0])
+        self.assertEqual(result[('2026-09-29', '1_당월신규', '광고', 'e-영업1', '여성')], [900.0, 9.0])
+        self.assertNotIn(('2026-09-30', '1_당월신규', '광고', 'e-영업1', '여성'), result)
 
 
 if __name__ == '__main__':

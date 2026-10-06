@@ -170,7 +170,7 @@ function sheetTable(d) {
   const sh = sheet('실적 표');
   let r = head(sh, `${GRAIN[S.grain]} 실적 (${d.modeName()})`, [context(d)]);
   const top = r;
-  const third = S.cmp === 'pop' ? `${d.baseShort()} (직전 기간)` : `${y - 1} 동기간`;
+  const third = S.cmp === 'pop' ? `${d.baseShort()} (직전 기간)` : `${y - (S.cmpY || 1)} 동기간`;
   put(sh, r, 0, {v: '구분', s: 'headL'});
   put(sh, r + 1, 0, {v: '', s: 'headL'});
   sh.merges.push(`${ref(r, 0)}:${ref(r + 1, 0)}`);
@@ -206,7 +206,8 @@ function sheetProd(d) {
   if (!E) return null;
   const sh = sheet('상품 구성');
   let r = head(sh, '상품 구성 · 첫구매', [context(d), `${E.tip} · ${E.viewName} · ${E.filters} · 경로 ${E.crumb || '전체'} · ${E.level} 단계 · 표시 ${E.avg ? '일평균' : '합계'}`]);
-  const H = [E.level, ...(E.hasCode ? ['상품코드'] : []), '거래액(백만원)', E.baseName, E.cLbl, '주문고객수', E.baseName, E.cLbl,
+  const weekCols = E.weekCompare ? ['전주', '전주비'] : [];
+  const H = [E.level, ...(E.hasCode ? ['상품코드'] : []), '거래액(백만원)', E.baseName, E.cLbl, ...weekCols, '주문고객수', E.baseName, E.cLbl, ...weekCols,
     ...(E.uvOn ? ['상품UV', `상품UV ${E.cLbl}`, '상품CR', `상품CR ${E.cLbl}`] : []), `구성비(${E.basis})`, '주 채널'];
   const top = r;
   H.forEach((h, c) => put(sh, r, c, {v: h, s: c ? 'head' : 'headL'}));
@@ -219,9 +220,17 @@ function sheetProd(d) {
     put(sh, r, c++, okNum(x.a) ? {v: x.a / 1e6, s: 'dec1' + B} : {v: '–', s: 'flat'});
     put(sh, r, c++, okNum(x.pa) ? {v: x.pa / 1e6, s: 'dec1P'} : {v: '–', s: 'flat'});
     put(sh, r, c++, delta(x.da));
+    if (E.weekCompare) {
+      put(sh, r, c++, okNum(x.wa) ? {v: x.wa / 1e6, s: 'dec1P'} : {v: '–', s: 'flat'});
+      put(sh, r, c++, delta(x.wda));
+    }
     put(sh, r, c++, okNum(x.u) ? {v: x.u, s: 'int' + B} : {v: '–', s: 'flat'});
     put(sh, r, c++, okNum(x.pu) ? {v: x.pu, s: 'intP'} : {v: '–', s: 'flat'});
     put(sh, r, c++, delta(x.du));
+    if (E.weekCompare) {
+      put(sh, r, c++, okNum(x.wu) ? {v: x.wu, s: 'intP'} : {v: '–', s: 'flat'});
+      put(sh, r, c++, delta(x.wdu));
+    }
     if (E.uvOn) {
       put(sh, r, c++, okNum(x.uv) ? {v: x.uv, s: 'int' + B} : {v: '–', s: 'flat'});
       put(sh, r, c++, delta(x.duv));
@@ -343,6 +352,7 @@ function sheetKpi(d) {
 }
 
 const BUILD = {sum: sheetSum, table: sheetTable, prod: sheetProd, app: sheetApp, kpi: sheetKpi};
+const build = (part, dash = window.__dash) => BUILD[part] ? BUILD[part](dash) : null;
 function xlsx(parts) {
   const d = window.__dash;
   if (!d) throw new Error('대시보드가 아직 열리지 않았습니다');
@@ -352,5 +362,5 @@ function xlsx(parts) {
   const blob = workbook(sheets);
   return {blob, name: `첫구매실적_${GRAIN[d.state.grain]}_${String(d.dataMeta.lastDate || '').replace(/-/g, '')}_${stamp}.xlsx`, sheets: sheets.map(s => s.name)};
 }
-window.FP_EXPORT = {xlsx, zip, crc32, version: 1};
+window.FP_EXPORT = {xlsx, zip, crc32, build, version: 2};
 })();
