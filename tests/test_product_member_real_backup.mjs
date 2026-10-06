@@ -10,13 +10,14 @@ if (!backupPath) {
 }
 const backup = JSON.parse(zlib.gunzipSync(fs.readFileSync(backupPath)));
 assert.equal(backup.prod.meta.factFields, 7);
-const lastDay = backup.prod.meta.days - 1, expected = {T: {a: 0, u: 0}, 1: {a: 0, u: 0}, 2: {a: 0, u: 0}, 3: {a: 0, u: 0}};
+const lastDay = backup.prod.meta.days - 1, expected = {T: {a: 0, u: 0}, 0: {a: 0, u: 0}, 1: {a: 0, u: 0}, 2: {a: 0, u: 0}, 3: {a: 0, u: 0}};
 let day = 0;
 for (let i = 0; i < backup.prod.f.length; i += 7) {
   day += backup.prod.f[i];
   if (day !== lastDay) continue;
   const seg = backup.prod.f[i + 4], a = backup.prod.f[i + 5], u = backup.prod.f[i + 6];
-  expected[seg].a += a; expected[seg].u += u; expected.T.a += a; expected.T.u += u;
+  if (expected[seg]) { expected[seg].a += a; expected[seg].u += u; }
+  expected.T.a += a; expected.T.u += u;
 }
 
 const require = createRequire(import.meta.url);
@@ -44,8 +45,8 @@ for (const seg of ['T', '1', '2', '3']) {
   assert.equal(actual[seg].a, expected[seg].a, `${seg} product amount must match encoded facts`);
   assert.equal(actual[seg].u, expected[seg].u, `${seg} product customer sum must match encoded facts`);
 }
-assert.equal(actual[1].a + actual[2].a + actual[3].a, actual.T.a);
-assert.equal(actual[1].u + actual[2].u + actual[3].u, actual.T.u);
+assert.equal(actual[1].a + actual[2].a + actual[3].a + expected[0].a, actual.T.a);
+assert.equal(actual[1].u + actual[2].u + actual[3].u + expected[0].u, actual.T.u);
 assert.equal(errors.length, 0, `page errors: ${errors.join(' | ')}`);
 await browser.close();
 console.log(`OK: ${backup.prod.meta.lastDate} product totals follow T/1/2/3 member filters and reconcile`);

@@ -1741,9 +1741,10 @@ function prodInit() {
   }
   // 상품관점 공식 실적: 회원구분 × 채널 × BPU × 상품군. 일별 우선, 과거 공백은 주별 일평균으로 보완된 값이다.
   const cv4 = PRD.cov4 || [], cf4 = PRD.meta.covFields4 || 0, m4 = cf4 ? Math.floor(cv4.length / cf4) : 0;
-  PC4 = {n: m4, has: m4 > 0, d: new Uint16Array(m4), s: new Int8Array(m4), c: new Int16Array(m4), b: new Int16Array(m4), g: new Int16Array(m4), a: new Float64Array(m4), u: new Float64Array(m4)};
+  PC4 = {n: m4, has: m4 > 0, d: new Uint16Array(m4), s: new Int8Array(m4), c: new Int16Array(m4), b: new Int16Array(m4), g: new Int16Array(m4), a: new Float64Array(m4), u: new Float64Array(m4), cover: Array.from({length: 4}, () => new Uint8Array(PRD.meta.days))};
   for (let i = 0, j = 0, day = 0; i < m4; i++, j += cf4) {
     day += cv4[j]; PC4.d[i] = day; PC4.s[i] = cv4[j + 1]; PC4.c[i] = cv4[j + 2]; PC4.b[i] = cv4[j + 3]; PC4.g[i] = cv4[j + 4]; PC4.a[i] = cv4[j + 5]; PC4.u[i] = cv4[j + 6];
+    if (PC4.c[i] === -1 && PC4.b[i] === -1 && PC4.g[i] === -1 && day < PRD.meta.days && PC4.cover[PC4.s[i]]) PC4.cover[PC4.s[i]][day] = 1;
   }
 }
 function pGrp(mask, chSel, b) {  // 상품관점 상품군별 합 — chSel: 채널 목록 | -1(전체 채널 행), b: BPU | -1(= BPU 전체 합)
@@ -1822,8 +1823,11 @@ function pCubeSum(base, row, dates) {  // 상품관점 회원구분 × 채널 ×
   return {v, n, est: false};
 }
 function pSourceSum(base, row, dates) {  // 상품관점 회원구분 × 채널 × BPU × 상품군
-  const bs = row.bpu != null ? [row.bpu] : (PD.bpuAll || !PD.bpus.length ? [-1] : PD.bpus.slice());
   const gs = row.grp != null ? [row.grp] : (PD.grps.length ? PD.grps.slice() : [-1]);
+  const grouped = !gs.includes(-1);  // 원천은 BPU 전체 × 개별 상품군 행이 없으므로 상품군 선택 때는 BPU별 행을 합산한다
+  const bs = row.bpu != null ? (row.bpu < 0 && grouped ? bpuOrder() : [row.bpu])
+    : grouped ? (PD.bpuAll || !PD.bpus.length ? bpuOrder() : PD.bpus.slice())
+      : (PD.bpuAll || !PD.bpus.length ? [-1] : PD.bpus.slice());
   const s = SEG_IDX[row.seg] ?? 0, c = row.ch === '*TOTAL' ? -1 : PRD.ch.indexOf(row.ch);
   const key = `v4|${PRD.meta.built}|${s}|${c}|${bs.join(',')}|${gs.join(',')}`;
   let arr = CUBE.get(key);
@@ -1837,7 +1841,7 @@ function pSourceSum(base, row, dates) {  // 상품관점 회원구분 × 채널 
   }
   const src = base === 'amt' ? arr.a : arr.u;
   let v = 0, n = 0;
-  for (const d of dates) { const i = pDay(d); if (i >= 0 && i < PRD.meta.days && arr.day[i]) { v += src[i]; n++; } }
+  for (const d of dates) { const i = pDay(d); if (i >= 0 && i < PRD.meta.days && ((PC4.cover[s] && PC4.cover[s][i]) || arr.day[i])) { v += src[i]; n++; } }
   return {v, n, est: false};
 }
 const pOfficialSum = (base, row, dates) => PC4 && PC4.has ? pSourceSum(base, row, dates) : pCubeSum(base, row, dates);

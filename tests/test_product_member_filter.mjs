@@ -34,11 +34,11 @@ let html = fs.readFileSync(new URL('dashboard.html', root), 'utf8');
 const ai = fs.readFileSync(new URL('ai_question.js', root), 'utf8');
 const data = {
   meta: {built: 'test', sources: ['test'], lastDate: '2026-09-29', channels: ['*TOTAL', '광고']},
-  daily: {p: ['2026-09-29'], s: {
-    'amt|T|*TOTAL': [9999], 'cust|T|*TOTAL': [99],
-    'amt|1|*TOTAL': [999], 'cust|1|*TOTAL': [9],
-    'amt|2|*TOTAL': [999], 'cust|2|*TOTAL': [9],
-    'amt|3|*TOTAL': [999], 'cust|3|*TOTAL': [9],
+  daily: {p: ['2026-09-29', '2026-09-30'], s: {
+    'amt|T|*TOTAL': [9999, 8888], 'cust|T|*TOTAL': [99, 88],
+    'amt|1|*TOTAL': [999, 888], 'cust|1|*TOTAL': [9, 8],
+    'amt|2|*TOTAL': [999, 888], 'cust|2|*TOTAL': [9, 8],
+    'amt|3|*TOTAL': [999, 888], 'cust|3|*TOTAL': [9, 8],
   }},
   weekly: {p: [
     {y: 2024, w: 1, m: 1, n: 1, start: '2024-01-01', d: 7},
@@ -46,14 +46,15 @@ const data = {
   ], s: {'tr|*TOTAL': [700, 800]}},
 };
 const prod = {
-  meta: {built: 'test', start: '2026-09-29', days: 1, lastDate: '2026-09-29', rows: 5, products: 5,
+  meta: {built: 'test', start: '2026-09-29', days: 2, lastDate: '2026-09-30', rows: 5, products: 5,
     topN: null, factFields: 7, covFields: 6, covFields2: 7, covFields3: 6, covFields4: 7, positiveOnly: true},
   ch: ['광고'], bpu: ['e-영업1'], cat: ['가방', '슈즈'], brand: ['브랜드'], grp: ['여성의류', '남성의류'], paths: [0, 0, 0, 0, 1, 0],
   prods: ['P1', '상품1', 'P2', '상품2', 'P3', '상품3', 'P4', '상품4', 'P5', '상품5'],
   f: [0, 0, 0, 0, 1, 100, 1, 0, 0, 0, 1, 2, 200, 2, 0, 0, 0, 2, 3, 300, 3, 0, 0, 1, 3, 3, 400, 4, 0, 0, 1, 4, 1, 50, 1], cov: [], cov2: [], cov3: [],
   cov4: [0, 0, -1, -1, -1, 1050, 11,
-    0, 1, -1, -1, -1, 150, 2, 0, 1, -1, -1, 0, 100, 1, 0, 1, -1, -1, 1, 50, 1,
-    0, 2, -1, -1, -1, 200, 2, 0, 3, -1, -1, -1, 700, 7],
+    0, 1, -1, -1, -1, 150, 2, 0, 1, -1, 0, 0, 100, 1, 0, 1, -1, 0, 1, 50, 1,
+    0, 2, -1, -1, -1, 200, 2, 0, 3, -1, -1, -1, 700, 7,
+    1, 0, -1, -1, -1, 900, 9, 0, 1, -1, -1, -1, 80, 1, 0, 1, -1, 0, 1, 80, 1],
 };
 const marker = /<script>\r?\nwindow\.__dashMain = function \(\) \{/;
 const inject = `<script>window.DASH_EMBED='test';window.DASH_DATA=${JSON.stringify(data)};window.DASH_KPI=null;window.DASH_PROD=${JSON.stringify(prod)};</script><script>${ai}</script>`;
@@ -97,6 +98,8 @@ const clicked = await page.evaluate(() => {
   document.querySelector('[data-pgrp="0"]').click();
   document.querySelector('[data-pcatopen]').click();
   document.querySelector('[data-pcat="0"]').click();
+  dash.state.at.day = '2026-09-29';
+  dash.render();
   return {
     segments: dash.selSegs(),
     productGroups: dash.prodState.grps.slice(),
@@ -105,6 +108,9 @@ const clicked = await page.evaluate(() => {
     top: dash.MODEL.amt.map(row => ({label: row.label, value: row.vals.at(-1).c})),
     compareYears: Array.from(document.querySelector('#selCmpY').options, o => o.textContent),
     compareDisabled: document.querySelector('#selCmpY').disabled,
+    groupAllPressed: document.querySelector('[data-pgrp="-1"]').getAttribute('aria-pressed'),
+    pressedGroups: Array.from(document.querySelectorAll('[data-pgrp]:not([data-pgrp="-1"])[aria-pressed="true"]'), b => b.textContent.trim()),
+    zeroSaleDay: dash.compute('amt', {ch: '*TOTAL', seg: '1', grp: 0}, ['2026-09-30']).v,
   };
 });
 assert.deepEqual(clicked, {
@@ -115,6 +121,9 @@ assert.deepEqual(clicked, {
   top: [{label: '전체 · 여성의류 · 당월신규', value: 100}],
   compareYears: ['전년 (2025)', '2024년'],
   compareDisabled: false,
+  groupAllPressed: 'false',
+  pressedGroups: ['여성의류'],
+  zeroSaleDay: 0,
 }, 'member and product-group filters must intersect in the headline source, organization categories must filter the lower detail, and 2024 must remain selectable');
 assert.equal(errors.length, 0, `page errors: ${errors.join(' | ')}`);
 await browser.close();
