@@ -748,13 +748,13 @@ def build_products(dirs, last_date, verbose=True):
 
 
 def _raw_dirs(base):
-    """base 와 그 아래 모든 폴더 중 CSV 가 든 폴더 — 예: 9월2주차 · 2026년/0914 · 2026년/0915 …"""
+    """base 와 그 아래 모든 폴더 중 CSV 또는 APP 설치 XLSX가 든 폴더."""
     out = []
     for d in [base, *sorted(p for p in base.rglob('*') if p.is_dir())]:
         rel = d.relative_to(ROOT).parts if d.is_relative_to(ROOT) else d.parts
         if any(part in SKIP_DIRS or part.startswith('.') for part in rel):
             continue
-        if any(d.glob('*.csv')):
+        if any(d.glob('*.csv')) or any(APP_KEY in x.stem and not x.name.startswith('~$') for x in d.glob('*.xlsx')):
             out.append(d)
     return out
 
@@ -766,8 +766,11 @@ def dir_label(d):
 def discover(args):
     bases = [Path(a) if Path(a).is_absolute() else ROOT / a for a in args] if args else [ROOT]
     dirs = list(dict.fromkeys(d for b in bases if b.is_dir() for d in _raw_dirs(b)))
-    # 같은 날짜 값은 나중 폴더가 덮어쓴다 — 가장 최근에 내보낸 CSV 가 있는 폴더를 나중에
-    return sorted(dirs, key=lambda d: max(f.stat().st_mtime for f in d.glob('*.csv')))
+    # 같은 날짜 값은 나중 폴더가 덮어쓴다 — 가장 최근에 내보낸 CSV/APP XLSX가 있는 폴더를 나중에
+    def latest(d):
+        files = list(d.glob('*.csv')) + [x for x in d.glob('*.xlsx') if APP_KEY in x.stem and not x.name.startswith('~$')]
+        return max(f.stat().st_mtime for f in files)
+    return sorted(dirs, key=latest)
 
 
 def _round(key, v):
