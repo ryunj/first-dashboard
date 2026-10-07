@@ -31,19 +31,23 @@ assert.deepEqual(uploadedSegments.sort(), [1, 2, 3], 'browser merge must retain 
 const require = createRequire(import.meta.url);
 const {chromium} = require('playwright');
 let html = fs.readFileSync(new URL('dashboard.html', root), 'utf8');
+assert.match(html, /2023-01-15.*원천 빈값/, 'metric definitions must disclose the known 2023-01-15 source gap');
 const ai = fs.readFileSync(new URL('ai_question.js', root), 'utf8');
 const data = {
   meta: {built: 'test', sources: ['test'], lastDate: '2026-09-29', channels: ['*TOTAL', '광고']},
-  daily: {p: ['2026-09-29', '2026-09-30'], s: {
-    'amt|T|*TOTAL': [9999, 8888], 'cust|T|*TOTAL': [99, 88],
-    'amt|1|*TOTAL': [999, 888], 'cust|1|*TOTAL': [9, 8],
-    'amt|2|*TOTAL': [999, 888], 'cust|2|*TOTAL': [9, 8],
-    'amt|3|*TOTAL': [999, 888], 'cust|3|*TOTAL': [9, 8],
+  daily: {p: ['2023-09-14', '2024-09-14', '2025-09-14', '2026-09-29', '2026-09-30'], s: {
+    'amt|T|*TOTAL': [null, null, 5000, 9999, 8888], 'cust|T|*TOTAL': [null, null, 50, 99, 88],
+    'amt|1|*TOTAL': [null, null, 500, 999, 888], 'cust|1|*TOTAL': [null, null, 5, 9, 8],
+    'amt|2|*TOTAL': [null, null, 500, 999, 888], 'cust|2|*TOTAL': [null, null, 5, 9, 8],
+    'amt|3|*TOTAL': [null, null, 4000, 999, 888], 'cust|3|*TOTAL': [null, null, 40, 9, 8],
+    'nma|*TOTAL': [3000, 4000, 5100, null, null], 'nmc|*TOTAL': [30, 40, 51, null, null],
   }},
   weekly: {p: [
+    {y: 2020, w: 1, m: 1, n: 1, start: '2019-12-30', d: 7},
+    {y: 2022, w: 1, m: 1, n: 1, start: '2022-01-03', d: 7},
     {y: 2024, w: 1, m: 1, n: 1, start: '2024-01-01', d: 7},
     {y: 2025, w: 1, m: 1, n: 1, start: '2024-12-30', d: 7},
-  ], s: {'tr|*TOTAL': [700, 800]}},
+  ], s: {'tr|*TOTAL': [600, 650, 700, 800]}},
 };
 const prod = {
   meta: {built: 'test', start: '2026-09-29', days: 2, lastDate: '2026-09-30', rows: 5, products: 5,
@@ -67,6 +71,19 @@ const errors = [];
 page.on('pageerror', error => errors.push(error.message));
 await page.setContent(html, {waitUntil: 'networkidle', timeout: 60000});
 await page.waitForFunction(() => window.__dash && window.__dash.prodReady());
+
+const historical = await page.evaluate(() => ({
+  years: Array.from(document.querySelector('#selYear').options, option => option.value),
+  amount2023: window.__dash.compute('amt', {ch: '*TOTAL', seg: 'T'}, ['2023-09-14'], null, 'sum').v,
+  amount2024: window.__dash.compute('amt', {ch: '*TOTAL', seg: 'T'}, ['2024-09-14'], null, 'sum').v,
+  customers2024: window.__dash.compute('cust', {ch: '*TOTAL', seg: 'T'}, ['2024-09-14'], null, 'sum').v,
+}));
+assert.deepEqual(historical, {
+  years: ['2026', '2025', '2024', '2023'],
+  amount2023: 3000,
+  amount2024: 4000,
+  customers2024: 40,
+}, 'year controls must follow daily data and 2023-2024 headline metrics must use the new-member dashboard replacement source');
 
 const values = await page.evaluate(() => {
   const dash = window.__dash;
@@ -119,7 +136,7 @@ assert.deepEqual(clicked, {
   categories: [0],
   section: 100,
   top: [{label: '전체 · 여성의류 · 당월신규', value: 100}],
-  compareYears: ['전년 (2025)', '2024년'],
+  compareYears: ['전년 (2025)', '2024년', '2023년'],
   compareDisabled: false,
   groupAllPressed: 'false',
   pressedGroups: ['여성의류'],
