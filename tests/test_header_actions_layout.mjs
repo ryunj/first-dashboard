@@ -26,6 +26,16 @@ try {
   assert.ok(Math.abs((tools.y + tools.height / 2) - (menu.y + menu.height / 2)) < 4, 'backup controls must remain on the same top row as the mode controls');
   assert.ok(tools.x > menu.x, 'backup controls must remain to the right of the mode controls');
   assert.ok(tools.x + tools.width > 1400, 'backup controls must stay aligned to the right edge');
+
+  await page.locator('button[data-set="grain"][data-v="week"]').click();
+  await page.waitForFunction(() => document.querySelector('#selAt')?.options[0]?.textContent?.includes('주차'));
+  await page.locator('#selAt').selectOption({index: 2});
+  await page.locator('#filtSum').evaluate(el => {
+    el.textContent = '회원구분 전체 · 채널 전체 · BPU 전체 · 상품군 전체 · 조직 카테고리 전체';
+  });
+  const [periodBar, filter] = await Promise.all([page.locator('header .bar2').first().boundingBox(), box('#btnFilt')]);
+  assert.ok(periodBar && filter, 'period controls and filter summary must be visible');
+  assert.ok(filter.y < periodBar.y + 40, 'filter summary must stay on the first controls row for a prior week');
 } finally {
   await browser.close();
 }

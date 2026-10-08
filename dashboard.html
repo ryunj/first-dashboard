@@ -53,6 +53,7 @@ main.wrap{position:relative;z-index:0}
 #fCmpY.off{opacity:.45}
 /* 상단 필터(회원구분 · 채널 · BPU · 카테고리) — 기본 접힘, 접힌 동안은 고른 조건을 한 줄로 */
 .filt-tg{display:inline-flex;align-items:center;gap:6px;max-width:min(560px,100%);min-width:0;padding:5px 11px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--ink);font-size:13px;font-weight:600;cursor:pointer}
+.bar2>.filt-tg{flex:1 1 240px}
 .filt-tg:hover{border-color:var(--axis)}
 .filt-tg[aria-expanded="true"]{background:var(--wash)}
 .filt-ic{display:inline-block;font-size:10px;color:var(--muted);transition:transform .15s}
@@ -668,7 +669,7 @@ body.pdfcap .pgrid{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr)!important
     <summary>지표 정의 · 집계 기준</summary>
     <ul>
       <li><b>첫구매</b> = 전체관점 <code>_첫구매</code> raw 기준. 2023~2024년의 첫구매 거래액 · 고객수 · 객단가는 <b>신규회원대시보드 '총)첫구매 거래액 · 고객수 (전체)'</b>(채널별)로 대신한다 — 2025~2026년에 두 원천을 대조하면 평소 신규회원대시보드가 1~3% 높고, 2025년 9~10월은 전체관점이 크게 높다(대량 첫구매 이벤트 등이 한쪽에만 잡힘). <b>2023-01-15는 해당 원천 빈값</b>이므로 첫구매 거래액 · 고객수 · 객단가가 표시되지 않는다. 이 원천엔 회원구분이 없어 당월신규 · 기가입신규 · 기존은 비어 있다. 이 값이 화면에 섞이면 요약 설명과 지표 설명에 표시한다. 거래액 단위 백만원. <b>회원구분</b>(당월신규 · 기가입신규 · 기존)은 거래액 · 고객수 · 객단가에만 적용된다.</li>
-      <li><b>첫구매율</b> = 태블로 첫구매율 raw(0.1% 단위 반올림)를 트래픽으로 가중해 재집계 · <b>가입률</b> = 가입자수 ÷ 비회원 트래픽 · <b>객단가</b> = 거래액 ÷ 고객수 · <b>당일가입 CR</b> = 당일가입 첫구매자 ÷ 가입자수.</li>
+      <li><b>첫구매율</b> = 태블로 첫구매율 raw(0.1% 단위 반올림)를 트래픽으로 가중해 재집계 · <b>가입률</b> = 가입자수 ÷ 비회원 트래픽 · <b>객단가</b> = 거래액 ÷ 고객수 · <b>당일가입 CR</b> = 당일가입 첫구매자 ÷ 가입자수. 주별 완결 주차는 <code>당일가입 첫구매율_주차별</code> raw와 같은 주별 분자·분모를 사용한다.</li>
       <li><b>비회원 트래픽 기준</b> — 월별 · 주별 · 일별 모두 화면 기간의 <b>일자 트래픽 raw를 합산</b>한다. 주별 일평균은 월~일 일별 합계 ÷ 실제 데이터 일수다. 원천에 사용자 식별자가 없어 날짜 사이 중복 여부는 이 대시보드에서 확인하거나 제거하지 않는다. 가입률 · 첫구매율도 같은 일별 합산 트래픽을 분모로 계산한다.</li>
       <li><b>주별 · 월별</b> 거래액 · 고객수 · 가입자수는 일자 raw 합산. <b>일평균</b> = 기간 합계 ÷ 데이터 일수. <b>누계</b> = 월별은 월 합계, 주별은 주 합계, 일별은 하루 값이라 일평균과 누계가 같다.</li>
       <li><b>주차</b> = ISO 주(월~일). 'M월 N주차' 는 그 주 목요일이 속한 달 기준(태블로 라벨과 동일).</li>
@@ -743,7 +744,7 @@ function isoWeek(s) {  // → {y, w, m(목요일 월), n(목요일이 그 달 �
 const isoMonday = (y, w) => { const jan4 = Date.UTC(y, 0, 4); return ymd(jan4 - ((new Date(jan4).getUTCDay() + 6) % 7) * DAY + (w - 1) * 7 * DAY); };
 
 /* ---------- 데이터 ---------- */
-// 일자 raw가 기본. 주별 raw는 일자 raw가 없는 날짜를 채우는 보조값(합산 가능한 시리즈만)으로만 쓴다.
+// 일자 raw가 기본. 주별 raw는 일자 공백 보완과 완결 주차의 당일가입 CR에 쓴다.
 const DAILY = {s: D.daily.s, dates: D.daily.p, idx: new Map(D.daily.p.map((d, i) => [d, i]))};
 const WEEKLY = {s: D.weekly.s, p: D.weekly.p, byIso: new Map(D.weekly.p.map((p, i) => [`${p.y}-${p.w}`, i]))};
 const FALLBACK = new Set(['amt', 'cust', 'sg', 'crn']);
@@ -835,6 +836,10 @@ function baseSum(base, row, dates, allow) {
 function compute(m, row, dates, wi, mode = S.mode) {
   const M = MET[m];
   if (!dates || !dates.length) return {v: null, est: false};
+  if (m === 'cr' && wi != null && wi >= 0) {
+    const num = WEEKLY.s[`crn|${row.ch}`]?.[wi], den = WEEKLY.s[`sg|${row.ch}`]?.[wi];
+    if (num != null && den) return {v: num / den, est: false};
+  }
   // 요청 기간의 절반도 데이터가 없으면(예: 전년 12월 비교창에 1/1 하루만 걸림) 값을 내지 않는다
   const enough = n => n > 0 && n * 2 >= dates.length;
   if (M.type === 'flow') {
@@ -1030,7 +1035,7 @@ function weekCols(y) {
     if (!cur.length) continue;
     const w = isoWeek(mon), pv = back(cur), pw = isoWeek(pv[0]), pp = cur.map(d => addDays(d, -7)), qw = isoWeek(pp[0]), partial = cur.length < 7;
     cols.push(pickCmp({id: `${w.y}-W${pad(w.w)}`, label: `${w.m}월 ${w.n}주`, sub: `${md(mon)}~`, partial, cur, prevY: pv, prevP: pp,
-      wk: null, wkY: null, wkP: null,
+      wk: partial ? null : {cur: WEEKLY.byIso.get(`${w.y}-${w.w}`)}, wkY: partial ? null : WEEKLY.byIso.get(`${pw.y}-${pw.w}`), wkP: partial ? null : WEEKLY.byIso.get(`${qw.y}-${qw.w}`),
       opt: `${w.m}월 ${w.n}주차 (${md(cur[0])}~${md(cur.at(-1))})`,
       tip: `${w.y}년 ${w.m}월 ${w.n}주차 (${md(cur[0])}~${md(cur.at(-1))})`,
       ptipY: `${pw.y}년 ${pw.m}월 ${pw.n}주차 (${md(pv[0])}~${md(pv.at(-1))})`,
