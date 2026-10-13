@@ -89,45 +89,42 @@ assert.doesNotMatch(allAnswer, /지원하지 않는 조건/);
 assert.equal(await page.evaluate(() => JSON.stringify(window.__dash.state)), stateBeforeAll, 'all-results question must not mutate dashboard state');
 
 const labelCheck = await page.evaluate(() => {
-  const q = window.__dash.queryProducts({dates:['2026-09-21'],dimensions:['category']});
-  const byName = name => q.groups.category.all.find(row => row.name === name);
-  const outdoor = byName('아웃도어'), golf = byName('골프'), shoes = byName('슈즈');
-  if (!outdoor || !golf || !shoes) return {found:false};
-  window.__dash.prodState.cats = [outdoor.key];
-  window.__dash.prodState.catNone = false;
+  const available = window.__dash.productQuestionFilters().availableProductGroups;
+  const byName = name => available.indexOf(name);
+  const women = byName('여성'), golf = byName('골프'), shoes = byName('슈즈');
+  if ([women, golf, shoes].some(key => key < 0)) return {found:false};
+  window.__dash.prodState.grps = [women];
   window.__dash.render();
   const groups = [...document.querySelectorAll('#tblWrap tr.grp')].map(row => row.innerText.replace(/\s+/g, ' '));
   const singleRows = window.__dash.MODEL.amt.map(row => row.label);
 
   Object.assign(window.__dash.state, {grain:'week', year:2026, mode:'avg', cmp:'yoy', cmpY:1, chans:['*TOTAL'], segs:['T']});
   window.__dash.state.at.week = '2026-W38';
-  window.__dash.prodState.cats = [golf.key, shoes.key];
-  window.__dash.prodState.catNone = false;
+  window.__dash.prodState.grps = [golf, shoes];
   window.__dash.prodState.bpus = [];
   window.__dash.prodState.bpuAll = true;
   window.__dash.render();
   const cols = window.__dash.lastCols, colIndex = cols.findIndex(col => col.id === '2026-W38'), dates = cols[colIndex].cur;
   const splitRows = window.__dash.MODEL.amt.map(row => ({label:row.label, value:row.vals[colIndex].c}));
-  const expected = Object.fromEntries(['골프','슈즈'].map(name => [name, window.__dash.queryProducts({dates,categories:[name]}).total.a / dates.length]));
+  const expected = Object.fromEntries([['골프', golf], ['슈즈', shoes]].map(([name, grp]) => [name, window.__dash.compute('amt', {ch:'*TOTAL', seg:'T', grp}, dates, null, 'avg').v]));
 
-  window.__dash.prodState.cats = [];
-  window.__dash.prodState.catNone = true;
+  window.__dash.prodState.grps = [];
   window.__dash.render();
-  const recovered = {catNone:window.__dash.prodState.catNone, cats:window.__dash.prodState.cats.slice(), value:window.__dash.MODEL.amt[0].vals[colIndex].c};
+  const recovered = {grps:window.__dash.prodState.grps.slice(), value:window.__dash.MODEL.amt[0].vals[colIndex].c};
   return {found:true, amount:groups.find(x => x.startsWith('첫구매 거래액')), traffic:groups.find(x => x.startsWith('비회원 트래픽')), singleRows, splitRows, expected, recovered};
 });
-assert.equal(labelCheck.found, true, 'real backup must include 아웃도어 category');
-assert.match(labelCheck.amount, /카테고리 아웃도어/);
-assert.match(labelCheck.traffic, /카테고리 아웃도어 필터 미적용/);
-assert.deepEqual(labelCheck.singleRows, ['전체 · 아웃도어']);
+assert.equal(labelCheck.found, true, 'real backup must include 여성, 골프, 슈즈 product groups');
+assert.match(labelCheck.amount, /상품군 여성/);
+assert.match(labelCheck.traffic, /상품군 여성 필터 미적용/);
+assert.deepEqual(labelCheck.singleRows, ['전체 · 여성']);
 assert.deepEqual(labelCheck.splitRows.map(row => row.label).sort(), ['전체 · 골프', '전체 · 슈즈']);
 for (const row of labelCheck.splitRows) {
   const name = row.label.split(' · ').at(-1);
-  assert.ok(Math.abs(row.value - labelCheck.expected[name]) < 0.001, `${name} row must equal its own category total, not a combined total`);
+  assert.ok(Math.abs(row.value - labelCheck.expected[name]) < 0.001, `${name} row must equal its own product-group total, not a combined total`);
 }
-assert.equal(labelCheck.recovered.catNone, false, 'legacy zero-category state must recover to all categories');
-assert.ok(labelCheck.recovered.value > 0, 'recovered all-category state must not display zero');
+assert.deepEqual(labelCheck.recovered.grps, [], 'clearing product groups must recover to all product groups');
+assert.ok(labelCheck.recovered.value > 0, 'recovered all-product-group state must not display zero');
 assert.equal(errors.length, 0, `page errors after all queries: ${errors.join(' | ')}`);
 
 await browser.close();
-console.log(`OK: real backup ${backup.data.meta.lastDate}, weekly periods, all metric families, category labels and official parity`);
+console.log(`OK: real backup ${backup.data.meta.lastDate}, weekly periods, all metric families, product-group labels and official parity`);

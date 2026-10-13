@@ -36,6 +36,11 @@ try {
   const [periodBar, filter] = await Promise.all([page.locator('header .bar2').first().boundingBox(), box('#btnFilt')]);
   assert.ok(periodBar && filter, 'period controls and filter summary must be visible');
   assert.ok(filter.y < periodBar.y + 40, 'filter summary must stay on the first controls row for a prior week');
+  await page.locator('#selCmpY').selectOption('2');
+  const comparedFilter = await box('#btnFilt');
+  assert.ok(comparedFilter, 'filter summary must remain visible after changing the comparison year');
+  assert.ok(Math.abs(filter.width - comparedFilter.width) < 1, 'filter summary width must not change with selected values');
+  assert.ok(filter.height <= 36 && comparedFilter.height <= 36, 'filter label and summary must remain on one line');
 } finally {
   await browser.close();
 }
