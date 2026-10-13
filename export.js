@@ -270,6 +270,34 @@ function sheetProd(d) {
   for (let c = 1; c < H.length; c++) sh.widths[c] = 12;
   if (E.hasCode) sh.widths[1] = 15;
   sh.freeze = {r: top + 1, c: 1};
+  // 현재 드릴 단계와 별개로 BPU → 카테고리 → 브랜드 전체 상세를 같은 화면 조건으로 함께 제공한다.
+  const hierarchy = typeof d.productHierarchy === 'function' && Array.isArray(V.cur) ? d.productHierarchy(V.cur) : [];
+  if (hierarchy.length) {
+    const previous = typeof d.productHierarchy === 'function' && Array.isArray(V.prev) ? d.productHierarchy(V.prev) : [];
+    const pmap = new Map(previous.map(x => [x.key, x]));
+    const cdiv = E.avg && V.cur.length ? V.cur.length : 1, pdiv = E.avg && V.prev && V.prev.length ? V.prev.length : 1;
+    const change = (c, p) => {
+      if (!okNum(c) || !okNum(p) || !p) return {v: '–', s: 'flat'};
+      const v = (c / p - 1) * 100;
+      return {v: `${v > 0 ? '+' : ''}${v.toFixed(1)}%`, s: v > 0 ? 'pos' : v < 0 ? 'neg' : 'flat'};
+    };
+    r++;
+    for (let c = 0; c < 9; c++) put(sh, r, c, {v: c ? '' : 'BPU·카테고리·브랜드 상세', s: 'group'});
+    r++;
+    ['BPU', '카테고리', '브랜드', `거래액${E.avg ? '(일평균)' : ''}(백만원)`, `거래액 ${E.baseName}`, `거래액 ${E.cLbl}`,
+      `주문고객수${E.avg ? '(일평균)' : ''}`, `고객수 ${E.baseName}`, `고객수 ${E.cLbl}`]
+      .forEach((h, c) => put(sh, r, c, {v: h, s: c < 3 ? 'headL' : 'head'}));
+    r++;
+    for (const x of hierarchy) {
+      const p = pmap.get(x.key), a = x.a / cdiv, u = x.u / cdiv, pa = p ? p.a / pdiv : null, pu = p ? p.u / pdiv : null;
+      put(sh, r, 0, text(x.bpu)); put(sh, r, 1, text(x.category)); put(sh, r, 2, text(x.brand));
+      put(sh, r, 3, {v: a / 1e6, s: 'dec1'}); put(sh, r, 4, okNum(pa) ? {v: pa / 1e6, s: 'dec1P'} : {v: '–', s: 'flat'}); put(sh, r, 5, change(a, pa));
+      put(sh, r, 6, {v: u, s: 'int'}); put(sh, r, 7, okNum(pu) ? {v: pu, s: 'intP'} : {v: '–', s: 'flat'}); put(sh, r, 8, change(u, pu));
+      r++;
+    }
+    sh.widths[0] = Math.max(sh.widths[0] || 0, 18); sh.widths[1] = Math.max(sh.widths[1] || 0, 22); sh.widths[2] = Math.max(sh.widths[2] || 0, 24);
+    for (let c = 3; c < 9; c++) sh.widths[c] = Math.max(sh.widths[c] || 0, 14);
+  }
   // 기간별 표 — 기간마다 값 · 비교
   const T = E.table();
   if (T && T.cols.length) {

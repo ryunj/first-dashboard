@@ -2052,6 +2052,25 @@ function queryProducts(opts = {}) {  // AI 실적문의용 읽기 전용 집계 
     segments: askedSegments.map(segLabel),
   }, total: {a: total.a, u: total.u, aov: total.u ? total.a / total.u : null}, groups};
 }
+function productHierarchy(dates) {  // 엑셀용 — 현재 상품 화면 조건의 BPU × 카테고리 × 브랜드 상세를 한 번에 집계
+  prodInit();
+  if (!PRD || !PF || PD.catNone || !Array.isArray(dates) || !dates.length) return [];
+  const daySet = new Set(dates.map(pDay).filter(d => d >= 0 && d < PRD.meta.days));
+  const chm = pChanMask(), bm = pBpuMask(), cm = pCatMask(), sm = segSet(selSegs()), cond = pCond(), out = new Map();
+  for (let i = 0; i < PF.n; i++) {
+    if (!daySet.has(PF.d[i]) || !pSegOk(PF.s[i], sm)) continue;
+    const ch = PF.c[i], path = PF.p[i] * 3, bpu = PRD.paths[path], cat = PRD.paths[path + 1], brand = PRD.paths[path + 2];
+    if ((chm && !chm[ch]) || (bm && !bm[bpu]) || (cm && !cm[cat])) continue;
+    let match = true;
+    for (const [code, key] of cond) if (pVal(i, code) !== key) { match = false; break; }
+    if (!match) continue;
+    const id = `${bpu}|${cat}|${brand}`;
+    let row = out.get(id);
+    if (!row) out.set(id, row = {key: id, bpu: pName(1, bpu), category: pName(2, cat), brand: pName(3, brand), a: 0, u: 0});
+    row.a += PF.a[i]; row.u += PF.u[i];
+  }
+  return [...out.values()].sort((a, b) => a.bpu.localeCompare(b.bpu, 'ko') || a.category.localeCompare(b.category, 'ko') || a.brand.localeCompare(b.brand, 'ko'));
+}
 const productQuestionFilters = () => !PRD ? {availableBpus: [], availableProductGroups: [], availableCategories: [], bpus: [], productGroups: [], categories: []} : ({
   availableBpus: PRD.bpu.slice(), availableProductGroups: (PRD.grp || []).slice(), availableCategories: PRD.cat.slice(),
   bpus: !PD.bpuAll && PD.bpus.length ? PD.bpus.map(k => PRD.bpu[k]) : [],
@@ -3140,7 +3159,7 @@ render();
 if (PRINT_HASH) printParts(PRINT_HASH === 'all' ? DL_PARTS.map(p => p[0]) : PRINT_HASH.split(','), false);
 window.__dash = {get state() { return S; }, render, compute, evalCol, getCols, seriesKeys, questionRows, fmt, MET, METRICS, CHS, SEGS, YEARS,
                  dataFirst: FIRST, dataLast: LAST, get MODEL() { return MODEL; },
-                 computeKpi, queryKpi: computeKpi, selStats: () => SEL.stats, selTSV, prodState: PD, renderProd, prodView: () => PVIEW, prodReady: () => !!PRD, queryProducts, productQuestionFilters, axVal, queryApp, AX, AX_ORDER, renderApp,
+                 computeKpi, queryKpi: computeKpi, selStats: () => SEL.stats, selTSV, prodState: PD, renderProd, prodView: () => PVIEW, prodReady: () => !!PRD, queryProducts, productHierarchy, productQuestionFilters, axVal, queryApp, AX, AX_ORDER, renderApp,
                  // 엑셀 다운로드(export.js)가 화면과 같은 값을 쓰도록
                  get lastCols() { return lastCols; }, get lastSum() { return LAST_SUM; }, get dataMeta() { return D.meta; },
                  focusIdx, unitOf, fmtDelta, delta, axFmtDelta, fmtAX, cmpLbl, otherLbl, baseLbl, baseShort, modeName, trNote,
