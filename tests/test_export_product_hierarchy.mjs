@@ -7,7 +7,7 @@ const context = {window: {}, console, Date, Blob, TextEncoder, Uint8Array, Uint3
 vm.createContext(context);
 vm.runInContext(source, context, {filename: 'export.js'});
 
-const current = ['2026-10-01'], previous = ['2025-10-02'];
+const current = ['2026-10-01'], previous = ['2025-10-02'], week = ['2026-09-24'], month = ['2026-09-01'];
 const hierarchy = new Map([
   [current, [
     {key:'0|1|2', bpu:'e-영업1', category:'여성의류', brand:'브랜드A', a:30e6, u:120},
@@ -16,18 +16,24 @@ const hierarchy = new Map([
   [previous, [
     {key:'0|1|2', bpu:'e-영업1', category:'여성의류', brand:'브랜드A', a:25e6, u:100},
   ]],
+  [week, [
+    {key:'0|1|2', bpu:'e-영업1', category:'여성의류', brand:'브랜드A', a:20e6, u:80},
+  ]],
+  [month, [
+    {key:'0|1|2', bpu:'e-영업1', category:'여성의류', brand:'브랜드A', a:15e6, u:60},
+  ]],
 ]);
 const exp = {
   tip:'2026년 10월', viewName:'BPU 기준', filters:'전 채널 · 회원구분 전체', crumb:'', level:'BPU', avg:false, hasCode:false,
   baseName:'2025년', cLbl:'전년비', cLbl2:'전년비', weekCompare:false, uvOn:false, basis:'거래액',
-  rows:[{name:'합계', total:true, code:'', a:50e6, pa:25e6, da:{t:'+100%',c:'pos'}, u:200, pu:100, du:{t:'+100%',c:'pos'}, share:1, main:'직접 100%'}],
+  rows:[{name:'합계', total:true, code:'', a:50e6, pa:25e6, da:{t:'+100%',c:'pos'}, wa:20e6, wda:{t:'+150%',c:'pos'}, ma:15e6, mda:{t:'+233%',c:'pos'}, u:200, pu:100, du:{t:'+100%',c:'pos'}, wu:80, wdu:{t:'+150%',c:'pos'}, mu:60, mdu:{t:'+233%',c:'pos'}, share:1, main:'직접 100%'}],
   rest:null, table:() => null,
 };
 const dash = {
   state:{year:2026,grain:'month',mode:'sum',cmp:'yoy',cmpY:1,layout:'block'},
   lastCols:[{label:'10월',tip:'2026년 10월'}], focusIdx:()=>0, modeName:()=> '월 합계', cmpLbl:()=> '전년비',
   selChans:()=>['*TOTAL'], chLabel:()=> '전체', selSegs:()=>['T'], segLabel:()=> '전체', prodFiltOn:()=>false,
-  dataMeta:{lastDate:'2026-10-12'}, prodView:()=>({cur:current,prev:previous,exp}), productHierarchy:dates=>hierarchy.get(dates) || [],
+  dataMeta:{lastDate:'2026-10-12'}, prodView:()=>({cur:current,prev:previous,week,month,exp}), productHierarchy:dates=>hierarchy.get(dates) || [],
 };
 
 const sheet = context.window.FP_EXPORT.build('prod', dash);
@@ -40,5 +46,12 @@ assert.ok(labels.includes(30), 'product hierarchy must export current amount in 
 assert.ok(labels.includes(25), 'product hierarchy must export comparison amount in millions');
 assert.ok(labels.includes(120), 'product hierarchy must export current customer count');
 assert.ok(labels.includes(100), 'product hierarchy must export comparison customer count');
+for (const label of ['거래액 전주비','거래액 전월비','고객수 전주비','고객수 전월비']) {
+  assert.ok(labels.includes(label), `product hierarchy must include ${label}`);
+}
+assert.ok(labels.includes(20), 'product hierarchy must export previous-week amount in millions');
+assert.ok(labels.includes(15), 'product hierarchy must export previous-month amount in millions');
+assert.ok(labels.includes(80), 'product hierarchy must export previous-week customer count');
+assert.ok(labels.includes(60), 'product hierarchy must export previous-month customer count');
 
 console.log('OK: product Excel includes BPU, category and brand hierarchy details');

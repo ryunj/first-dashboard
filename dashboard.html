@@ -1008,6 +1008,25 @@ const baseLbl = () => cmpPop() ? CMP_NAME[S.grain] : `${S.year - yk()} 동기간
 const cmpDesc = () => cmpPop()
   ? `${cmpLbl()} = 직전 ${{month: '달', week: '주', day: '날'}[S.grain]} 대비${S.grain === 'month' ? '(진행 중인 달은 같은 일수끼리)' : ''}`
   : `${yoyLbl()} = ${364 * yk()}일 전 동기간·동요일${yk() > 1 ? `(${yk()}년 전)` : ''}`;
+// 다운로드 공통 비교기간 — 화면의 월별/주별 선택과 무관하게 전주·전월을 함께 제공한다.
+// 전월은 달의 1일부터 시작하는 기간이면 전월의 같은 일수(완료 월은 전월 전체),
+// 그 밖의 기간은 종료일을 한 달 전으로 옮긴 뒤 같은 일수만큼 잡는다.
+function periodComparisons(dates) {
+  const ds = [...new Set((dates || []).filter(Boolean))].sort();
+  if (!ds.length) return {week: [], month: []};
+  const week = ds.map(d => addDays(d, -7));
+  const last = ds.at(-1), [ly, lm, ld] = last.split('-').map(Number);
+  const pm = lm === 1 ? 12 : lm - 1, py = lm === 1 ? ly - 1 : ly;
+  const prevEnd = `${py}-${pad(pm)}-${pad(Math.min(ld, daysInMonth(py, pm)))}`;
+  const [fy, fm, fd] = ds[0].split('-').map(Number);
+  const contiguous = ds.every((d, i) => !i || d === addDays(ds[i - 1], 1));
+  let month;
+  if (contiguous && fy === ly && fm === lm && fd === 1) {
+    const all = span(`${py}-${pad(pm)}-01`, `${py}-${pad(pm)}-${pad(daysInMonth(py, pm))}`);
+    month = ds.length >= daysInMonth(ly, lm) ? all : all.slice(0, Math.min(ds.length, all.length));
+  } else month = span(addDays(prevEnd, -(ds.length - 1)), prevEnd);
+  return {week, month};
+}
 function pickCmp(col) {  // 선택한 비교 기준을 prev · ptip · wk.prev 에 싣는다
   const pop = cmpPop();
   col.prev = pop ? col.prevP : col.prevY;
@@ -1276,8 +1295,11 @@ function renderSummary(cols) {
   }).join('');
   LAST_SUM = {tip: col.tip, rows: METRICS.map(m => {
     const r = rowFor(m), v = evalCol(m, r, col);
+    const periods = periodComparisons(col.cur);
+    const week = compute(m, r, periods.week, col.wkP ?? null).v, month = compute(m, r, periods.month, null).v;
     return {m, name: MET[m].name, unit: MET[m].pct ? '%' : unitOf(m), c: v.c, p: v.p, main: fmtDelta(v.d),
-            other: oPrev && oPrev.length ? fmtDelta(delta(m, v.c, compute(m, r, oPrev, oWk).v)) : {t: '–', c: ''}};
+            other: oPrev && oPrev.length ? fmtDelta(delta(m, v.c, compute(m, r, oPrev, oWk).v)) : {t: '–', c: ''},
+            week: fmtDelta(delta(m, v.c, week)), month: fmtDelta(delta(m, v.c, month))};
   })};
 }
 
@@ -2202,27 +2224,34 @@ function renderProd() {
   const amtSel = PD.metric === 'amt', mk = amtSel ? 'a' : 'u', mkc = amtSel ? 'ca' : 'cu', avg = S.mode === 'avg' && S.grain !== 'day';  // 일별은 일평균 = 누계
   const dv = (v, ds) => v == null ? null : (avg && ds.length ? v / ds.length : v);
   const hasPrev = pInRange(sel.prev);
+  const exportPeriods = periodComparisons(sel.cur);
+  const exportWeekDates = pInRange(exportPeriods.week) ? exportPeriods.week : [];
+  const exportMonthDates = pInRange(exportPeriods.month) ? exportPeriods.month : [];
   const weekCompare = S.grain === 'week' && sel !== ytd && pInRange(sel.prevP || []);
-  const curMask = pMask([sel.cur]), prevMask = hasPrev ? pMask([sel.prev]) : null, weekMask = weekCompare ? pMask([sel.prevP]) : null;
+  const curMask = pMask([sel.cur]), prevMask = hasPrev ? pMask([sel.prev]) : null;
   const chm = pChanMask(), cond = pCond();
   PCM = pCatMask();
   PBM = pBpuMask();
-  const cur = pAgg(code, cond, curMask, chm, true), prev = hasPrev ? pAgg(code, cond, prevMask, chm, false) : new Map(), week = weekCompare ? pAgg(code, cond, weekMask, chm, false) : new Map();
+  const cur = pAgg(code, cond, curMask, chm, true), prev = hasPrev ? pAgg(code, cond, prevMask, chm, false) : new Map();
+  const exportWeek = exportWeekDates.length ? pAgg(code, cond, pMask([exportWeekDates]), chm, false) : new Map();
+  const exportMonth = exportMonthDates.length ? pAgg(code, cond, pMask([exportMonthDates]), chm, false) : new Map();
   const nch = PRD.ch.length, totRaw = new Float64Array(nch), items = [];
   for (const [k, o] of cur) {
     if (!o.a && !o.u) continue;
-    const q = prev.get(k), w = week.get(k);
+    const q = prev.get(k), w = exportWeek.get(k), mo = exportMonth.get(k);
     for (let c = 0; c < nch; c++) totRaw[c] += o[mkc][c];
     items.push({k, a: dv(o.a, sel.cur), u: dv(o.u, sel.cur), pa: q ? dv(q.a, sel.prev) : null, pu: q ? dv(q.u, sel.prev) : null,
-      wa: w ? dv(w.a, sel.prevP) : null, wu: w ? dv(w.u, sel.prevP) : null,
+      wa: w ? dv(w.a, exportWeekDates) : null, wu: w ? dv(w.u, exportWeekDates) : null,
+      ma: mo ? dv(mo.a, exportMonthDates) : null, mu: mo ? dv(mo.u, exportMonthDates) : null,
       mix: Array.from(o[mkc], x => dv(x, sel.cur)), sp: pSpread(o[mkc])});
   }
   for (const x of items) { x.v = amtSel ? x.a : x.u; x.p = amtSel ? x.pa : x.pu; }
-  let pa = null, pu = null, wa = null, wu = null;
+  let pa = null, pu = null, wa = null, wu = null, ma = null, mu = null;
   if (hasPrev) { pa = 0; pu = 0; for (const o of prev.values()) { pa += o.a; pu += o.u; } pa = dv(pa, sel.prev); pu = dv(pu, sel.prev); }
-  if (weekCompare) { wa = 0; wu = 0; for (const o of week.values()) { wa += o.a; wu += o.u; } wa = dv(wa, sel.prevP); wu = dv(wu, sel.prevP); }
+  if (exportWeekDates.length) { wa = 0; wu = 0; for (const o of exportWeek.values()) { wa += o.a; wu += o.u; } wa = dv(wa, exportWeekDates); wu = dv(wu, exportWeekDates); }
+  if (exportMonthDates.length) { ma = 0; mu = 0; for (const o of exportMonth.values()) { ma += o.a; mu += o.u; } ma = dv(ma, exportMonthDates); mu = dv(mu, exportMonthDates); }
   const totA = items.reduce((t, x) => t + x.a, 0), totU = items.reduce((t, x) => t + x.u, 0);
-  const totalRow = {total: true, k: null, a: totA, u: totU, pa, pu, wa, wu, v: amtSel ? totA : totU, p: amtSel ? pa : pu, mix: Array.from(totRaw, x => dv(x, sel.cur)), sp: pSpread(totRaw)};
+  const totalRow = {total: true, k: null, a: totA, u: totU, pa, pu, wa, wu, ma, mu, v: amtSel ? totA : totU, p: amtSel ? pa : pu, mix: Array.from(totRaw, x => dv(x, sel.cur)), sp: pSpread(totRaw)};
   const total = totalRow.v;  // 구성비 분모
   const sortOn = code !== 0 && code !== 1;
   const other = code === 4 ? items.find(x => x.k === -1) : null;  // 예전 백업(상위 N만 개별)의 '기타 상품'
@@ -2235,6 +2264,7 @@ function renderProd() {
   const share = v => total ? (v / total * 100).toFixed(1) + '%' : '–';
   const yo = (c, p) => hasPrev ? fmtDelta(delta('amt', c, p)) : {t: '–', c: ''};
   const wo = (c, p) => weekCompare ? fmtDelta(delta('amt', c, p)) : {t: '–', c: ''};
+  const po = (enabled, c, p) => enabled ? fmtDelta(delta('amt', c, p)) : {t: '–', c: ''};
   const fU = v => ok(v) ? NF.format(Math.round(v)) + '명' : '–';
   const fPA = v => hasPrev && ok(v) ? fmtM(v) : '–', fPU = v => hasPrev && ok(v) ? fU(v) : '–';
   const pct1 = v => ok(v) ? (v * 100).toFixed(1) + '%' : '–';
@@ -2343,15 +2373,18 @@ function renderProd() {
     const keep = PCM;
     PCM = catMask;
     const cs = pcols.filter(c => pInRange(c.cur));
-    const ser = pSeries(code, cond, pMask([...cs.map(c => c.cur), ...cs.map(c => c.prev), ...cs.flatMap(c => c.prevP || [])]), chm, new Set(tblKeys));
+    const periods = cs.map(c => periodComparisons(c.cur));
+    const ser = pSeries(code, cond, pMask([...cs.map(c => c.cur), ...cs.map(c => c.prev), ...periods.flatMap(p => p.week), ...periods.flatMap(p => p.month)]), chm, new Set(tblKeys));
     PCM = keep;
     const sumDays = (m, ds) => { let t = 0; if (m) for (const x of ds) { const o = m.get(pDay(x)); if (o) t += o[mk]; } return t; };
     const rows = [{label: '합계', total: true, key: 'T'}, ...tblKeys.map(k => ({label: pName(code, k), total: false, key: k}))].map(r => ({
       label: r.label, total: r.total,
-      vals: cs.map(c => {
+      vals: cs.map((c, i) => {
         const m = ser.get(r.key), v = dv(sumDays(m, c.cur), c.cur), p = pInRange(c.prev) ? dv(sumDays(m, c.prev), c.prev) : null;
-        const wp = S.grain === 'week' && pInRange(c.prevP || []) ? dv(sumDays(m, c.prevP), c.prevP) : null;
-        return {v, p, d: fmtDelta(delta('amt', v, p)), wp, wd: wp == null ? {t: '–', c: ''} : fmtDelta(delta('amt', v, wp))};
+        const wdts = periods[i].week, mdts = periods[i].month;
+        const wp = pInRange(wdts) ? dv(sumDays(m, wdts), wdts) : null, mp = pInRange(mdts) ? dv(sumDays(m, mdts), mdts) : null;
+        return {v, p, d: fmtDelta(delta('amt', v, p)), wp, wd: wp == null ? {t: '–', c: ''} : fmtDelta(delta('amt', v, wp)),
+          mp, md: mp == null ? {t: '–', c: ''} : fmtDelta(delta('amt', v, mp))};
       }),
     }));
     return {cols: cs.map(c => ({label: c.label, tip: c.tip})), rows, basis: amtSel ? '거래액' : '주문고객수', metric: PD.metric};
@@ -2409,14 +2442,17 @@ function renderProd() {
   const expRows = [totalRow, ...top, ...(other ? [other] : [])].map(x => ({
     name: x.total ? '합계' : pName(code, x.k), total: !!x.total, code: code === 4 && !x.total && x.k >= 0 ? PRD.prods[x.k * 2] : '',
     a: x.a, pa: hasPrev ? x.pa : null, da: yo(x.a, x.pa), u: x.u, pu: hasPrev ? x.pu : null, du: yo(x.u, x.pu),
-    wa: weekCompare ? x.wa : null, wda: wo(x.a, x.wa), wu: weekCompare ? x.wu : null, wdu: wo(x.u, x.wu),
+    wa: exportWeekDates.length ? x.wa : null, wda: po(exportWeekDates.length, x.a, x.wa),
+    wu: exportWeekDates.length ? x.wu : null, wdu: po(exportWeekDates.length, x.u, x.wu),
+    ma: exportMonthDates.length ? x.ma : null, mda: po(exportMonthDates.length, x.a, x.ma),
+    mu: exportMonthDates.length ? x.mu : null, mdu: po(exportMonthDates.length, x.u, x.mu),
     uv: x.uv, duv: yo(x.uv, x.puv), cr: x.cr, dcr: crDelta(x), share: total ? x.v / total : null, main: mainTxt(x.sp)}));
   PVIEW = {view: PD.view, lv, code, total, itemCount: items.length, shownCount: items.length, sort: sortOn ? PD.sort : 'v',
     top: top.map(x => ({k: x.k, v: x.v, p: x.p, a: x.a, u: x.u, pa: x.pa, pu: x.pu, uv: x.uv, cr: x.cr, mixSum: x.mix.reduce((t, y) => t + y, 0), sp: x.sp})),
-    restCount: rest.length, restSum, other, coverage, key: sel.key, cur: sel.cur, prev: sel.prev, hasPrev, optCount: all.length, trendN: tbars.length,
+    restCount: rest.length, restSum, other, coverage, key: sel.key, cur: sel.cur, prev: sel.prev, week: exportWeekDates, month: exportMonthDates, hasPrev, optCount: all.length, trendN: tbars.length,
     names: top.map(x => pName(code, x.k)), sideCode, sideNames: sItems.map(x => pName(sideCode, x.k)), sideTotal: sTot, chCols,
     crumb: PD.path.map((k, i) => pName(dims[i], k)).join(' › '), uvOn, cats: PD.cats.slice(), grps: PD.grps.slice(), limit: LIMIT,
-    totalRow: {a: totA, u: totU, pa, pu, wa, wu, uv: totalRow.uv, cr: totalRow.cr}, table: tableData, tblKeys, grpData, grpOn: !!(PC2 && PC2.has), grp: G,
+    totalRow: {a: totA, u: totU, pa, pu, wa, wu, ma, mu, uv: totalRow.uv, cr: totalRow.cr}, table: tableData, tblKeys, grpData, grpOn: !!(PC2 && PC2.has), grp: G,
     exp: {tip: sel.tip, viewName: PD.view === 'bpu' ? 'BPU 기준' : '채널 기준',
       filters: `${chm ? `채널 ${PD.chans.map(k => PRD.ch[k]).join('·')}` : '전 채널'} · 회원구분 ${selSegs().map(segLabel).join('·')}${PD.grps.length ? ` · 상품군 ${grpTxt()}` : ''}${PCM ? ` · 조직 카테고리 ${catTxt()}` : ''}`,
       crumb: PD.path.map((k, i) => pName(dims[i], k)).join(' › '), level: PCODE[code], avg, hasCode: code === 4, baseName, cLbl, cLbl2: cmpLbl(), weekCompare, uvOn,
@@ -3157,7 +3193,7 @@ new ResizeObserver(() => {
 }).observe($('#charts'));
 render();
 if (PRINT_HASH) printParts(PRINT_HASH === 'all' ? DL_PARTS.map(p => p[0]) : PRINT_HASH.split(','), false);
-window.__dash = {get state() { return S; }, render, compute, evalCol, getCols, seriesKeys, questionRows, fmt, MET, METRICS, CHS, SEGS, YEARS,
+window.__dash = {get state() { return S; }, render, compute, evalCol, getCols, periodComparisons, seriesKeys, questionRows, fmt, MET, METRICS, CHS, SEGS, YEARS,
                  dataFirst: FIRST, dataLast: LAST, get MODEL() { return MODEL; },
                  computeKpi, queryKpi: computeKpi, selStats: () => SEL.stats, selTSV, prodState: PD, renderProd, prodView: () => PVIEW, prodReady: () => !!PRD, queryProducts, productHierarchy, productQuestionFilters, axVal, queryApp, AX, AX_ORDER, renderApp,
                  // 엑셀 다운로드(export.js)가 화면과 같은 값을 쓰도록

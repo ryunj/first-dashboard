@@ -143,13 +143,23 @@ function num(d, m, v, variant = '') {  // 화면 단위(거래액 = 백만원)�
 }
 const delta = f => ({v: f && f.t ? f.t : '–', s: f && f.c === 'pos' ? 'pos' : f && f.c === 'neg' ? 'neg' : 'flat'});
 const text = (v, s = 'label') => ({v: v == null ? '' : String(v), s});
+function periodRates(d, m, row, col, current) {
+  if (typeof d.periodComparisons !== 'function' || typeof d.compute !== 'function' || typeof d.delta !== 'function') return {week: {t: '–', c: ''}, month: {t: '–', c: ''}};
+  const periods = d.periodComparisons(col.cur || []), rate = (kind, wi = null) => {
+    const dates = periods[kind] || [];
+    if (!dates.length) return {t: '–', c: ''};
+    const prior = d.compute(m, row, dates, wi).v;
+    return d.fmtDelta(d.delta(m, current, prior));
+  };
+  return {week: rate('week', col.wkP ?? null), month: rate('month')};
+}
 
 function sheetSum(d) {
   const L = d.lastSum;
   if (!L) return null;
   const sh = sheet('실적 요약');
   let r = head(sh, '실적 요약', [context(d), L.tip]);
-  ['지표', '값', '단위', d.cmpLbl(), d.otherLbl(), d.baseShort()].forEach((h, c) => put(sh, r, c, {v: h, s: c ? 'head' : 'headL'}));
+  ['지표', '값', '단위', d.cmpLbl(), d.otherLbl(), d.baseShort(), '전주비', '전월비'].forEach((h, c) => put(sh, r, c, {v: h, s: c ? 'head' : 'headL'}));
   r++;
   for (const x of L.rows) {
     put(sh, r, 0, text(x.name, 'labelB'));
@@ -158,9 +168,11 @@ function sheetSum(d) {
     put(sh, r, 3, delta(x.main));
     put(sh, r, 4, delta(x.other));
     put(sh, r, 5, num(d, x.m, x.p, 'P'));
+    put(sh, r, 6, delta(x.week));
+    put(sh, r, 7, delta(x.month));
     r++;
   }
-  sh.widths = {0: 18, 1: 14, 2: 9, 3: 12, 4: 12, 5: 14};
+  sh.widths = {0: 18, 1: 14, 2: 9, 3: 12, 4: 12, 5: 14, 6: 12, 7: 12};
   sh.freeze = {r: 5, c: 1};
   return sh;
 }
@@ -180,7 +192,7 @@ function sheetTable(d) {
   } else {
     put(sh, r + 1, 0, {v: '', s: 'headL'});
     sh.merges.push(`${ref(r, 0)}:${ref(r + 1, 0)}`);
-    [`${y} 실적`, d.cmpLbl(), third].forEach((b, i) => {
+    [`${y} 실적`, d.cmpLbl(), third, '전주비', '전월비'].forEach((b, i) => {
       for (let k = 0; k < n; k++) {
         put(sh, r, 1 + i * n + k, {v: k ? '' : b, s: 'head'});
         put(sh, r + 1, 1 + i * n + k, {v: cols[k].label + (cols[k].sub ? ` ${cols[k].sub}` : ''), s: 'head'});
@@ -191,7 +203,7 @@ function sheetTable(d) {
   }
   for (const m of d.METRICS) {
     const unit = [d.unitOf(m), d.trNote(m)].filter(Boolean).join(' · ');
-    const last = stacked ? n + 1 : 3 * n;
+    const last = stacked ? n + 1 : 5 * n;
     for (let c = 0; c <= last; c++) put(sh, r, c, {v: c ? '' : `${d.MET[m].name}${unit ? ` (${unit})` : ''}`, s: 'group'});
     r++;
     for (const row of d.MODEL[m] || []) {
@@ -209,19 +221,30 @@ function sheetTable(d) {
         put(sh, r, 1, text(d.cmpLbl()));
         row.vals.forEach((v, k) => put(sh, r, 2 + k, delta(d.fmtDelta(v.d))));
         r++;
+        put(sh, r, 0, text(''));
+        put(sh, r, 1, text('전주비'));
+        row.vals.forEach((v, k) => put(sh, r, 2 + k, delta(periodRates(d, m, row, cols[k], v.c).week)));
+        r++;
+        put(sh, r, 0, text(''));
+        put(sh, r, 1, text('전월비'));
+        row.vals.forEach((v, k) => put(sh, r, 2 + k, delta(periodRates(d, m, row, cols[k], v.c).month)));
+        r++;
       } else {
         put(sh, r, 0, text(row.label, style));
         row.vals.forEach((v, k) => {
           put(sh, r, 1 + k, num(d, m, v.c));
           put(sh, r, 1 + n + k, delta(d.fmtDelta(v.d)));
           put(sh, r, 1 + 2 * n + k, num(d, m, v.p, 'P'));
+          const rates = periodRates(d, m, row, cols[k], v.c);
+          put(sh, r, 1 + 3 * n + k, delta(rates.week));
+          put(sh, r, 1 + 4 * n + k, delta(rates.month));
         });
         r++;
       }
     }
   }
   sh.widths = {0: 24, ...(stacked ? {1: 12} : {})};
-  for (let c = stacked ? 2 : 1; c <= (stacked ? n + 1 : 3 * n); c++) sh.widths[c] = 11;
+  for (let c = stacked ? 2 : 1; c <= (stacked ? n + 1 : 5 * n); c++) sh.widths[c] = 11;
   sh.freeze = {r: top + (stacked ? 1 : 2), c: stacked ? 2 : 1};
   return sh;
 }
@@ -230,8 +253,8 @@ function sheetProd(d) {
   if (!E) return null;
   const sh = sheet('상품 구성');
   let r = head(sh, '상품 구성 · 첫구매', [context(d), `${E.tip} · ${E.viewName} · ${E.filters} · 경로 ${E.crumb || '전체'} · ${E.level} 단계 · 표시 ${E.avg ? '일평균' : '합계'}`]);
-  const weekCols = E.weekCompare ? ['전주', '전주비'] : [];
-  const H = [E.level, ...(E.hasCode ? ['상품코드'] : []), '거래액(백만원)', E.baseName, E.cLbl, ...weekCols, '주문고객수', E.baseName, E.cLbl, ...weekCols,
+  const compareCols = ['전주', '전주비', '전월', '전월비'];
+  const H = [E.level, ...(E.hasCode ? ['상품코드'] : []), '거래액(백만원)', E.baseName, E.cLbl, ...compareCols, '주문고객수', E.baseName, E.cLbl, ...compareCols,
     ...(E.uvOn ? ['상품UV', `상품UV ${E.cLbl}`, '상품CR', `상품CR ${E.cLbl}`] : []), `구성비(${E.basis})`, '주 채널'];
   const top = r;
   H.forEach((h, c) => put(sh, r, c, {v: h, s: c ? 'head' : 'headL'}));
@@ -244,17 +267,17 @@ function sheetProd(d) {
     put(sh, r, c++, okNum(x.a) ? {v: x.a / 1e6, s: 'dec1' + B} : {v: '–', s: 'flat'});
     put(sh, r, c++, okNum(x.pa) ? {v: x.pa / 1e6, s: 'dec1P'} : {v: '–', s: 'flat'});
     put(sh, r, c++, delta(x.da));
-    if (E.weekCompare) {
-      put(sh, r, c++, okNum(x.wa) ? {v: x.wa / 1e6, s: 'dec1P'} : {v: '–', s: 'flat'});
-      put(sh, r, c++, delta(x.wda));
-    }
+    put(sh, r, c++, okNum(x.wa) ? {v: x.wa / 1e6, s: 'dec1P'} : {v: '–', s: 'flat'});
+    put(sh, r, c++, delta(x.wda));
+    put(sh, r, c++, okNum(x.ma) ? {v: x.ma / 1e6, s: 'dec1P'} : {v: '–', s: 'flat'});
+    put(sh, r, c++, delta(x.mda));
     put(sh, r, c++, okNum(x.u) ? {v: x.u, s: 'int' + B} : {v: '–', s: 'flat'});
     put(sh, r, c++, okNum(x.pu) ? {v: x.pu, s: 'intP'} : {v: '–', s: 'flat'});
     put(sh, r, c++, delta(x.du));
-    if (E.weekCompare) {
-      put(sh, r, c++, okNum(x.wu) ? {v: x.wu, s: 'intP'} : {v: '–', s: 'flat'});
-      put(sh, r, c++, delta(x.wdu));
-    }
+    put(sh, r, c++, okNum(x.wu) ? {v: x.wu, s: 'intP'} : {v: '–', s: 'flat'});
+    put(sh, r, c++, delta(x.wdu));
+    put(sh, r, c++, okNum(x.mu) ? {v: x.mu, s: 'intP'} : {v: '–', s: 'flat'});
+    put(sh, r, c++, delta(x.mdu));
     if (E.uvOn) {
       put(sh, r, c++, okNum(x.uv) ? {v: x.uv, s: 'int' + B} : {v: '–', s: 'flat'});
       put(sh, r, c++, delta(x.duv));
@@ -274,57 +297,69 @@ function sheetProd(d) {
   const hierarchy = typeof d.productHierarchy === 'function' && Array.isArray(V.cur) ? d.productHierarchy(V.cur) : [];
   if (hierarchy.length) {
     const previous = typeof d.productHierarchy === 'function' && Array.isArray(V.prev) ? d.productHierarchy(V.prev) : [];
-    const pmap = new Map(previous.map(x => [x.key, x]));
+    const weekly = typeof d.productHierarchy === 'function' && Array.isArray(V.week) ? d.productHierarchy(V.week) : [];
+    const monthly = typeof d.productHierarchy === 'function' && Array.isArray(V.month) ? d.productHierarchy(V.month) : [];
+    const pmap = new Map(previous.map(x => [x.key, x])), wmap = new Map(weekly.map(x => [x.key, x])), mmap = new Map(monthly.map(x => [x.key, x]));
     const cdiv = E.avg && V.cur.length ? V.cur.length : 1, pdiv = E.avg && V.prev && V.prev.length ? V.prev.length : 1;
+    const wdiv = E.avg && V.week && V.week.length ? V.week.length : 1, mdiv = E.avg && V.month && V.month.length ? V.month.length : 1;
     const change = (c, p) => {
       if (!okNum(c) || !okNum(p) || !p) return {v: '–', s: 'flat'};
       const v = (c / p - 1) * 100;
       return {v: `${v > 0 ? '+' : ''}${v.toFixed(1)}%`, s: v > 0 ? 'pos' : v < 0 ? 'neg' : 'flat'};
     };
     r++;
-    for (let c = 0; c < 9; c++) put(sh, r, c, {v: c ? '' : 'BPU·카테고리·브랜드 상세', s: 'group'});
+    for (let c = 0; c < 17; c++) put(sh, r, c, {v: c ? '' : 'BPU·카테고리·브랜드 상세', s: 'group'});
     r++;
-    ['BPU', '카테고리', '브랜드', `거래액${E.avg ? '(일평균)' : ''}(백만원)`, `거래액 ${E.baseName}`, `거래액 ${E.cLbl}`,
-      `주문고객수${E.avg ? '(일평균)' : ''}`, `고객수 ${E.baseName}`, `고객수 ${E.cLbl}`]
+    ['BPU', '카테고리', '브랜드', `거래액${E.avg ? '(일평균)' : ''}(백만원)`, `거래액 ${E.baseName}`, `거래액 ${E.cLbl}`, '거래액 전주', '거래액 전주비', '거래액 전월', '거래액 전월비',
+      `주문고객수${E.avg ? '(일평균)' : ''}`, `고객수 ${E.baseName}`, `고객수 ${E.cLbl}`, '고객수 전주', '고객수 전주비', '고객수 전월', '고객수 전월비']
       .forEach((h, c) => put(sh, r, c, {v: h, s: c < 3 ? 'headL' : 'head'}));
     r++;
     for (const x of hierarchy) {
-      const p = pmap.get(x.key), a = x.a / cdiv, u = x.u / cdiv, pa = p ? p.a / pdiv : null, pu = p ? p.u / pdiv : null;
+      const p = pmap.get(x.key), w = wmap.get(x.key), mo = mmap.get(x.key), a = x.a / cdiv, u = x.u / cdiv;
+      const pa = p ? p.a / pdiv : null, pu = p ? p.u / pdiv : null, wa = w ? w.a / wdiv : null, wu = w ? w.u / wdiv : null, ma = mo ? mo.a / mdiv : null, mu = mo ? mo.u / mdiv : null;
       put(sh, r, 0, text(x.bpu)); put(sh, r, 1, text(x.category)); put(sh, r, 2, text(x.brand));
       put(sh, r, 3, {v: a / 1e6, s: 'dec1'}); put(sh, r, 4, okNum(pa) ? {v: pa / 1e6, s: 'dec1P'} : {v: '–', s: 'flat'}); put(sh, r, 5, change(a, pa));
-      put(sh, r, 6, {v: u, s: 'int'}); put(sh, r, 7, okNum(pu) ? {v: pu, s: 'intP'} : {v: '–', s: 'flat'}); put(sh, r, 8, change(u, pu));
+      put(sh, r, 6, okNum(wa) ? {v: wa / 1e6, s: 'dec1P'} : {v: '–', s: 'flat'}); put(sh, r, 7, change(a, wa));
+      put(sh, r, 8, okNum(ma) ? {v: ma / 1e6, s: 'dec1P'} : {v: '–', s: 'flat'}); put(sh, r, 9, change(a, ma));
+      put(sh, r, 10, {v: u, s: 'int'}); put(sh, r, 11, okNum(pu) ? {v: pu, s: 'intP'} : {v: '–', s: 'flat'}); put(sh, r, 12, change(u, pu));
+      put(sh, r, 13, okNum(wu) ? {v: wu, s: 'intP'} : {v: '–', s: 'flat'}); put(sh, r, 14, change(u, wu));
+      put(sh, r, 15, okNum(mu) ? {v: mu, s: 'intP'} : {v: '–', s: 'flat'}); put(sh, r, 16, change(u, mu));
       r++;
     }
     sh.widths[0] = Math.max(sh.widths[0] || 0, 18); sh.widths[1] = Math.max(sh.widths[1] || 0, 22); sh.widths[2] = Math.max(sh.widths[2] || 0, 24);
-    for (let c = 3; c < 9; c++) sh.widths[c] = Math.max(sh.widths[c] || 0, 14);
+    for (let c = 3; c < 17; c++) sh.widths[c] = Math.max(sh.widths[c] || 0, 14);
   }
   // 기간별 표 — 기간마다 값 · 비교
   const T = E.table();
   if (T && T.cols.length) {
     r++;
-    for (let c = 0; c <= T.cols.length * 2; c++) put(sh, r, c, {v: c ? '' : `기간별 · ${T.basis}${E.avg ? '(일평균)' : ''} · ${E.cLbl2}`, s: 'group'});
+    for (let c = 0; c <= T.cols.length * 4; c++) put(sh, r, c, {v: c ? '' : `기간별 · ${T.basis}${E.avg ? '(일평균)' : ''} · ${E.cLbl2} · 전주비 · 전월비`, s: 'group'});
     r++;
     put(sh, r, 0, {v: '항목', s: 'headL'});
     put(sh, r + 1, 0, {v: '', s: 'headL'});
     sh.merges.push(`${ref(r, 0)}:${ref(r + 1, 0)}`);
     T.cols.forEach((col, k) => {
-      put(sh, r, 1 + 2 * k, {v: col.label, s: 'head'});
-      put(sh, r, 2 + 2 * k, {v: '', s: 'head'});
-      sh.merges.push(`${ref(r, 1 + 2 * k)}:${ref(r, 2 + 2 * k)}`);
-      put(sh, r + 1, 1 + 2 * k, {v: '값', s: 'head'});
-      put(sh, r + 1, 2 + 2 * k, {v: E.cLbl2, s: 'head'});
+      put(sh, r, 1 + 4 * k, {v: col.label, s: 'head'});
+      for (let j = 1; j < 4; j++) put(sh, r, 1 + 4 * k + j, {v: '', s: 'head'});
+      sh.merges.push(`${ref(r, 1 + 4 * k)}:${ref(r, 4 + 4 * k)}`);
+      put(sh, r + 1, 1 + 4 * k, {v: '값', s: 'head'});
+      put(sh, r + 1, 2 + 4 * k, {v: E.cLbl2, s: 'head'});
+      put(sh, r + 1, 3 + 4 * k, {v: '전주비', s: 'head'});
+      put(sh, r + 1, 4 + 4 * k, {v: '전월비', s: 'head'});
     });
     r += 2;
     const isAmt = T.metric === 'amt';
     for (const row of T.rows) {
       put(sh, r, 0, text(row.label, row.total ? 'labelB' : 'label'));
       row.vals.forEach((x, k) => {
-        put(sh, r, 1 + 2 * k, okNum(x.v) ? {v: isAmt ? x.v / 1e6 : x.v, s: (isAmt ? 'dec1' : 'int') + (row.total ? 'B' : '')} : {v: '–', s: 'flat'});
-        put(sh, r, 2 + 2 * k, delta(x.d));
+        put(sh, r, 1 + 4 * k, okNum(x.v) ? {v: isAmt ? x.v / 1e6 : x.v, s: (isAmt ? 'dec1' : 'int') + (row.total ? 'B' : '')} : {v: '–', s: 'flat'});
+        put(sh, r, 2 + 4 * k, delta(x.d));
+        put(sh, r, 3 + 4 * k, delta(x.wd));
+        put(sh, r, 4 + 4 * k, delta(x.md));
       });
       r++;
     }
-    for (let c = 1; c <= T.cols.length * 2; c++) sh.widths[c] = Math.max(sh.widths[c] || 0, 11);
+    for (let c = 1; c <= T.cols.length * 4; c++) sh.widths[c] = Math.max(sh.widths[c] || 0, 11);
   }
   return sh;
 }

@@ -24,6 +24,7 @@ const require = createRequire(import.meta.url);
 const {chromium} = require('playwright');
 const root = new URL('../', import.meta.url);
 let html = fs.readFileSync(new URL('dashboard.html', root), 'utf8');
+const exportSource = fs.readFileSync(new URL('export.js', root), 'utf8');
 const marker = /<script>\r?\nwindow\.__dashMain = function \(\) \{/;
 const inject = `<script>window.DASH_EMBED='test';window.DASH_DATA=${JSON.stringify(backup.data).replace(/<\//g, '<\\/')};window.DASH_KPI=null;window.DASH_PROD=${JSON.stringify(backup.prod).replace(/<\//g, '<\\/')};</script>`;
 html = html.replace(marker, match => inject + match);
@@ -33,6 +34,7 @@ const page = await browser.newPage();
 const errors = [];
 page.on('pageerror', error => errors.push(error.message));
 await page.setContent(html, {waitUntil: 'domcontentloaded', timeout: 120000});
+await page.addScriptTag({content: exportSource});
 await page.waitForFunction(() => window.__dash && window.__dash.prodReady(), null, {timeout: 120000});
 const actual = await page.evaluate(lastDate => {
   const dash = window.__dash;
@@ -43,6 +45,8 @@ const actual = await page.evaluate(lastDate => {
   dash.state.segs = ['T']; dash.render();
   const hierarchy = dash.productHierarchy(dash.prodView().cur);
   out.hierarchy = {count: hierarchy.length, a: hierarchy.reduce((sum, row) => sum + row.a, 0), u: hierarchy.reduce((sum, row) => sum + row.u, 0), sample: hierarchy[0]};
+  const sheet = window.FP_EXPORT.build('prod', dash);
+  out.exportLabels = sheet.rows.flatMap(row => (row || []).map(cell => cell && cell.v)).filter(v => v !== undefined && v !== '');
   return out;
 }, backup.prod.meta.lastDate);
 for (const seg of ['T', '1', '2', '3']) {
@@ -55,6 +59,9 @@ assert.ok(actual.hierarchy.count > 0, 'real backup must expose BPU-category-bran
 assert.ok(actual.hierarchy.sample.bpu && actual.hierarchy.sample.category && actual.hierarchy.sample.brand, 'hierarchy rows must name all three dimensions');
 assert.equal(actual.hierarchy.a, actual.T.a, 'hierarchy amount must reconcile to the product total');
 assert.equal(actual.hierarchy.u, actual.T.u, 'hierarchy customer sum must reconcile to the product total');
+for (const label of ['거래액 전주비', '거래액 전월비', '고객수 전주비', '고객수 전월비']) {
+  assert.ok(actual.exportLabels.includes(label), `real product export must include ${label}`);
+}
 assert.equal(errors.length, 0, `page errors: ${errors.join(' | ')}`);
 await browser.close();
 console.log(`OK: ${backup.prod.meta.lastDate} product totals follow T/1/2/3 member filters and reconcile`);

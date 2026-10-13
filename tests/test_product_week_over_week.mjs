@@ -25,7 +25,9 @@ await page.waitForFunction(() => window.__dash && window.__dash.prodReady());
 const result = await page.evaluate(() => {
   const d=window.__dash; Object.assign(d.state,{grain:'week',year:2026,mode:'sum',cmp:'yoy',cmpY:1}); d.state.at.week=''; d.render();
   const e=d.prodView().exp, row=e.rows[0];
-  return {weekCompare:e.weekCompare,wa:row.wa,wda:row.wda,wu:row.wu,wdu:row.wdu,text:document.querySelector('#pdBody').innerText};
+  return {weekCompare:e.weekCompare,wa:row.wa,wda:row.wda,wu:row.wu,wdu:row.wdu,text:document.querySelector('#pdBody').innerText,
+    partialMonth:d.periodComparisons(Array.from({length:12},(_,i)=>`2026-10-${String(i+1).padStart(2,'0')}`)),
+    weekSpan:d.periodComparisons(Array.from({length:7},(_,i)=>`2026-10-${String(i+5).padStart(2,'0')}`))};
 });
 await browser.close();
 assert.equal(result.weekCompare,true);
@@ -34,4 +36,6 @@ assert.equal(result.wu,10);
 assert.match(result.wda.t,/20/);
 assert.match(result.wdu.t,/20/);
 assert.match(result.text,/전주비/);
+assert.deepEqual(result.partialMonth.month, Array.from({length:12},(_,i)=>`2026-09-${String(i+1).padStart(2,'0')}`));
+assert.deepEqual(result.weekSpan.month, Array.from({length:7},(_,i)=>`2026-09-${String(i+5).padStart(2,'0')}`));
 console.log('OK: product first-purchase rows include previous-week values and rates');
