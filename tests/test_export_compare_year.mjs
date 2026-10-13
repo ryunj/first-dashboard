@@ -9,7 +9,7 @@ vm.createContext(context);
 vm.runInContext(source, context, {filename: 'export.js'});
 
 const dash = {
-  state: {year: 2026, grain: 'week', cmp: 'yoy', cmpY: 2},
+  state: {year: 2026, grain: 'week', cmp: 'yoy', cmpY: 2, layout: 'block'},
   lastCols: [{label: '9월 4주', sub: '9/21~', tip: '2026년 9월 4주'}],
   focusIdx: () => 0, modeName: () => '주 합계', cmpLbl: () => '2024년비', otherLbl: () => '전주비', baseShort: () => '2024년',
   selChans: () => ['*TOTAL'], chLabel: () => '전체', selSegs: () => ['T'], segLabel: () => '전체',
@@ -25,4 +25,15 @@ assert.ok(!labels.includes('2025 동기간'), 'hard-coded previous-year label mu
 assert.ok(dashboard.includes("`${y - yk()} 동기간`"), 'on-screen three-band table must use the selected comparison-year helper');
 assert.equal(sheet.rows.flatMap(row => row || []).some(cell => cell && cell.v === 8 / 1e6), true, 'comparison values must remain unchanged');
 
-console.log('OK: Excel table labels the selected 2024 comparison year');
+dash.state.layout = 'stack';
+const stacked = context.window.FP_EXPORT.build('table', dash);
+const stackedLabels = stacked.rows.flatMap(row => (row || []).map(cell => cell && cell.v)).filter(v => v !== undefined && v !== '');
+assert.ok(stackedLabels.includes('기준'), 'three-row comparison export must include a basis column');
+assert.ok(stackedLabels.includes(2026), 'three-row comparison export must include the current-year row');
+assert.ok(stackedLabels.includes(2024), 'three-row comparison export must include the selected comparison-year row');
+assert.ok(stackedLabels.includes('2024년비'), 'three-row comparison export must include the comparison-rate row');
+assert.ok(!stackedLabels.includes('2026 실적'), 'three-row comparison export must not use the horizontal Excel-style current band');
+assert.ok(!stackedLabels.includes('2024 동기간'), 'three-row comparison export must not use the horizontal Excel-style comparison band');
+assert.equal(stacked.rows.flatMap(row => row || []).some(cell => cell && cell.v === 8 / 1e6), true, 'three-row comparison export must retain comparison values');
+
+console.log('OK: Excel export follows the selected table layout and comparison year');

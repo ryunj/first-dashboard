@@ -170,35 +170,59 @@ function sheetTable(d) {
   const sh = sheet('실적 표');
   let r = head(sh, `${GRAIN[S.grain]} 실적 (${d.modeName()})`, [context(d)]);
   const top = r;
+  const stacked = S.layout === 'stack';
   const third = S.cmp === 'pop' ? `${d.baseShort()} (직전 기간)` : `${y - (S.cmpY || 1)} 동기간`;
   put(sh, r, 0, {v: '구분', s: 'headL'});
-  put(sh, r + 1, 0, {v: '', s: 'headL'});
-  sh.merges.push(`${ref(r, 0)}:${ref(r + 1, 0)}`);
-  [`${y} 실적`, d.cmpLbl(), third].forEach((b, i) => {
-    for (let k = 0; k < n; k++) {
-      put(sh, r, 1 + i * n + k, {v: k ? '' : b, s: 'head'});
-      put(sh, r + 1, 1 + i * n + k, {v: cols[k].label + (cols[k].sub ? ` ${cols[k].sub}` : ''), s: 'head'});
-    }
-    if (n > 1) sh.merges.push(`${ref(r, 1 + i * n)}:${ref(r, i * n + n)}`);
-  });
-  r += 2;
+  if (stacked) {
+    put(sh, r, 1, {v: '기준', s: 'head'});
+    cols.forEach((col, k) => put(sh, r, 2 + k, {v: col.label + (col.sub ? ` ${col.sub}` : ''), s: 'head'}));
+    r++;
+  } else {
+    put(sh, r + 1, 0, {v: '', s: 'headL'});
+    sh.merges.push(`${ref(r, 0)}:${ref(r + 1, 0)}`);
+    [`${y} 실적`, d.cmpLbl(), third].forEach((b, i) => {
+      for (let k = 0; k < n; k++) {
+        put(sh, r, 1 + i * n + k, {v: k ? '' : b, s: 'head'});
+        put(sh, r + 1, 1 + i * n + k, {v: cols[k].label + (cols[k].sub ? ` ${cols[k].sub}` : ''), s: 'head'});
+      }
+      if (n > 1) sh.merges.push(`${ref(r, 1 + i * n)}:${ref(r, i * n + n)}`);
+    });
+    r += 2;
+  }
   for (const m of d.METRICS) {
     const unit = [d.unitOf(m), d.trNote(m)].filter(Boolean).join(' · ');
-    for (let c = 0; c <= 3 * n; c++) put(sh, r, c, {v: c ? '' : `${d.MET[m].name}${unit ? ` (${unit})` : ''}`, s: 'group'});
+    const last = stacked ? n + 1 : 3 * n;
+    for (let c = 0; c <= last; c++) put(sh, r, c, {v: c ? '' : `${d.MET[m].name}${unit ? ` (${unit})` : ''}`, s: 'group'});
     r++;
     for (const row of d.MODEL[m] || []) {
-      put(sh, r, 0, text(row.label, row.ch === '*TOTAL' && row.seg === 'T' ? 'labelB' : 'labelSub'));
-      row.vals.forEach((v, k) => {
-        put(sh, r, 1 + k, num(d, m, v.c));
-        put(sh, r, 1 + n + k, delta(d.fmtDelta(v.d)));
-        put(sh, r, 1 + 2 * n + k, num(d, m, v.p, 'P'));
-      });
-      r++;
+      const style = row.ch === '*TOTAL' && row.seg === 'T' ? 'labelB' : 'labelSub';
+      if (stacked) {
+        put(sh, r, 0, text(row.label, style));
+        put(sh, r, 1, {v: y, s: 'labelB'});
+        row.vals.forEach((v, k) => put(sh, r, 2 + k, num(d, m, v.c)));
+        r++;
+        put(sh, r, 0, text(''));
+        put(sh, r, 1, {v: S.cmp === 'pop' ? d.baseShort() : y - (S.cmpY || 1), s: 'label'});
+        row.vals.forEach((v, k) => put(sh, r, 2 + k, num(d, m, v.p, 'P')));
+        r++;
+        put(sh, r, 0, text(''));
+        put(sh, r, 1, text(d.cmpLbl()));
+        row.vals.forEach((v, k) => put(sh, r, 2 + k, delta(d.fmtDelta(v.d))));
+        r++;
+      } else {
+        put(sh, r, 0, text(row.label, style));
+        row.vals.forEach((v, k) => {
+          put(sh, r, 1 + k, num(d, m, v.c));
+          put(sh, r, 1 + n + k, delta(d.fmtDelta(v.d)));
+          put(sh, r, 1 + 2 * n + k, num(d, m, v.p, 'P'));
+        });
+        r++;
+      }
     }
   }
-  sh.widths = {0: 24};
-  for (let c = 1; c <= 3 * n; c++) sh.widths[c] = 11;
-  sh.freeze = {r: top + 2, c: 1};
+  sh.widths = {0: 24, ...(stacked ? {1: 12} : {})};
+  for (let c = stacked ? 2 : 1; c <= (stacked ? n + 1 : 3 * n); c++) sh.widths[c] = 11;
+  sh.freeze = {r: top + (stacked ? 1 : 2), c: stacked ? 2 : 1};
   return sh;
 }
 function sheetProd(d) {
