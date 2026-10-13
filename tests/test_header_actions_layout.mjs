@@ -33,9 +33,17 @@ try {
   await page.locator('#filtSum').evaluate(el => {
     el.textContent = '회원구분 전체 · 채널 전체 · BPU 전체 · 상품군 전체 · 조직 카테고리 전체';
   });
-  const [periodBar, filter] = await Promise.all([page.locator('header .bar2').first().boundingBox(), box('#btnFilt')]);
-  assert.ok(periodBar && filter, 'period controls and filter summary must be visible');
+  const [periodBar, periodControls, comparisonYear, filter] = await Promise.all([
+    box('.period-bar'), box('.period-controls'), box('#fCmpY'), box('#btnFilt')
+  ]);
+  const controlLayout = await page.locator('.period-controls').evaluate(el => ({
+    width: el.getBoundingClientRect().width,
+    children: [...el.children].map(child => ({id: child.id || child.className, x: child.getBoundingClientRect().x, y: child.getBoundingClientRect().y, width: child.getBoundingClientRect().width}))
+  }));
+  assert.ok(periodBar && periodControls && comparisonYear && filter, 'period controls, comparison year and filter summary must be visible');
   assert.ok(filter.y < periodBar.y + 40, 'filter summary must stay on the first controls row for a prior week');
+  assert.ok(comparisonYear.y < periodBar.y + 40, `comparison year must stay on the first controls row for a prior week: ${JSON.stringify(controlLayout)}`);
+  assert.ok(periodControls.height <= 40, 'period controls must not wrap when a prior week exposes the latest shortcut');
   await page.locator('#selCmpY').selectOption('2');
   const comparedFilter = await box('#btnFilt');
   assert.ok(comparedFilter, 'filter summary must remain visible after changing the comparison year');
