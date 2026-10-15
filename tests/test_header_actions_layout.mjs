@@ -30,6 +30,10 @@ try {
   await page.locator('button[data-set="grain"][data-v="week"]').click();
   await page.waitForFunction(() => document.querySelector('#selAt')?.options[0]?.textContent?.includes('주차'));
   await page.locator('#selAt').selectOption({index: 2});
+  await page.locator('#selAt').evaluate(el => {
+    el.options[0].textContent = '최근 · 10월 3주차 (10/12~10/13)';
+    el.selectedOptions[0].textContent = '10월 3주차 (10/12~10/13)';
+  });
   await page.locator('#filtSum').evaluate(el => {
     el.textContent = '회원구분 전체 · 채널 전체 · BPU 전체 · 상품군 전체 · 조직 카테고리 전체';
   });
